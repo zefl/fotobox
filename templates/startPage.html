@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+body{
+  background: url(../static/pictures/background.png) no-repeat center center fixed; 
+  -webkit-background-size: cover;
+  -moz-background-size: cover;
+  -o-background-size: cover;
+  background-size: cover;
+}
+/* Header/logo Title */
+.headerOld {
+  padding: 20px;
+  text-align: center;
+  background: rgba(220, 220, 220, 0.6);
+  color: white;
+  border-radius: 15px 50px;
+}
+
+
+.iconsize{
+  width: 180px;
+}
+
+.icon {
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 5px;
+}
+
+
+.iconContainer {
+    background-color: rgba(220, 220, 220, 0.6);
+}
+
+.header{
+ border-width:1px 1px 1px 1px;
+ border-top-left-radius:0px; 
+ border-top-right-radius:0px; 
+ border-bottom-right-radius:0px; 
+ border-bottom-left-radius:0px; 
+ min-height:80px; 
+ background-color:rgba(78,78,78,1);
+}
+
+.button{padding: 0px 0px 0px 0px;
+border-color: rgba(33,33,33,1);
+border-style: solid;
+border-width: 2px 2px 2px 2px;
+border-top-left-radius: 15px;
+border-top-right-radius: 15px;
+border-bottom-right-radius: 15px;
+border-bottom-left-radius: 15px;
+background-image: none;
+background-color: rgba(255,255,255,0.45);
+color: rgba(0,0,0,1);
+font-size: 22px;
+font-weight: bold;
+font-family: "Courier New", Courier, monospace;
+text-align: center;}
+
+.button:hover{border-color: rgba(0,0,0,1);
+border-style: solid;
+border-width: 2px 2px 2px 2px;
+border-top-left-radius: 15px;
+border-top-right-radius: 15px;
+border-bottom-right-radius: 15px;
+border-bottom-left-radius: 15px;
+background-image: none;
+background-color: rgba(163,159,159,0.01);
+color: rgba(0,0,0,1);}
+
+
+</style>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+</head>
+<body>
+<div class="header" style="left:auto;margin-top:0;margin-left:0">
+    <h1 style="text-align: center; font-size: 40px;">
+        <span style="font-size: 40px; font-family: 'Courier New', Courier, monospace; font-weight: bold; color: #ffffff;">Viel Spaß beim feiern und fotografieren</span>
+    </h1>
+</div>
+
+<div style="width:276px;height:276px;overflow:hidden; margin:0 auto;">
+    <img role="presentation" src="../static/pictures/logo.png" style="display:block;margin:0" height="276" width="276" data-width="276" data-height="276">
+</div>
+
+<a href="options" style="text-decoration: none; "> 
+    <div style="margin:0 auto;margin-top:34px;width:580px;height:68px;">
+            <div class="button" style="width:513px;height:68px;float:left" id="kamera">
+                <span >Hier klicken, um Fotospaß zu starten!</span>
+            </div>
+            <div style="width:45px;height:45px;margin-left:6px;margin-top:6px;float:left">
+                <img src="../static/pictures/kamera.png" style="height:100%;opacity:1" />
+            </div>
+    </div>
+</a>
+
+<a href="gallery" style="text-decoration: none; "> 
+    <div style="margin:0 auto;margin-top:34px;width:580px;height:68px;">
+            <div class="button" style="width:513px;height:68px;float:left " id="gallery">
+                <span >Hier geht´s zur Galerie</span>
+            </div>
+            <div style="width:45px;height:45px;margin-left:6px;margin-top:6px;float:left">
+                <img src="../static/pictures/gallery.png" style="height:100%;opacity:1" />
+            </div>
+    </div>
+</a>
+  
+</body>
+
+<script type="text/javascript">
+$(document).ready(function(){
+ setInterval(update,1000);
+});
+
+function update(){
+    $.ajax({
+            url: '/button',
+            type: 'GET',
+            success: function(data, status){
+                highlight(data.statusNext, data.statusEnter)
+                console.log(data.statusNext, data.statusEnter)
+            },
+        });
+}
+
+function highlight(buttonNext, buttonEnter) {
+    if (buttonNext == 1) {
+        document.getElementById("kamera").style.boxShadow  =  "0 0 20px 10px rgba(0, 140, 186, 0.5)";
+        document.getElementById("kamera4").style.boxShadow =  "0 0 20px 10px rgba(0, 140, 186, 0)";
+        document.getElementById("video").style.boxShadow   =  "0 0 20px 10px rgba(0, 140, 186, 0)";
+        document.getElementById("gallery").style.boxShadow =  "0 0 20px 10px rgba(0, 140, 186, 0)";
+    } else if (buttonNext == 2) {
+        document.getElementById("kamera").style.boxShadow  =  "0 0 20px 10px rgba(0, 140, 186, 0)";
+        document.getElementById("kamera4").style.boxShadow =  "0 0 20px 10px rgba(0, 140, 186, 0.5)";
+        document.getElementById("video").style.boxShadow   =  "0 0 20px 10px rgba(0, 140, 186, 0)";
+        document.getElementById("gallery").style.boxShadow =  "0 0 20px 10px rgba(0, 140, 186, 0)";
+    } else if (buttonNext == 3) {
+        document.getElementById("kamera").style.boxShadow  =  "0 0 20px 10px rgba(0, 140, 186, 0)";
+        document.getElementById("kamera4").style.boxShadow =  "0 0 20px 10px rgba(0, 140, 186, 0)";
+        document.getElementById("video").style.boxShadow   =  "0 0 20px 10px rgba(0, 140, 186, 0.5)";
+        document.getElementById("gallery").style.boxShadow =  "0 0 20px 10px rgba(0, 140, 186, 0)";
+    } else if (buttonNext == 4) {
+        document.getElementById("kamera").style.boxShadow  =  "0 0 20px 10px rgba(0, 140, 186, 0)";
+        document.getElementById("kamera4").style.boxShadow =  "0 0 20px 10px rgba(0, 140, 186, 0)";
+        document.getElementById("video").style.boxShadow   =  "0 0 20px 10px rgba(0, 140, 186, 0)";
+        document.getElementById("gallery").style.boxShadow =  "0 0 20px 10px rgba(0, 140, 186, 0.5)";
+    } else {
+        document.getElementById("kamera").style.boxShadow  =  "0 0 20px 10px rgba(0, 140, 186, 0)";
+        document.getElementById("kamera4").style.boxShadow =  "0 0 20px 10px rgba(0, 140, 186, 0)";
+        document.getElementById("video").style.boxShadow   =  "0 0 20px 10px rgba(0, 140, 186, 0)";
+        document.getElementById("gallery").style.boxShadow =  "0 0 20px 10px rgba(0, 140, 186, 0)";
+    }
+    
+    if(buttonEnter){
+        document.location.replace("../picture");
+    }
+}
+</script>
+</html>
