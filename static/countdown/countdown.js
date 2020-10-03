@@ -17,7 +17,7 @@ const COLOR_CODES = {
   }
 };
 
-const TIME_LIMIT = 20;
+let TIME_LIMIT = 5;
 let timePassed = 0;
 let timeLeft = TIME_LIMIT;
 let timerInterval = null;
@@ -45,26 +45,38 @@ document.getElementById("countdown").innerHTML = `
 </div>
 `;
 
-startTimer();
-
 function onTimesUp() {
   clearInterval(timerInterval);
+  timerInterval = null;
 }
 
 function startTimer() {
-  timerInterval = setInterval(() => {
-    timePassed = timePassed += 1;
+    //reset
+    timePassed = 0;  
+    timeLeft = TIME_LIMIT;
+    remainingPathColor = COLOR_CODES.info.color;
     timeLeft = TIME_LIMIT - timePassed;
     document.getElementById("base-timer-label").innerHTML = formatTime(
       timeLeft
     );
     setCircleDasharray();
     setRemainingPathColor(timeLeft);
+    //start Timer
+    if(timerInterval == null){
+      timerInterval = setInterval(() => {
+        timePassed = timePassed += 1;
+        timeLeft = TIME_LIMIT - timePassed;
+        document.getElementById("base-timer-label").innerHTML = formatTime(
+          timeLeft
+        );
+        setCircleDasharray();
+        setRemainingPathColor(timeLeft);
 
-    if (timeLeft === 0) {
-      onTimesUp();
+        if (timeLeft === 0) {
+          onTimesUp();
+        }
+      }, 1000);
     }
-  }, 1000);
 }
 
 function formatTime(time) {

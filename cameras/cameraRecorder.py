@@ -79,10 +79,10 @@ class CameraRecorder(object):
         while self.recordingActive:
             time.sleep(0.1)  
             #To Do Timeout and rais error
-        fourcc = cv2.VideoWriter_fourcc(*'MJPG')
+        fourcc = cv2.VideoWriter_fourcc(*'MP4V')
         now = datetime.now()
         #handle video data
-        timestamp = str(now.year) + "_" + str(now.month) + "_" + str(now.day) + "_" + str(now.hour) + "_" + str(now.minute) + "_" + str(now.second)
+        timestamp = now.strftime('%Y_%m_%d_%H_%M_%S') 
         video_file = os.path.join(_folder, "vid_" + timestamp +'.avi' )  
         frame = self.camera.convert_to_cv2(self.recordFrames[0])                                             
         videoWriter = cv2.VideoWriter(video_file, fourcc, self.fpsRecorded, (frame.shape[1],frame.shape[0])) 
@@ -115,11 +115,13 @@ class CameraRecorder(object):
 
     def take_picture(self, _folder="", _file=""):
         #if streaming is active take current picture
-        if not(self.captureStreamActive):
-            #todo init camera
-            pass
-            
-            
+        if self.captureStreamActive:
+            now = datetime.now()
+            picName = now.strftime('%Y_%m_%d_%H_%M_%S') 
+            picFrame = copy.copy(self.get_last_capture());
+            cv2.imwrite("pictures/"+ picName +".jpg", picFrame)
+       #return error if not init
+                      
     def _thread_take_picture(self):
         self.camera.initialize(self.fps)
         self.camera.capture_picture()

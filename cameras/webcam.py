@@ -12,7 +12,7 @@ import copy
 from cameras.ICamera import ICamera
 
 
-class webCam(ICamera):
+class Camera(ICamera):
 
     def __init__(self):
         self.videoCap = None

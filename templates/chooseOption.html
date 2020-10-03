@@ -118,7 +118,7 @@ transform: rotate(90deg);
 
 <!-- from https://stackoverflow.com/questions/6180256/post-from-an-a-tag -->
 <!-- from http://www.corelangs.com/css/box/center-div.html -->
-<form action="kameraOption/1" method="POST">
+<form action="modus?option=1" method="POST">
     <input type="hidden" />
     <a href="#" onclick="this.parentNode.submit()" style="text-decoration: none; "> 
         <div style="margin-left: 50px;margin-top:34px;width:580px;height:68px;">
@@ -132,7 +132,7 @@ transform: rotate(90deg);
     </a>
 </form>
 
-<form action="kameraOption/2" method="POST">
+<form action="modus?option=2" method="POST">
     <input type="hidden" />
     <a href="#" onclick="this.parentNode.submit()" style="text-decoration: none; "> 
         <div style="margin-left: 50px;margin-top:34px;width:580px;height:68px;">
@@ -146,7 +146,7 @@ transform: rotate(90deg);
     </a>
 </form>
 
-<form action="kameraOption/3" method="POST">
+<form action="modus?option=3" method="POST">
     <input type="hidden" />
     <a href="#" onclick="this.parentNode.submit()" style="text-decoration: none; "> 
         <div style="margin-left:800px;margin-top:-170px;width:580px;height:68px;float:left;">
@@ -162,53 +162,4 @@ transform: rotate(90deg);
 
 </body>
 
-<script type="text/javascript">
-$(document).ready(function(){
- setInterval(update,1000);
-});
-
-function update(){
-    $.ajax({
-            url: '/button',
-            type: 'GET',
-            success: function(data, status){
-                highlight(data.statusNext, data.statusEnter)
-                console.log(data.statusNext, data.statusEnter)
-            },
-        });
-}
-
-function highlight(buttonNext, buttonEnter) {
-    if (buttonNext == 1) {
-        document.getElementById("kamera").style.boxShadow  =  "0 0 20px 10px rgba(0, 140, 186, 0.5)";
-        document.getElementById("kamera4").style.boxShadow =  "0 0 20px 10px rgba(0, 140, 186, 0)";
-        document.getElementById("video").style.boxShadow   =  "0 0 20px 10px rgba(0, 140, 186, 0)";
-        document.getElementById("gallery").style.boxShadow =  "0 0 20px 10px rgba(0, 140, 186, 0)";
-    } else if (buttonNext == 2) {
-        document.getElementById("kamera").style.boxShadow  =  "0 0 20px 10px rgba(0, 140, 186, 0)";
-        document.getElementById("kamera4").style.boxShadow =  "0 0 20px 10px rgba(0, 140, 186, 0.5)";
-        document.getElementById("video").style.boxShadow   =  "0 0 20px 10px rgba(0, 140, 186, 0)";
-        document.getElementById("gallery").style.boxShadow =  "0 0 20px 10px rgba(0, 140, 186, 0)";
-    } else if (buttonNext == 3) {
-        document.getElementById("kamera").style.boxShadow  =  "0 0 20px 10px rgba(0, 140, 186, 0)";
-        document.getElementById("kamera4").style.boxShadow =  "0 0 20px 10px rgba(0, 140, 186, 0)";
-        document.getElementById("video").style.boxShadow   =  "0 0 20px 10px rgba(0, 140, 186, 0.5)";
-        document.getElementById("gallery").style.boxShadow =  "0 0 20px 10px rgba(0, 140, 186, 0)";
-    } else if (buttonNext == 4) {
-        document.getElementById("kamera").style.boxShadow  =  "0 0 20px 10px rgba(0, 140, 186, 0)";
-        document.getElementById("kamera4").style.boxShadow =  "0 0 20px 10px rgba(0, 140, 186, 0)";
-        document.getElementById("video").style.boxShadow   =  "0 0 20px 10px rgba(0, 140, 186, 0)";
-        document.getElementById("gallery").style.boxShadow =  "0 0 20px 10px rgba(0, 140, 186, 0.5)";
-    } else {
-        document.getElementById("kamera").style.boxShadow  =  "0 0 20px 10px rgba(0, 140, 186, 0)";
-        document.getElementById("kamera4").style.boxShadow =  "0 0 20px 10px rgba(0, 140, 186, 0)";
-        document.getElementById("video").style.boxShadow   =  "0 0 20px 10px rgba(0, 140, 186, 0)";
-        document.getElementById("gallery").style.boxShadow =  "0 0 20px 10px rgba(0, 140, 186, 0)";
-    }
-    
-    if(buttonEnter){
-        document.location.replace("../picture");
-    }
-}
-</script>
 </html>

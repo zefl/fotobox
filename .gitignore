@@ -1,3 +1,5 @@
-# exclude everything
+__pycache__/
 videos/*
 pictures/*
+env/
+createEnv.txt

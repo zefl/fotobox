@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+body{
+  background: url(../static/pictures/background.png) no-repeat center center fixed; 
+  -webkit-background-size: cover;
+  -moz-background-size: cover;
+  -o-background-size: cover;
+  background-size: cover;
+}
+
+/* Header/logo Title */
+.header{
+ border-width:1px 1px 1px 1px;
+ border-top-left-radius:0px; 
+ border-top-right-radius:0px; 
+ border-bottom-right-radius:0px; 
+ border-bottom-left-radius:0px; 
+ min-height:80px; 
+ background-color:rgba(78,78,78,1);
+}
+
+.button{padding: 0px 0px 0px 0px;
+border-color: rgba(33,33,33,1);
+border-style: solid;
+border-width: 2px 2px 2px 2px;
+border-top-left-radius: 15px;
+border-top-right-radius: 15px;
+border-bottom-right-radius: 15px;
+border-bottom-left-radius: 15px;
+background-image: none;
+background-color: rgba(255,255,255,0.45);
+color: rgba(0,0,0,1);
+font-size: 22px;
+font-weight: bold;
+font-family: "Courier New", Courier, monospace;
+text-align: center;}
+
+.button:hover{border-color: rgba(0,0,0,1);
+border-style: solid;
+border-width: 2px 2px 2px 2px;
+border-top-left-radius: 15px;
+border-top-right-radius: 15px;
+border-bottom-right-radius: 15px;
+border-bottom-left-radius: 15px;
+background-image: none;
+background-color: rgba(163,159,159,0.01);
+color: rgba(0,0,0,1);
+}
+
+
+
+div.polaroid {
+  background-color: rgba(220, 220, 220, 0.6);
+  box-shadow: 0 40px 80px 0 rgba(0, 0, 0, 0.8), 0 6px 20px 0 rgba(0, 0, 0, 0.39);
+  margin-bottom: 25px;
+  text-align: center;
+  margin-left: auto;
+  margin-right: auto;
+  width: 100%;
+  margin-top: 1%;
+}
+
+div.container {
+  text-align: center;
+  padding: 10px 20px;
+}
+/* https://www.w3schools.com/howto/howto_css_loader.asp */
+
+.loader {
+  border: 16px solid #f3f3f3;
+  border-radius: 50%;
+  border-top: 16px solid #3498db;
+  width: 240px;
+  height: 240px;
+  animation: spin 2s linear infinite;
+  position: absolute;
+  margin-left: 45%;
+  margin-top:12%;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+</style>
+<link rel="stylesheet"  type="text/css" href="{{url_for('static', filename='countdown/countdown.css')}}"/>
+<link rel="stylesheet"  type="text/css" href="../static/countdown/countdown.css"/>
+</head>
+<body>
+<div class="header" style="margin: auto;">
+    <h1 style="text-align: center; font-size: 40px;margin:auto;">
+        <span style="font-size: 40px; font-family: 'Courier New', Courier, monospace; font-weight: bold; color: #ffffff;">Es ist Fertig</span>
+        
+        <img data-loading="lazy" role="presentation" data-scalestrategy="fit" src="../static/pictures/logo.png" style="display:block;margin:0;float:left;" height="80" width="80" />
+        <div style="margin-right: 0px;margin-top: 0px; width:80%; height:40px;float:left; position: relative;" >
+        </div>
+        <a href=".">
+            <div class="button" style="margin-right: 0px;margin-top: -20px; width:100px;height:40px;float:left;">
+                <span>Home</span>
+            </div>
+        </a>
+    </h1>
+</div>
+
+<div class="polaroid"> 
+    <div id="loader" style="float:left;">
+        <div class="loader"></div>
+    </div>
+    <img onload="picload()" src="/getPicture" style="width:100%; height: 78vh; margin-top: 1%;"/> 
+    <!--<video controls>
+      <source src="/getVideo" type="video/mp4" style="width:100%; height: 78vh; margin-top: 1%;">
+      Your browser does not support the video tag.
+    </video>-->
+
+<div>
+</body>
+<script>
+function picload(){
+    document.getElementById("loader").style.display = 'none';
+}
+</script>
+</html>
