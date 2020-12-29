@@ -107,7 +107,7 @@ div.container {
         </div>
     </div>
     <!--<div id="countdown" style="float:left; position:absolute; margin-left:85%;margin-top:1%;font-family: sans-serif;"></div>-->
-    <img src="{{ url_for('video_feed') }}" style="width:100%; height: 78vh; margin-top: 1%;"> 
+    <img src="{{ url_for('pageVideoFeed') }}" style="width:100%; height: 78vh; margin-top: 1%;"> 
     <div class="container" id="demo">
       <p><font face="Comic sans MS" style="font-size: 400%,width:100%;"><b>Keep Smiling<b></font></p>
     </div>
@@ -166,8 +166,8 @@ function statemachine(transition){
                     xhttp.send(JSON.stringify({option:"takePciture"}));
                 }
                 else if(modus == 3){
-                    xhttp.send(JSON.stringify({option:"startVideo"}));
                     startTimer(10,'video');
+                    xhttp.send(JSON.stringify({option:"startVideo"}));
                 }
             }
             break;

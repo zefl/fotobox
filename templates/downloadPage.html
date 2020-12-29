@@ -89,7 +89,7 @@ div.container {
 <link rel="stylesheet"  type="text/css" href="{{url_for('static', filename='countdown/countdown.css')}}"/>
 <link rel="stylesheet"  type="text/css" href="../static/countdown/countdown.css"/>
 </head>
-<body>
+<body onload="startUpFunction()">
 <div class="header" style="margin: auto;">
     <h1 style="text-align: center; font-size: 40px;margin:auto;">
         <span style="font-size: 40px; font-family: 'Courier New', Courier, monospace; font-weight: bold; color: #ffffff;">Es ist Fertig</span>
@@ -105,19 +105,54 @@ div.container {
     </h1>
 </div>
 
-<div class="polaroid"> 
-    <div id="loader" style="float:left;">
-        <div class="loader"></div>
-    </div>
-    <img onload="picload()" src="/getPicture" style="width:100%; height: 78vh; margin-top: 1%;"/> 
-    <!--<video controls>
-      <source src="/getVideo" type="video/mp4" style="width:100%; height: 78vh; margin-top: 1%;">
-      Your browser does not support the video tag.
-    </video>-->
+<div id='content' class="polaroid"> 
 
 <div>
 </body>
 <script>
+let modus = 0;
+
+video.addEventListener('loadeddata', function() {
+   // Video is loaded and can be played
+   picload();
+}, false);
+
+function startUpFunction(){
+    var xhttp = new XMLHttpRequest();
+    var jsonObj = null
+    xhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+            jsonObj = JSON.parse(this.responseText);
+            modus = jsonObj.option
+            const div = document.createElement('div');
+            if(modus == 1 || modus == 2){
+                div.innerHTML = `
+                    <div id="loader" style="float:left;">
+                        <div class="loader"></div>
+                    </div>
+                    <img id="picure" onload="picload()" src="/getPicture" style="width:80%; height: 78vh; margin-top: 1%;"/> 
+                    <img src="/getQRCode" style="width:10%; height: 18vh; "/> 
+              `;
+            }
+            else if (modus == 3){
+              div.innerHTML = `
+                    <video id="video" controls autoplay>
+                      <source src="/getVideo" type="video/mp4" style="width:80%; height: 78vh; margin-top: 1%;">
+                      Your browser does not support the video tag.
+                    </video>
+                    <img src="/getQRCode" style="width:10%; height: 18vh; "/> 
+              `;
+            }
+            document.getElementById('content').appendChild(div);
+        }
+    };
+    xhttp.open("GET", "modus");
+    xhttp.send(); 
+
+
+    
+}
+
 function picload(){
     document.getElementById("loader").style.display = 'none';
 }

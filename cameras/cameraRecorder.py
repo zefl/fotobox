@@ -18,6 +18,7 @@ import threading
 import cv2
 import copy
 import os
+import ffmpeg
 from datetime import datetime
 #from audioRecorder import audio
 from cameras.ICamera import ICamera
@@ -79,7 +80,7 @@ class CameraRecorder(object):
         while self.recordingActive:
             time.sleep(0.1)  
             #To Do Timeout and rais error
-        fourcc = cv2.VideoWriter_fourcc(*'MP4V')
+        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
         now = datetime.now()
         #handle video data
         timestamp = now.strftime('%Y_%m_%d_%H_%M_%S') 
@@ -103,7 +104,15 @@ class CameraRecorder(object):
                 .concat(input_video, input_audio, v=1, a=1)
                 .output(os.path.join(_folder,movie_file))
                 .run(overwrite_output=True)
-            )              
+            )
+        else:
+            movie_file = "mov_" + timestamp + ".mp4"
+            (
+                ffmpeg
+                .input(video_file)
+                .output(os.path.join(_folder,movie_file))
+                .run()
+            )
         self.recordFrames = []
 
     def get_last_capture(self):
