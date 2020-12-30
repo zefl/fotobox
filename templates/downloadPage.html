@@ -49,8 +49,6 @@ background-color: rgba(163,159,159,0.01);
 color: rgba(0,0,0,1);
 }
 
-
-
 div.polaroid {
   background-color: rgba(220, 220, 220, 0.6);
   box-shadow: 0 40px 80px 0 rgba(0, 0, 0, 0.8), 0 6px 20px 0 rgba(0, 0, 0, 0.39);
@@ -130,23 +128,23 @@ function startUpFunction(){
                     <div id="loader" style="float:left;">
                         <div class="loader"></div>
                     </div>
-                    <img id="picure" onload="picload()" src="/getPicture" style="width:80%; height: 78vh; margin-top: 1%;"/> 
-                    <img src="/getQRCode" style="width:10%; height: 18vh; "/> 
+                    <img id="picure" onload="picload()" src="api/renderPicture" style="width:80%; height: 78vh; margin-top: 1%;"/> 
+                    <img src="api/getQRCode" style="width:10%; height: 18vh; "/> 
               `;
             }
             else if (modus == 3){
               div.innerHTML = `
                     <video id="video" controls autoplay>
-                      <source src="/getVideo" type="video/mp4" style="width:80%; height: 78vh; margin-top: 1%;">
+                      <source src="/api/renderVideo" type="video/mp4" style="width:80%; height: 78vh; margin-top: 1%;">
                       Your browser does not support the video tag.
                     </video>
-                    <img src="/getQRCode" style="width:10%; height: 18vh; "/> 
+                    <img src="api/getQRCode" style="width:10%; height: 18vh; "/> 
               `;
             }
-            document.getElementById('content').appendChild(div);
+            document.getElementById('content').appendChild(div); 
         }
     };
-    xhttp.open("GET", "modus");
+    xhttp.open("GET", "api/modus");
     xhttp.send(); 
 
 

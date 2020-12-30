@@ -95,10 +95,10 @@
             <h1 class="page-header">Gallery</h1>
         </div>
         <hr>
-        {% for image_name in image_names %}
+        {% for imageName in imageNames %}
         <div class="col-lg-3 col-md-4 col-xs-6 thumb" style="margin-top:10px;">
-            <a href="{{url_for('send_image', filename=image_name)}}" data-lightbox="mygallery">
-                <img class="img-responsive image" src=" {{url_for('send_image', filename=image_name)}}">
+            <a href="{{url_for('pageImage', filename=imageName)}}" data-lightbox="mygallery">
+                <img class="img-responsive image" src=" {{url_for('pageImage', filename=imageName)}}">
             </a>
         </div>
         {% endfor %}

@@ -1,6 +1,7 @@
 __pycache__/
 cameras/__pycache__/
-videos/*
-pictures/*
-env/
+data/videos/*
+data/pictures/*
+data/orginal_pictures/*
+workspace/env/
 createEnv.txt

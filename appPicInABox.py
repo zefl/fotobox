@@ -30,7 +30,10 @@ from cameras.webcam import Camera
 #create Flask object with __name__ --> acutal python object
 app = Flask(__name__)
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
+
 modus = 1
+anchorsMulti = []
+anchorSingle = []
 
 streamingCamera = Camera()
 streamingCamera.initialize('capture_stream', 30)
@@ -55,22 +58,35 @@ def pagePicture():
     recorder.start_capturing()
     return render_template('picturePage.html') 
 
+#from https://gist.github.com/arusahni/9434953
 @app.route('/download')
 def pageDownload():
-    return render_template('downloadPage.html') 
+    response = make_response(render_template('downloadPage.html'))
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, private, max-age=1')
+    return response
  
+@app.route('/gallery')
+def pageGallery():
+    images = os.listdir('./data/pictures')
+    images.sort(reverse=True)
+    return render_template("gallery.html", imageNames=images)
+
 @app.route('/videoFeed')
 def pageVideoFeed():
     #Video streaming route. Put this in the src attribute of an img tag
     #This gets called when the image inside the html is loaded
     return Response(gen(),
                     mimetype='multipart/x-mixed-replace; boundary=frame') 
- 
+
+@app.route('/upload/<filename>')
+def pageImage(filename):
+    return send_from_directory("data/pictures", filename)
+
 #-------------------------------
 # Rest API functions
 #-------------------------------
-@app.route('/modus', methods = ['POST', 'GET'])
-def modus():
+@app.route('/api/modus', methods = ['POST', 'GET'])
+def setModus():
     global modus
     if request.method == 'POST':
         if 'option' in request.args:
@@ -80,32 +96,22 @@ def modus():
             return redirect(url_for('pagePicture'))
     elif request.method == 'GET':
         return jsonify( {'option': modus} )
-  
-@app.route('/upload/<filename>')
-def send_image(filename):
-    return send_from_directory("pictures", filename)
-
-@app.route('/gallery')
-def get_gallery():
-    image_names = os.listdir('./pictures')
-    image_names.sort(reverse=True)
-    return render_template("gallery.html", image_names=image_names)
-    
-@app.route('/takePicture', methods = ['POST', 'GET'])
+      
+@app.route('/api/controlCamera', methods = ['POST', 'GET'])
 def action():
     global recorder
     print(request.data)
     jsonReq = json.loads(request.data)
     if request.method == 'POST':
         if 'takePciture' in jsonReq['option']:
-            recorder.take_picture('pictures')
+            recorder.take_picture('data/orginal_pictures')
         elif 'startVideo' in jsonReq['option']:
             recorder.start_recording()     
         elif 'stopVideo' in jsonReq['option']:
             recorder.stop_recording()
     return jsonify( {'return': 'done'} )
     
-@app.route('/getQRCode', methods = ['GET']) 
+@app.route('/api/getQRCode', methods = ['GET']) 
 def get_qrCode():
     global modus
     if request.method == 'GET':
@@ -116,11 +122,11 @@ def get_qrCode():
             border=4,
         )   
         if modus == 1 or modus == 2:
-            list_of_files = glob.glob('pictures/*')
+            list_of_files = glob.glob('data/pictures/*')
             list_of_files.sort(key=os.path.getctime)
             dataSrc = list_of_files[-1]
         elif modus == 3:
-            list_of_files = glob.glob('videos/*')
+            list_of_files = glob.glob('data/videos/*')
             list_of_files.sort(key=os.path.getctime) 
             dataSrc = list_of_files[-1]
         qr.add_data(dataSrc)
@@ -133,52 +139,57 @@ def get_qrCode():
         img_buf.seek(0)
         return send_file(img_buf, mimetype='image/jpg') 
     
-
-@app.route('/getPicture', methods = ['GET']) 
+@app.route('/api/renderPicture', methods = ['GET']) 
 def get_picture():   
     global modus
+    global anchorsMulti
     time.sleep(2)
     if request.method == 'GET':   
-        list_of_files = glob.glob('pictures/*')
+        list_of_files = glob.glob('data/orginal_pictures/*')
         list_of_files.sort(key=os.path.getctime)
+        pics = []
         if modus == 1:
-            imgSrc = list_of_files[-1]
+            #append last taken image
+            pics.append(Image.open(list_of_files[-1]))
+            layoutSrc = "static/pictures/LayoutSingle.png"
+            anchors = anchorSingle
+
         elif modus == 2:
             pics = []
             for index in range(1,5): 
                 id = index * -1
                 print(list_of_files[id])
                 pics.append(Image.open(list_of_files[id]))
-            layoutSrc = "static/pictures/Layout4.png"
-            ancors = findInserts(layoutSrc)
-            compositeImg =  Image.new('RGBA', (Image.open(layoutSrc).size), (255, 0, 0, 0))
-            #from https://www.tutorialspoint.com/python_pillow/Python_pillow_merging_images.htm
-            for ancor in ancors:
-                print(ancors.index(ancor))
-                compositeImg.paste(pics[ancors.index(ancor)].resize((ancor['width'], ancor['height'])),(ancor['x'], ancor['y']),0)
-            layoutImg = Image.open(layoutSrc) 
-            #from https://pythontic.com/image-processing/pillow/alpha-composite
-            finalImg = Image.alpha_composite(compositeImg, layoutImg) 
-            imgSrc = "pictures/"+ datetime.now().strftime('%Y_%m_%d_%H_%M_%S') +"_4Pics.jpg"
-            finalImg = finalImg.convert('RGB')
-            finalImg.save(imgSrc, "JPEG") 
+            layoutSrc = "static/pictures/LayoutMulti.png"
+            anchors = anchorsMulti
+        
+        compositeImg =  Image.new('RGBA', (Image.open(layoutSrc).size), (255, 0, 0, 0))
+        #from https://www.tutorialspoint.com/python_pillow/Python_pillow_merging_images.htm
+        for ancor in anchors:
+            print(anchors.index(ancor))
+            compositeImg.paste(pics[anchors.index(ancor)].resize((ancor['width'], ancor['height'])),(ancor['x'], ancor['y']),0)
+        layoutImg = Image.open(layoutSrc) 
+        #from https://pythontic.com/image-processing/pillow/alpha-composite
+        finalImg = Image.alpha_composite(compositeImg, layoutImg) 
+        imgSrc = "data/pictures/"+ datetime.now().strftime('%Y_%m_%d_%H_%M_%S') +"_4Pics.jpg"
+        finalImg = finalImg.convert('RGB')
+        finalImg.save(imgSrc, "JPEG") 
         return send_file(imgSrc, mimetype='image/jpg') 
 
-@app.route('/getVideo', methods = ['GET'])
+@app.route('/api/renderVideo', methods = ['GET'])
 def get_video():    
     global modus
     time.sleep(2)
     if request.method == 'GET':
-        recorder.save_recording('videos')
-        list_of_files = glob.glob('videos/*')
+        recorder.save_recording('data/videos')
+        list_of_files = glob.glob('data/videos/*')
         list_of_files.sort(key=os.path.getctime) 
         vidSrc = list_of_files[-1]
-        print(vidSrc)
         resp = make_response(send_file(vidSrc, 'video/avi'))
         resp.headers['Content-Disposition'] = 'inline'
         return resp
 #-------------------------------
-# Web functions
+# Helper functions
 #-------------------------------
 def gen():
     global recorder
@@ -243,8 +254,9 @@ def findInserts(layoutSrc):
             if(item['height'] > 10):
                 imageAncors.append(item)
         lastAncor = item
-    print(imageAncors)
     return imageAncors
 
 if __name__ == '__main__':
+    anchorsMulti = findInserts("static/pictures/LayoutMulti.png")
+    anchorSingle = findInserts("static/pictures/LayoutSingle.png")
     app.run(host='0.0.0.0', port =5000, debug=True, threaded=True)

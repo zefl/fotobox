@@ -76,44 +76,46 @@ class CameraRecorder(object):
         self.stopRecording = True
             
     def save_recording(self, _folder="", _file=""):
-        #wait for recording to finish
-        while self.recordingActive:
-            time.sleep(0.1)  
-            #To Do Timeout and rais error
-        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-        now = datetime.now()
-        #handle video data
-        timestamp = now.strftime('%Y_%m_%d_%H_%M_%S') 
-        video_file = os.path.join(_folder, "vid_" + timestamp +'.avi' )  
-        frame = self.camera.convert_to_cv2(self.recordFrames[0])                                             
-        videoWriter = cv2.VideoWriter(video_file, fourcc, self.fpsRecorded, (frame.shape[1],frame.shape[0])) 
-        for frame in self.recordFrames:
-            videoWriter.write(self.camera.convert_to_cv2(frame))
-        videoWriter.release()
-        #handle audio data
-        if self.audioRecorder:
-            volume_file = os.path.join(_folder, "vol_" + timestamp + ".wav")
-            self.audioRecorder.save(volume_file)
-            
-            #merge video and audio data
-            input_video = ffmpeg.input(video_file)
-            input_audio  = ffmpeg.input(volume_file)
-            movie_file = "mov_" + timestamp + ".mp4"
-            (
-                ffmpeg
-                .concat(input_video, input_audio, v=1, a=1)
-                .output(os.path.join(_folder,movie_file))
-                .run(overwrite_output=True)
-            )
-        else:
-            movie_file = "mov_" + timestamp + ".mp4"
-            (
-                ffmpeg
-                .input(video_file)
-                .output(os.path.join(_folder,movie_file))
-                .run()
-            )
-        self.recordFrames = []
+        if self.recordFrames:
+            #wait for recording to finish
+            while self.recordingActive:
+                time.sleep(0.1)  
+                #To Do Timeout and rais error
+            fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+            now = datetime.now()
+            #handle video data
+            timestamp = now.strftime('%Y_%m_%d_%H_%M_%S') 
+            video_file = os.path.join(_folder, "vid_" + timestamp +'.avi' )  
+            frame = self.camera.convert_to_cv2(self.recordFrames[0])                                             
+            videoWriter = cv2.VideoWriter(video_file, fourcc, self.fpsRecorded, (frame.shape[1],frame.shape[0])) 
+            for frame in self.recordFrames:
+                videoWriter.write(self.camera.convert_to_cv2(frame))
+            videoWriter.release()
+            #handle audio data
+            if self.audioRecorder:
+                volume_file = os.path.join(_folder, "vol_" + timestamp + ".wav")
+                self.audioRecorder.save(volume_file)
+                
+                #merge video and audio data
+                input_video = ffmpeg.input(video_file)
+                input_audio  = ffmpeg.input(volume_file)
+                movie_file = "mov_" + timestamp + ".mp4"
+                (
+                    ffmpeg
+                    .concat(input_video, input_audio, v=1, a=1)
+                    .output(os.path.join(_folder,movie_file))
+                    .run(overwrite_output=True)
+                )
+            else:
+                movie_file = "mov_" + timestamp + ".mp4"
+                (
+                    ffmpeg
+                    .input(video_file)
+                    .output(os.path.join(_folder,movie_file))
+                    .run()
+                )
+            os.remove(video_file) 
+            self.recordFrames = []
 
     def get_last_capture(self):
         if self.frameAvalible:
@@ -126,9 +128,11 @@ class CameraRecorder(object):
         #if streaming is active take current picture
         if self.captureStreamActive:
             now = datetime.now()
-            picName = now.strftime('%Y_%m_%d_%H_%M_%S') 
             picFrame = copy.copy(self.get_last_capture());
-            cv2.imwrite("pictures/"+ picName +".jpg", picFrame)
+            if(_file == ""):
+                _file = now.strftime('%Y_%m_%d_%H_%M_%S') 
+            picName = os.path.join(_folder, _file + ".jpg")
+            cv2.imwrite(picName, picFrame)
        #return error if not init
                       
     def _thread_take_picture(self):
@@ -146,7 +150,7 @@ class CameraRecorder(object):
                 self.frameAvalible = True                    
                 if self.startRecording and not(self.recordingActive):
                     countFrames = 0
-                    startTimeRec = time.time();
+                    startTimeRec = time.time()
                     self.startRecording = False
                     self.recordingActive = True
                     if self.audioRecorder:
