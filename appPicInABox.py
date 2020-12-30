@@ -6,6 +6,8 @@
 
 from flask import Flask, render_template, Response, request, redirect, url_for, jsonify, send_from_directory, send_file, make_response
 
+from flask import session
+from flask_session import Session
 
 import time
 import cv2
@@ -31,6 +33,12 @@ from cameras.webcam import Camera
 app = Flask(__name__)
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 
+#create session to store setting data
+#from https://flask-session.readthedocs.io/en/latest/
+SESSION_TYPE = 'filesystem'
+app.config.from_object(__name__)
+Session(app)
+
 modus = 1
 anchorsMulti = []
 anchorSingle = []
@@ -39,13 +47,38 @@ streamingCamera = Camera()
 streamingCamera.initialize('capture_stream', 30)
 recorder = CameraRecorder(streamingCamera)
 #-------------------------------
+# Webserver Functions
+# from https://flask-session.readthedocs.io/en/latest/
+# from https://pythonise.com/series/learning-flask/python-before-after-request
+#-------------------------------
+@app.before_first_request
+def before_first_request_func():
+
+    """ 
+    This function will run once before the first request to this instance of the application.
+    You may want to use this function to create any databases/tables required for your app.
+    """
+
+    print("This function will run once ")
+    with open('static/default.json') as json_file:
+        data = json.load(json_file)
+        session['settings'] = data
+        for (k, v) in data.items():
+            session[k] = v
+
+#from https://www.youtube.com/watch?v=8qDdbcWmzCg
+#adds settings json to each page
+@app.context_processor
+def context_processor():
+    return dict(settings=session['settings'])
+#-------------------------------
 # Web pages
 #-------------------------------
 @app.route('/')
 def pageStart():
     global recorder
     #start stream of picture
-    recorder.start_capturing();
+    recorder.start_capturing()
     return render_template('startPage.html')
 
 @app.route('/options')
@@ -85,6 +118,14 @@ def pageImage(filename):
 #-------------------------------
 # Rest API functions
 #-------------------------------
+@app.route('/api/setting', methods = ['POST', 'GET'])
+def settings():
+    if request.method == 'POST':
+        pass
+    elif request.method == 'GET':
+        if 'key' in request.args:
+            return session[request.args['key']]
+
 @app.route('/api/modus', methods = ['POST', 'GET'])
 def setModus():
     global modus
