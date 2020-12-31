@@ -57,14 +57,19 @@ def before_first_request_func():
     """ 
     This function will run once before the first request to this instance of the application.
     You may want to use this function to create any databases/tables required for your app.
-    """
+    """    
 
     print("This function will run once ")
+
+    global anchorsMulti
+    global anchorSingle
+
+
+    anchorsMulti = findInserts("static/pictures/LayoutMulti.png")
+    anchorSingle = findInserts("static/pictures/LayoutSingle.png")
     with open('static/default.json') as json_file:
         data = json.load(json_file)
         session['settings'] = data
-        for (k, v) in data.items():
-            session[k] = v
 
 #from https://www.youtube.com/watch?v=8qDdbcWmzCg
 #adds settings json to each page
@@ -80,6 +85,10 @@ def pageStart():
     #start stream of picture
     recorder.start_capturing()
     return render_template('startPage.html')
+
+@app.route('/settings')
+def pageSettings():
+    return render_template('settingsPage.html')
 
 @app.route('/options')
 def pageOptions():
@@ -121,7 +130,10 @@ def pageImage(filename):
 @app.route('/api/setting', methods = ['POST', 'GET'])
 def settings():
     if request.method == 'POST':
-        pass
+        jsonReq = json.loads(request.data)
+        if  jsonReq['key'] in session['settings']:
+            session['settings'][jsonReq['key']]['value'] = jsonReq['value'] 
+        return jsonify( {'return': 'done'} )
     elif request.method == 'GET':
         if 'key' in request.args:
             return session[request.args['key']]
@@ -184,6 +196,7 @@ def get_qrCode():
 def get_picture():   
     global modus
     global anchorsMulti
+    global anchorSingle
     time.sleep(2)
     if request.method == 'GET':   
         list_of_files = glob.glob('data/orginal_pictures/*')
@@ -298,6 +311,4 @@ def findInserts(layoutSrc):
     return imageAncors
 
 if __name__ == '__main__':
-    anchorsMulti = findInserts("static/pictures/LayoutMulti.png")
-    anchorSingle = findInserts("static/pictures/LayoutSingle.png")
     app.run(host='0.0.0.0', port =5000, debug=True, threaded=True)

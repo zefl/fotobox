@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+body{
+  background: url(../static/pictures/background.png) no-repeat center center fixed; 
+  -webkit-background-size: cover;
+  -moz-background-size: cover;
+  -o-background-size: cover;
+  background-size: cover;
+}
+
+/* Header/logo Title */
+.header{
+ border-width:1px 1px 1px 1px;
+ border-top-left-radius:0px; 
+ border-top-right-radius:0px; 
+ border-bottom-right-radius:0px; 
+ border-bottom-left-radius:0px; 
+ min-height:80px; 
+ background-color:rgba(78,78,78,1);
+}
+
+.button{padding: 0px 0px 0px 0px;
+border-color: rgba(33,33,33,1);
+border-style: solid;
+border-width: 2px 2px 2px 2px;
+border-top-left-radius: 15px;
+border-top-right-radius: 15px;
+border-bottom-right-radius: 15px;
+border-bottom-left-radius: 15px;
+background-image: none;
+background-color: rgba(255,255,255,0.45);
+color: rgba(0,0,0,1);
+font-size: 22px;
+font-weight: bold;
+font-family: "Courier New", Courier, monospace;
+text-align: center;}
+
+.button:hover{border-color: rgba(0,0,0,1);
+border-style: solid;
+border-width: 2px 2px 2px 2px;
+border-top-left-radius: 15px;
+border-top-right-radius: 15px;
+border-bottom-right-radius: 15px;
+border-bottom-left-radius: 15px;
+background-image: none;
+background-color: rgba(163,159,159,0.01);
+color: rgba(0,0,0,1);
+}
+
+div.container {
+  text-align: center;
+  padding: 10px 20px;
+}
+
+input:focus{
+background-color: lightyellow;
+}
+
+input:onchange{
+background-color: lightred;
+}
+
+</style>
+<link rel="stylesheet"  type="text/css" href="{{url_for('static', filename='countdown/countdown.css')}}"/>
+<link rel="stylesheet"  type="text/css" href="../static/countdown/countdown.css"/>
+</head>
+<body>
+<div class="header" style="margin: auto;">
+    <h1 style="text-align: center; font-size: 40px;margin:auto;">
+        <span style="font-size: 40px; font-family: 'Courier New', Courier, monospace; font-weight: bold; color: #ffffff;">Einstellungen</span>
+        
+        <img data-loading="lazy" role="presentation" data-scalestrategy="fit" src="../static/pictures/logo.png" style="display:block;margin:0;float:left;" height="80" width="80" />
+        <div style="margin-right: 0px;margin-top: 0px; width:80%; height:40px;float:left; position: relative;" >
+        </div>
+        <a href=".">
+            <div class="button" style="margin-right: 0px;margin-top: -20px; width:100px;height:40px;float:left;">
+                <span>Home</span>
+            </div>
+        </a>
+    </h1>
+</div>
+
+<div style="margin-top: 50px;">
+    <!-- # wil not reload Page-->
+    {% for setting in settings %}
+    <form action="#" onsubmit="submitForm('{{ setting }}');">
+      <label style="font-size:24px;" for="{{ setting }}">{{ settings[setting]['nameDE'] }}</label>
+      <input style="font-size:24px;" id="{{ setting}}" placeholder="{{ settings[setting]['value'] }}" onchange="this.style.background-color = '#ccc';" ><br>
+    </form>
+    {% endfor %}
+</div>
+
+
+</body>
+
+<script>
+function submitForm(key) {
+  value = document.getElementById(key).value; 
+    console.log(value);
+    var xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+          console.log("done");
+        }
+    };
+    xhttp.open("POST", "api/setting");
+    xhttp.setRequestHeader("Content-Type", "application/json;charset=UTF-");
+    xhttp.send(JSON.stringify({'key':key, 'value':value}));
+}
+</script>
+
+</html>

@@ -1,4 +1,12 @@
 {
-    "timeVideo" : 2,
-    "countDown" : 2
+    "timeVideo" :
+    {
+        "value" : 2,
+        "nameDE" : "Aufnahmezeit des Videos"
+    },
+    "countDown" :    
+    {
+        "value" : 2,
+        "nameDE" : "Countdown bis zum Foto"
+    }
 }

@@ -143,7 +143,7 @@ function statemachine(transition){
     switch(state){
         case 'Init':
             if(transition == 'InitialStart'){ 
-                startTimer({{ settings.countDown }});
+                startTimer({{ settings['countDown']['value']}});
                 state = 'waitForTimeout'
             }
             break;
@@ -166,7 +166,7 @@ function statemachine(transition){
                     xhttp.send(JSON.stringify({option:"takePciture"}));
                 }
                 else if(modus == 3){
-                    startTimer({{ settings.timeVideo }},'video');
+                    startTimer({{ settings['timeVideo']['value']}},'video');
                     xhttp.send(JSON.stringify({option:"startVideo"}));
                 }
             }
@@ -186,7 +186,7 @@ function statemachine(transition){
                     done = true;
                     break;
                 }
-                startTimer({{ settings.countDown }},'countdown');
+                startTimer({{ settings['countDown']['value'] }},'countdown');
                 state = 'waitForTimeout'
                 break;
             } 
