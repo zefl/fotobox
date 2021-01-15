@@ -6,13 +6,18 @@
 #  
 #  
 
-import gphoto2 as gp
+try:
+    import gphoto2 as gp
+except ImportError:
+    pass  # gphoto2 is not supported if run on windows
+
 import io
 from PIL import Image, ImageFilter
 import copy
 import numpy as np
 import psutil
 from fnmatch import fnmatchcase
+import sys
 
 from cameras.ICamera import ICamera
 
@@ -20,6 +25,9 @@ from cameras.ICamera import ICamera
 def dsl_camera_connected():
     """Return True if a camera compatible with gPhoto2 is found.
     """
+    if 'gphoto2' not in sys.modules:
+        return False
+     
     if not gp:
         return False  # gPhoto2 is not installed
     if hasattr(gp, 'gp_camera_autodetect'):
@@ -32,7 +40,6 @@ def dsl_camera_connected():
         abilities_list.load()
         cameras = abilities_list.detect(port_info_list)
     if cameras:
-        cameras.exit()
         return True
 
     return False

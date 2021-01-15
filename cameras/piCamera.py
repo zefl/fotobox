@@ -4,14 +4,19 @@
 #  camera_pi.py
 #  
 #  
-#  
+# 
+try: 
+    import picamera
+    from picamera.array import PiRGBArray
+except ImportError:
+    pass  # gphoto2 is not supported if run on windows
+    
 import io
-import picamera
 import cv2
 import numpy as np
 import time
-from picamera.array import PiRGBArray
 import subprocess
+import sys
 
 from cameras.ICamera import ICamera
 
@@ -19,6 +24,9 @@ from cameras.ICamera import ICamera
 def pi_camera_connected():
     """Return True if a RPi camera is found.
     """
+    if 'picamera' not in sys.modules:
+        return False
+    
     if not picamera:
         return False  # picamera is not installed
     try:

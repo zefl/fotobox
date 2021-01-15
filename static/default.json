@@ -8,5 +8,10 @@
     {
         "value" : 2,
         "nameDE" : "Countdown bis zum Foto"
+    },
+    "camera":
+    {
+        "value" : 0,
+        "nameDE" : "Auswahl Camera (0-SpiegelReflex/1-RpiCamera/2-Webcam)"
     }
 }

@@ -134,10 +134,20 @@ def pageImage(filename):
 #-------------------------------
 @app.route('/api/setting', methods = ['POST', 'GET'])
 def settings():
+    global recorder  
+    global streamingCamera
     if request.method == 'POST':
         jsonReq = json.loads(request.data)
         if  jsonReq['key'] in session['settings']:
             session['settings'][jsonReq['key']]['value'] = jsonReq['value'] 
+            if(jsonReq['key'] == 'camera'):
+                newCamera = streamingCamera[int(jsonReq['value'])]
+                print(newCamera)
+                if newCamera != None:
+                    recorder = None
+                    recorder = CameraRecorder(newCamera)
+                else:
+                    print("Camera not active")
         return jsonify( {'return': 'done'} )
     elif request.method == 'GET':
         if 'key' in request.args:
@@ -326,25 +336,36 @@ def checkCamera():
     #########################
     #Select which camera driver to use
     #########################
-    if cv_camera_connected():
+    if dsl_camera_connected():
         print('Found DSLR camera')
         from cameras.dslrCamera import Camera
         streamingCamera.append(Camera())
+    else:
+        streamingCamera.append(None)
     if pi_camera_connected():
         print('Found pi camera')
         from cameras.piCamera import Camera
         streamingCamera.append(Camera())
-    if cv_camera_connected():
+    else:
+        streamingCamera.append(None)
+        
+    if cv_camera_connected() and not(pi_camera_connected()):
         print('Found webcam camera')
         from cameras.webcam import Camera
         streamingCamera.append(Camera())
+    else:
+        streamingCamera.append(None)
     
-    if streamingCamera == None:
+    recorder = None
+    
+    for mainCamera in streamingCamera:
+        if mainCamera != None:
+            mainCamera.initialize('capture_stream', 30)
+            recorder = CameraRecorder(mainCamera)
+            break
+    
+    if recorder == None:
         raise ValueError('No Camera found') 
-    
-    mainCamera = streamingCamera[0]
-    mainCamera.initialize('capture_stream', 30)
-    recorder = CameraRecorder(mainCamera)
 
 if __name__ == '__main__':
     print('Start application')
