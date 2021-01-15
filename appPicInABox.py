@@ -3,8 +3,10 @@
 #
 #  	picInABox.py
 #  	author:zefl
+import os
+print('Current working directory: ' + (os.getcwd()))
 
-from flask import Flask, render_template, Response, request, redirect, url_for, jsonify, send_from_directory, send_file, make_response
+from flask import Flask, render_template, Response, request, redirect, url_for, jsonify, send_from_directory, send_file, make_response, g
 
 from flask import session
 from flask_session import Session
@@ -12,7 +14,7 @@ from flask_session import Session
 import time
 import cv2
 import numpy as np
-import os
+
 import glob
 import json 
 import copy
@@ -22,12 +24,6 @@ from io import BytesIO
 from PIL import Image
 
 from cameras.cameraRecorder import CameraRecorder
-#########################
-#Select which camera driver to use
-#########################
-from cameras.webcam import Camera
-#from cameras.dslrCameras import Camera
-#from cameras.piCamera import Camera
 
 #create Flask object with __name__ --> acutal python object
 app = Flask(__name__)
@@ -39,13 +35,11 @@ SESSION_TYPE = 'filesystem'
 app.config.from_object(__name__)
 Session(app)
 
-modus = 1
+modus = None
 anchorsMulti = []
 anchorSingle = []
-
-streamingCamera = Camera()
-streamingCamera.initialize('capture_stream', 30)
-recorder = CameraRecorder(streamingCamera)
+streamingCamera = []
+recorder = None
 #-------------------------------
 # Webserver Functions
 # from https://flask-session.readthedocs.io/en/latest/
@@ -60,16 +54,26 @@ def before_first_request_func():
     """    
 
     print("This function will run once ")
+    
+    checkCamera()
 
     global anchorsMulti
     global anchorSingle
-
-
+    global modus
+    
+    modus = 1
     anchorsMulti = findInserts("static/pictures/LayoutMulti.png")
     anchorSingle = findInserts("static/pictures/LayoutSingle.png")
     with open('static/default.json') as json_file:
         data = json.load(json_file)
         session['settings'] = data
+        
+    if not(os.path.exists("./data/orginal_pictures")):
+        os.makedirs("./data/orginal_pictures")
+    if not(os.path.exists("./data/pictures")):
+        os.makedirs("./data/pictures")
+    if not(os.path.exists("./data/videos")):
+        os.makedirs("./data/videos")
 
 #from https://www.youtube.com/watch?v=8qDdbcWmzCg
 #adds settings json to each page
@@ -233,6 +237,7 @@ def get_picture():
 @app.route('/api/renderVideo', methods = ['GET'])
 def get_video():    
     global modus
+    global recorder
     time.sleep(2)
     if request.method == 'GET':
         recorder.save_recording('data/videos')
@@ -310,5 +315,36 @@ def findInserts(layoutSrc):
         lastAncor = item
     return imageAncors
 
+def checkCamera():
+    from cameras.webcam import cv_camera_connected
+    from cameras.dslrCamera import dsl_camera_connected
+    from cameras.piCamera import pi_camera_connected
+    
+    global recorder  
+    global streamingCamera
+    #########################
+    #Select which camera driver to use
+    #########################
+    if cv_camera_connected():
+        print('Found DSLR camera')
+        from cameras.dslrCamera import Camera
+        streamingCamera.append(Camera())
+    if pi_camera_connected():
+        print('Found pi camera')
+        from cameras.piCamera import Camera
+        streamingCamera.append(Camera())
+    if cv_camera_connected():
+        print('Found webcam camera')
+        from cameras.webcam import Camera
+        streamingCamera.append(Camera())
+    
+    if streamingCamera == None:
+        raise ValueError('No Camera found') 
+    
+    mainCamera = streamingCamera[0]
+    mainCamera.initialize('capture_stream', 30)
+    recorder = CameraRecorder(mainCamera)
+
 if __name__ == '__main__':
+    print('Start application')
     app.run(host='0.0.0.0', port =5000, debug=True, threaded=True)

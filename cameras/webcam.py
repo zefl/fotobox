@@ -11,7 +11,20 @@ import cv2
 import copy
 from cameras.ICamera import ICamera
 
+#from https://github.com/pibooth/pibooth/blob/master/pibooth/camera/opencv.py
+def cv_camera_connected():
+    """Return True if a camera compatible with OpenCV is found.
+    """
+    if not cv2:
+        return False  # OpenCV is not installed
 
+    camera = cv2.VideoCapture(0)
+    if camera.isOpened():
+        camera.release()
+        return True
+
+    return False
+    
 class Camera(ICamera):
 
     def __init__(self):

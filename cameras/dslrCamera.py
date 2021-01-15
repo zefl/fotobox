@@ -14,13 +14,39 @@ import numpy as np
 import psutil
 from fnmatch import fnmatchcase
 
-class dslrCamera(ICamera):
+from cameras.ICamera import ICamera
+
+#from https://github.com/pibooth/pibooth/blob/master/pibooth/camera/gphoto.py
+def dsl_camera_connected():
+    """Return True if a camera compatible with gPhoto2 is found.
+    """
+    if not gp:
+        return False  # gPhoto2 is not installed
+    if hasattr(gp, 'gp_camera_autodetect'):
+        # gPhoto2 version 2.5+
+        cameras = gp.check_result(gp.gp_camera_autodetect())
+    else:
+        port_info_list = gp.PortInfoList()
+        port_info_list.load()
+        abilities_list = gp.CameraAbilitiesList()
+        abilities_list.load()
+        cameras = abilities_list.detect(port_info_list)
+    if cameras:
+        cameras.exit()
+        return True
+
+    return False
+
+class Camera(ICamera):
     def __init__(self):
         self.cancleGphotoPrcess()
-        self.camera = gp.check_result(gp.gp_camera_new())
-        gp.check_result(gp.gp_camera_init(self.camera))
-        text = gp.check_result(gp.gp_camera_get_summary(self.camera))
+        self.camera = gp.Camera()
+        self.camera.init()
+        text = self.camera.get_summary()
         print(text)
+
+    def initialize(self, _modus: str, _fps: int = 0):
+        pass
         
     def __del__(self):
         print("close DLSR camera")
@@ -28,6 +54,7 @@ class dslrCamera(ICamera):
     
     #from pipooth utils
     def cancleGphotoPrcess(self):
+        print("Kill gphoto process")
         for proc in psutil.process_iter():
             if fnmatchcase(proc.name(), "*gphoto2*"):
                 try:
@@ -64,14 +91,12 @@ class dslrCamera(ICamera):
     def quit(self):
         gp.check_result(gp.gp_camera_exit(camera))
 
-    def initialize(self):
-
     def convert_to_cv2(self, _frame):
         open_cv_image = np.array(_frame)
         frame = open_cv_image[:, :, ::-1].copy()
         return frame
     
-    def capture(self):
+    def capture_picture(self):
         set_config_value('actions', 'viewfinder', 0)
         test = self.camera.capture(gp.GP_CAPTURE_IMAGE)
         time.sleep(0.3)  # Necessary to let the time for the camera to save the image

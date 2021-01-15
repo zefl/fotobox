@@ -180,7 +180,8 @@ class CameraRecorder(object):
                 if _waitTime > 0:
                     time.sleep(_waitTime)
                 else:
-                    print("Warning: Camera cannot take picture with given fps")                   
+                    #print("Warning: Camera cannot take picture with given fps")       
+                    pass
          
         self.frame=[] #delete picture
         self.thread = None
