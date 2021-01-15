@@ -28,6 +28,7 @@ from cameras.cameraRecorder import CameraRecorder
 #create Flask object with __name__ --> acutal python object
 app = Flask(__name__)
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
+app.secret_key = "sdbngiusdngdsgbiursbng"
 
 #create session to store setting data
 #from https://flask-session.readthedocs.io/en/latest/
@@ -79,7 +80,7 @@ def before_first_request_func():
 #adds settings json to each page
 @app.context_processor
 def context_processor():
-    return dict(settings=session['settings'])
+    return dict(settings=session.get('settings'))
 #-------------------------------
 # Web pages
 #-------------------------------
