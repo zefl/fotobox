@@ -21,20 +21,17 @@ import os
 import ffmpeg
 from datetime import datetime
 #from audioRecorder import audio
-from cameras.ICamera import ICamera
+
+from cameras.IVideocamera import IVideocamera
+from cameras.IFotocamera import IFotocamera
 
 
-class CameraRecorder(object):
+class CameraRecorder(IVideocamera):
     
-    def __init__(self, _camera: ICamera, _audioRec=None):
+    def __init__(self, _camera: IFotocamera, _audioRec=None):
         self.camera = _camera
-        #################
-        #Variables for handling streaming
-        #################
-        self.frame = []  # current frame is stored here
-        self.captureStreamActive = False
-        self.captureStreamStop = False
         self.thread = None
+        self.threadActive = False
         #################
         # Varibales for recording
         #################
@@ -42,40 +39,31 @@ class CameraRecorder(object):
         self.stopRecording = False
         self.recordingActive = False
         self.recordFrames = []
+        self.startTimeRec = None
+        self.finishTimeRec = None
         #################
         #Save fps_recorded
         #################
-        self.fps = 30
+        self.fps = 30 #in current setup we have two threads with leads to ~15 less framrate
         self.fpsRecorded = 0
         #################
         # Optinal audio Recorder
         #################
         self.audioRecorder = _audioRec
         
-        self.frameAvalible = False
-    
-    def start_capturing(self):
-        #check if thread is active 
-        if not(self.captureStreamActive):
-            # start background frame thread
-            self.thread = threading.Thread(target=self._thread_capturing)
-            self.thread.start()
-
-    def stop_capturing(self):
-        self.captureStreamStop = True
-        
-    def start_recording(self):
-        #reset frame buffer
-        self.recordFrames = []
+    def recording_start(self):
         #if no capturing is active start is
-        if not(self.captureStreamActive):
-            self.start_capturing()
+        if self.threadActive == False:
+            # start background frame thread
+            self.thread = threading.Thread(target=self._thread_recording)
+            #self.thread = threading.Timer(1/self.fps, self._thread_timer_recording)
+            self.thread.start()
         self.startRecording = True
         
-    def stop_recording(self):
+    def recording_stop(self):
         self.stopRecording = True
             
-    def save_recording(self, _folder="", _file=""):
+    def recording_save(self, _folder="", _file=""):
         if self.recordFrames:
             #wait for recording to finish
             while self.recordingActive:
@@ -86,10 +74,10 @@ class CameraRecorder(object):
             #handle video data
             timestamp = now.strftime('%Y_%m_%d_%H_%M_%S') 
             video_file = os.path.join(_folder, "vid_" + timestamp +'.avi' )  
-            frame = self.camera.convert_to_cv2(self.recordFrames[0])                                             
+            frame = self.recordFrames[0]                                             
             videoWriter = cv2.VideoWriter(video_file, fourcc, self.fpsRecorded, (frame.shape[1],frame.shape[0])) 
             for frame in self.recordFrames:
-                videoWriter.write(self.camera.convert_to_cv2(frame))
+                videoWriter.write(frame)
             videoWriter.release()
             #handle audio data
             if self.audioRecorder:
@@ -117,74 +105,38 @@ class CameraRecorder(object):
             os.remove(video_file) 
             self.recordFrames = []
 
-    def get_last_capture(self):
-        if self.frameAvalible:
-            return self.camera.convert_to_cv2(self.frame)
-        else:
-            return []
-    
-
-    def take_picture(self, _folder="", _file=""):
-        #if streaming is active take current picture
-        if self.captureStreamActive:
-            now = datetime.now()
-            picFrame = copy.copy(self.get_last_capture());
-            if(_file == ""):
-                _file = now.strftime('%Y_%m_%d_%H_%M_%S') 
-            picName = os.path.join(_folder, _file + ".jpg")
-            cv2.imwrite(picName, picFrame)
-       #return error if not init
-                      
-    def _thread_take_picture(self):
-        self.camera.initialize(self.fps)
-        self.camera.capture_picture()
-            
-    def _thread_capturing(self):
-        self.captureStreamActive = True
-        self.camera.initialize('capture_stream', self.fps)
+    def _thread_recording(self):
         _desiredCyleTime = 1 / self.fps #run this thread only as fast as nessecarry
-        while(True):
-                _startTimeCature = time.time()
-                #call camera to take picutre
-                self.frame = self.camera.capture_stream()
-                self.frameAvalible = True                    
+        self.camera.connect()
+        self.camera.stream_start()
+        self.threadActive = True
+        self.recordFrames = []
+        _lastWakeUp = time.time()
+        while(self.threadActive):
+            _currentTime = time.time()
+            if(_currentTime - _lastWakeUp > _desiredCyleTime):
+                _lastWakeUp = time.time()
                 if self.startRecording and not(self.recordingActive):
-                    countFrames = 0
-                    startTimeRec = time.time()
+                    self.startTimeRec = _lastWakeUp
                     self.startRecording = False
                     self.recordingActive = True
                     if self.audioRecorder:
                         self.audioRecorder.start()
                         
                 if self.recordingActive:
-                    countFrames += 1
-                    self.recordFrames.append(copy.copy(self.frame))
+                    #call camera to take picutre
+                    frame = self.camera.stream_capture()      
+                    self.recordFrames.append(copy.copy(frame))
                     
                 if self.stopRecording and self.recordingActive:
-                    finishTimeRec = time.time()
-                    self.fpsRecorded = countFrames / (finishTimeRec-startTimeRec)
-                    print('Recorded %d images in %d seconds at %.2ffps' % (countFrames, finishTimeRec-startTimeRec, self.fpsRecorded))   
+                    self.finishTimeRec = _lastWakeUp
+                    countFrames = len(self.recordFrames)
+                    self.fpsRecorded = countFrames / (self.finishTimeRec-self.startTimeRec)
+                    print('Recorded %d images in %d seconds at %.2ffps' % (countFrames, self.finishTimeRec-self.startTimeRec, self.fpsRecorded))   
                     self.stopRecording = False
                     self.recordingActive = False
                     self.startRecording = False #reset if someone wanted to start stream while running
                     if self.audioRecorder:
                         self.audioRecorder.stop()
-                        
-                if self.captureStreamStop:
-                    break #stop thread
-                    
-                #check cycle time with respect to given cycel time
-                _endTimeCature = time.time()
-                _cyleTime = _endTimeCature - _startTimeCature
-                _waitTime = _desiredCyleTime - _cyleTime
-                if _waitTime > 0:
-                    time.sleep(_waitTime)
-                else:
-                    #print("Warning: Camera cannot take picture with given fps")       
-                    pass
-         
-        self.frame=[] #delete picture
+                    self.threadActive = False #Stop thread
         self.thread = None
-        self.captureStreamActive = False
-        self.captureStreamStop = False
-        self.frameAvalible = False

@@ -54,7 +54,7 @@ div.container {
   padding: 10px 20px;
 }
 
-input:focus{
+test:focus{
 background-color: lightyellow;
 }
 
@@ -85,10 +85,8 @@ background-color: lightred;
 <div style="margin-top: 50px;">
     <!-- # wil not reload Page-->
     {% for setting in settings %}
-    <form action="#" onsubmit="submitForm('{{ setting }}');">
       <label style="font-size:24px;" for="{{ setting }}">{{ settings[setting]['nameDE'] }}</label>
-      <input style="font-size:24px;" id="{{ setting}}" placeholder="{{ settings[setting]['value'] }}" onchange="this.style.background-color = '#ccc';" ><br>
-    </form>
+      <input style="font-size:24px;" id="{{ setting}}" placeholder="{{ settings[setting]['value'] }}" onchange="onChange('{{ setting }}')" ><br>
     {% endfor %}
 </div>
 
@@ -96,19 +94,37 @@ background-color: lightred;
 </body>
 
 <script>
-function submitForm(key) {
-  value = document.getElementById(key).value; 
-    console.log(value);
-    var xhttp = new XMLHttpRequest();
-    xhttp.onreadystatechange = function() {
+function onChange(key){
+  element = document.getElementById(key); 
+  value = element.value; 
+  var xhttp = new XMLHttpRequest();
+  xhttp.onreadystatechange = function() {
+    if (this.readyState == 4 && this.status == 200) {
+      jsonObj = JSON.parse(this.responseText);
+      ret = jsonObj.return
+      var xhttpReq = new XMLHttpRequest();
+      xhttpReq.onreadystatechange = function() {
         if (this.readyState == 4 && this.status == 200) {
-          console.log("done");
+          jsonObj = JSON.parse(this.responseText);
+          valueRet = jsonObj.value
+          if(ret == "done"){
+            element.style.backgroundColor = "white";
+          }
+          else{
+            element.style.backgroundColor = "LightCoral";
+            document.getElementById(key).value = valueRet; 
+          }
         }
-    };
-    xhttp.open("POST", "api/setting");
-    xhttp.setRequestHeader("Content-Type", "application/json;charset=UTF-");
-    xhttp.send(JSON.stringify({'key':key, 'value':value}));
+      }
+      xhttpReq.open("GET", "api/setting?key="+key, true);
+      xhttpReq.send();
+    }
+  };
+  xhttp.open("POST", "api/setting");
+  xhttp.setRequestHeader("Content-Type", "application/json;charset=UTF-");
+  xhttp.send(JSON.stringify({'key':key, 'value':value}));
 }
+
 </script>
 
 </html>

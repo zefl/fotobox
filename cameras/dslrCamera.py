@@ -18,11 +18,14 @@ import numpy as np
 import psutil
 from fnmatch import fnmatchcase
 import sys
+from datetime import datetime
+import time
+import os
 
-from cameras.ICamera import ICamera
+from cameras.IFotocamera import IFotocamera
 
 #from https://github.com/pibooth/pibooth/blob/master/pibooth/camera/gphoto.py
-def dsl_camera_connected():
+def check_dslrCamera():
     """Return True if a camera compatible with gPhoto2 is found.
     """
     if 'gphoto2' not in sys.modules:
@@ -44,24 +47,81 @@ def dsl_camera_connected():
 
     return False
 
-class Camera(ICamera):
-    def __init__(self):
-        self.cancleGphotoPrcess()
-        self.camera = gp.Camera()
-        self.camera.init()
-        text = self.camera.get_summary()
-        print(text)
-
-    def initialize(self, _modus: str, _fps: int = 0):
-        pass
+class Camera(IFotocamera):
+    ##################################      
+    #Common functions
+    ##################################            
+    def picture_take(self):
+        if not(self.streamActive):
+            self.frame = self._take_picture()
+            self.frameAvalible = True
         
-    def __del__(self):
+    def picture_show(self):
+        if self.frameAvalible:
+            return _convert_to_cv2(self.frame)
+        else:
+            return []
+            
+    def picture_save(self, _folder="", _file=""):
+        if self.frameAvalible:
+            now = datetime.now()
+            picFrame = copy.copy(self.frame);
+            if(_file == ""):
+                _file = now.strftime('%Y_%m_%d_%H_%M_%S') 
+            picName = os.path.join(_folder, _file + ".jpg")
+            cv2.imwrite(picName, picFrame)  
+                
+    def stream_start(self):
+        #check if thread is active 
+        if not(self.streamActive):
+            # start background frame thread
+            self.thread = threading.Thread(target=self._stream_thread)
+            self.streamActive = True
+            self.thread.start()
+    
+    def stream_stop(self):
+        #Stop stream, thread will be stoped
+        self.streamActive = False
+    
+    def stream_capture(self):
+        if self.frameAvalible:
+            return _convert_to_cv2(self.frame)
+        else:
+            return []
+    
+    ##################################      
+    #Internal function
+    ##################################
+    def __init__(self):
+        #################
+        #Variables for handling camera
+        #################
+        self.camera = None
+        self.stream = None
+        #################
+        #Variables for handling streaming
+        #################
+        self.frameAvalible = False
+        self.frame = []  # current frame is stored here
+        self.streamActive = False
+        self.thread = None
+
+    def connect(self, _fps: int = 0):
+        if self.camera == None:
+            self._cancleGphotoPrcess()
+            self.camera = gp.Camera()
+            self.framerate = _fps  
+            
+            # camera setup
+            self.camera.init()
+            text = self.camera.get_summary()
+            print(text)
+        
+    def disconnect(self):
         print("close DLSR camera")
         self.camera.exit()
     
-    #from pipooth utils
-    def cancleGphotoPrcess(self):
-        print("Kill gphoto process")
+    def _cancleGphotoPrcess(self):
         for proc in psutil.process_iter():
             if fnmatchcase(proc.name(), "*gphoto2*"):
                 try:
@@ -98,19 +158,40 @@ class Camera(ICamera):
     def quit(self):
         gp.check_result(gp.gp_camera_exit(camera))
 
-    def convert_to_cv2(self, _frame):
+    def _convert_to_cv2(self, _frame):
         open_cv_image = np.array(_frame)
         frame = open_cv_image[:, :, ::-1].copy()
         return frame
     
-    def capture_picture(self):
+    def _take_picture(self):
         set_config_value('actions', 'viewfinder', 0)
         test = self.camera.capture(gp.GP_CAPTURE_IMAGE)
         time.sleep(0.3)  # Necessary to let the time for the camera to save the image
         print(test)
 
 
-    def capture_stream(self):  
+    def _capture_stream(self):  
         camFile =  self.camera.capture_preview()
         frame = Image.open(io.BytesIO(camFile.get_data_and_size()))
         return frame
+        
+        
+    def _stream_thread(self):
+        _desiredCyleTime = 1 / self.framerate #run this thread only as fast as nessecarry
+        while(self.streamActive):
+                self.streamActive = True
+                _startTimeCature = time.time()
+                #call camera to take picutre
+                self.frame = self._capture_stream()                                                                 
+                #check cycle time with respect to given cycel time
+                _endTimeCature = time.time()
+                _cyleTime = _endTimeCature - _startTimeCature
+                _waitTime = _desiredCyleTime - _cyleTime
+                if _waitTime > 0:
+                    time.sleep(_waitTime)
+                else:
+                    #print("Warning: Camera cannot take picture with given fps")       
+                    pass 
+        self.thread = None #stop thread
+        self.frameAvalible = False
+        self.frame=[] #delete picture

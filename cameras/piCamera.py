@@ -15,13 +15,15 @@ import io
 import cv2
 import numpy as np
 import time
+from datetime import datetime
 import subprocess
 import sys
+import os
 
-from cameras.ICamera import ICamera
+from cameras.IFotocamera import IFotocamera
 
 #from https://github.com/pibooth/pibooth/blob/master/pibooth/camera/rpi.py
-def pi_camera_connected():
+def check_piCamera():
     """Return True if a RPi camera is found.
     """
     if 'picamera' not in sys.modules:
@@ -40,61 +42,117 @@ def pi_camera_connected():
     return False
 
 
-class Camera(ICamera):
-
+class Camera(IFotocamera):
+    ##################################      
+    #Common functions
+    ##################################            
+    def picture_take(self):
+        if not(self.streamActive):
+            self.frame = self._take_picture()
+            self.frameAvalible = True
+        
+    def picture_show(self):
+        if self.frameAvalible:
+            return self.frame
+        else:
+            return []
+            
+    def picture_save(self, _folder="", _file=""):
+        if self.frameAvalible:
+            now = datetime.now()
+            picFrame = copy.copy(self.frame);
+            if(_file == ""):
+                _file = now.strftime('%Y_%m_%d_%H_%M_%S') 
+            picName = os.path.join(_folder, _file + ".jpg")
+            cv2.imwrite(picName, picFrame)  
+                
+    def stream_start(self):
+        #check if thread is active 
+        if not(self.streamActive):
+            # start background frame thread
+            self.thread = threading.Thread(target=self._stream_thread)
+            self.streamActive = True
+            self.thread.start()
+    
+    def stream_stop(self):
+        #Stop stream, thread will be stoped
+        self.streamActive = False
+    
+    def stream_capture(self):
+        if self.frameAvalible:
+            return self.frame
+        else:
+            return []
+    
+    ##################################      
+    #Internal function
+    ##################################
     def __init__(self):
+        #################
+        #Variables for handling camera
+        #################
         self.camera = None
         self.stream = None
         self.rawCapture = None
+        #################
+        #Variables for handling streaming
+        #################
+        self.frameAvalible = False
+        self.frame = []  # current frame is stored here
+        self.streamActive = False
+        self.thread = None
 
-    def initialize(self, _modus: str, _fps: int = 0):
-        print("Logging: Init pi Camera")
-        if _modus == 'capture_stream':
-            if self.camera == None:
-                self.camera = picamera.PiCamera()
-                
-                # camera setup
-                self.camera.resolution = (640, 480) #480p
-                self.camera.framerate = _fps
-                self.camera.hflip = False
-                self.camera.vflip = True
-                self.camera.video_stabilization = True
-                self.camera.iso = 100
-
-                # let camera warm up
-                self.camera.start_preview()
-                time.sleep(2)
-                self.camera.stop_preview()
-                
-                self.stream = io.BytesIO()
-                self.rawCapture = PiRGBArray(self.camera)
-
-    #measurement 
-    #15 fps, (640, 480),iso = 100, 
-    #Sent 90 images in 6 seconds at 14.74fps (bytesIO)
-    #Sent 89 images in 6 seconds at 14.73fps (rawData)
-
-    #36 fps, (640, 480),iso = 100, 
-    #Sent 101 images in 6 seconds at 16.82fps (bytesIO)
-    #Sent 117 images in 6 seconds at 19.23fps (rawData)
-    
-    def capture_picture(self):
-        raise NotImplementedError
+    def connect(self, _fps: int = 0):
+        if self.camera == None:
+            self.camera = picamera.PiCamera()
+            self.framerate = _fps            
             
-    def capture_stream(self):   
+            # camera setup
+            self.camera.resolution = (640, 480)
+            self.camera.framerate = _fps
+            self.camera.hflip = False
+            self.camera.vflip = True
+            self.camera.video_stabilization = True
+            self.camera.iso = 100
+
+            # let camera warm up
+            self.camera.start_preview()
+            time.sleep(2)
+            self.camera.stop_preview()
+            
+            self.stream = io.BytesIO()
+            self.rawCapture = PiRGBArray(self.camera)
+            
+    def disconnect(self):
+        #from https://www.raspberrypi.org/forums/viewtopic.php?t=227394
+        self.camera.close()
+        self.camera = None
+        
+    def _capture_stream(self):
         #wait for next caputre
-        newFrameTimestamp = time.time()
         for data in self.camera.capture_continuous(self.rawCapture, format="bgr", use_video_port=True):
-            # Debug to measure fps
-            if False:
-                lastFrameTimestamp = newFrameTimestamp
-                newFrameTimestamp = time.time()
-                currentFPS = 1 / (newFrameTimestamp - lastFrameTimestamp)
-                print("Current FPS: %.3f" % (currentFPS))   
             #get data via rawCaputre
             frame = data.array
             self.rawCapture.truncate(0) # reset stream for next frame
+            self.frameAvalible = True
             return frame
             
-    def convert_to_cv2(self, _frame):
-        return _frame
+    def _stream_thread(self):
+        _desiredCyleTime = 1 / self.framerate #run this thread only as fast as nessecarry
+        while(self.streamActive):
+                self.streamActive = True
+                _startTimeCature = time.time()
+                #call camera to take picutre
+                self.frame = self._capture_stream()                                                                 
+                #check cycle time with respect to given cycel time
+                _endTimeCature = time.time()
+                _cyleTime = _endTimeCature - _startTimeCature
+                _waitTime = _desiredCyleTime - _cyleTime
+                if _waitTime > 0:
+                    time.sleep(_waitTime)
+                else:
+                    #print("Warning: Camera cannot take picture with given fps")       
+                    pass
+        self.thread = None #stop thread
+        self.frameAvalible = False
+        self.frame=[] #delete picture

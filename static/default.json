@@ -2,16 +2,22 @@
     "timeVideo" :
     {
         "value" : 2,
-        "nameDE" : "Aufnahmezeit des Videos"
+        "nameDE" : "Aufnahmezeit des Videos",
+        "min" : 1,
+        "max" : 60
     },
     "countDown" :    
     {
         "value" : 2,
-        "nameDE" : "Countdown bis zum Foto"
+        "nameDE" : "Countdown bis zum Foto",
+        "min" : 1,
+        "max" : 20
     },
     "camera":
     {
         "value" : 0,
-        "nameDE" : "Auswahl Camera (0-SpiegelReflex/1-RpiCamera/2-Webcam)"
+        "nameDE" : "Auswahl Camera (0-SpiegelReflex/1-RpiCamera/2-Webcam)",
+        "min" : 0,
+        "max" : 2
     }
 }

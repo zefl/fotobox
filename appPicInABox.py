@@ -23,7 +23,8 @@ from datetime import datetime
 from io import BytesIO
 from PIL import Image
 
-from cameras.cameraRecorder import CameraRecorder
+from cameras.IFotocamera import IFotocamera
+from cameras.IVideocamera import IVideocamera
 
 #create Flask object with __name__ --> acutal python object
 app = Flask(__name__)
@@ -32,15 +33,26 @@ app.secret_key = "sdbngiusdngdsgbiursbng"
 
 #create session to store setting data
 #from https://flask-session.readthedocs.io/en/latest/
-SESSION_TYPE = 'filesystem'
-app.config.from_object(__name__)
-Session(app)
+#do not use session better to use global var
+#SESSION_TYPE = 'filesystem'
+#app.config.from_object(__name__)
+#Session(app)
 
-modus = None
-anchorsMulti = []
-anchorSingle = []
-streamingCamera = []
-recorder = None
+g_modus = None
+g_anchorsMulti = []
+g_anchorSingle = []
+g_settings = None
+
+class cameraContainer():
+    def __init__(self):
+        self.previewCamera = None
+        self.fotoCamera = None
+        self.videoCamera = None
+#holds active camera selection
+g_activeCamera = cameraContainer()
+#Holds list of available g_cameras
+g_cameras = []
+
 #-------------------------------
 # Webserver Functions
 # from https://flask-session.readthedocs.io/en/latest/
@@ -58,16 +70,17 @@ def before_first_request_func():
     
     checkCamera()
 
-    global anchorsMulti
-    global anchorSingle
-    global modus
+    global g_anchorsMulti
+    global g_anchorSingle
+    global g_modus
+    global g_settings
     
-    modus = 1
-    anchorsMulti = findInserts("static/pictures/LayoutMulti.png")
-    anchorSingle = findInserts("static/pictures/LayoutSingle.png")
+    g_modus = 1
+    g_anchorsMulti = findInserts("static/pictures/LayoutMulti.png")
+    g_anchorSingle = findInserts("static/pictures/LayoutSingle.png")
     with open('static/default.json') as json_file:
         data = json.load(json_file)
-        session['settings'] = data
+        g_settings = data
         
     if not(os.path.exists("./data/orginal_pictures")):
         os.makedirs("./data/orginal_pictures")
@@ -80,15 +93,13 @@ def before_first_request_func():
 #adds settings json to each page
 @app.context_processor
 def context_processor():
-    return dict(settings=session.get('settings'))
+    global g_settings
+    return dict(settings=g_settings)
 #-------------------------------
 # Web pages
 #-------------------------------
 @app.route('/')
 def pageStart():
-    global recorder
-    #start stream of picture
-    recorder.start_capturing()
     return render_template('startPage.html')
 
 @app.route('/settings')
@@ -101,8 +112,8 @@ def pageOptions():
 
 @app.route('/picture')
 def pagePicture():
-    global recorder
-    recorder.start_capturing()
+    global g_activeCamera
+    g_activeCamera.previewCamera.stream_start() #start preview stream
     return render_template('picturePage.html') 
 
 #from https://gist.github.com/arusahni/9434953
@@ -134,54 +145,60 @@ def pageImage(filename):
 #-------------------------------
 @app.route('/api/setting', methods = ['POST', 'GET'])
 def settings():
-    global recorder  
-    global streamingCamera
+    global g_activeCamera  
+    global g_cameras
+    global g_settings
     if request.method == 'POST':
         jsonReq = json.loads(request.data)
-        if  jsonReq['key'] in session['settings']:
-            session['settings'][jsonReq['key']]['value'] = jsonReq['value'] 
-            if(jsonReq['key'] == 'camera'):
-                newCamera = streamingCamera[int(jsonReq['value'])]
-                print(newCamera)
-                if newCamera != None:
-                    recorder = None
-                    recorder = CameraRecorder(newCamera)
-                else:
-                    print("Camera not active")
-        return jsonify( {'return': 'done'} )
+        if  jsonReq['key'] in g_settings:
+            newValue = jsonReq['value'] 
+            if g_settings[jsonReq['key']]['min'] <= int(newValue) and int(newValue) <= g_settings[jsonReq['key']]['max']:
+                if(jsonReq['key'] == 'camera'):
+                    newCamera = g_cameras[int(jsonReq['value'])]
+                    print(newCamera)
+                    if newCamera != None:
+                        g_activeCamera.previewCamera = None
+                        g_activeCamera.previewCamera = newCamera.previewCamera
+                    else:
+                        #camera not active
+                        return jsonify( {'return': 'error'} )
+                g_settings[jsonReq['key']]['value'] = jsonReq['value'] 
+                return jsonify( {'return': 'done'} ) #return okay if no error before
+        return jsonify( {'return': 'error'} ) #default error
     elif request.method == 'GET':
         if 'key' in request.args:
-            return session[request.args['key']]
+            return jsonify({'value': g_settings[request.args['key']]['value']}) 
 
 @app.route('/api/modus', methods = ['POST', 'GET'])
-def setModus():
-    global modus
+def setg_modus():
+    global g_modus
     if request.method == 'POST':
         if 'option' in request.args:
-            modus = int(request.args['option'])
-            print('Set modus: ' + str(modus))
+            g_modus = int(request.args['option'])
+            print('Set g_modus: ' + str(g_modus))
             #redirect the webpage to the picture Page
             return redirect(url_for('pagePicture'))
     elif request.method == 'GET':
-        return jsonify( {'option': modus} )
+        return jsonify( {'option': g_modus} )
       
 @app.route('/api/controlCamera', methods = ['POST', 'GET'])
 def action():
-    global recorder
+    global g_activeCamera
     print(request.data)
     jsonReq = json.loads(request.data)
     if request.method == 'POST':
         if 'takePciture' in jsonReq['option']:
-            recorder.take_picture('data/orginal_pictures')
+            g_activeCamera.fotoCamera.picture_take()
+            g_activeCamera.fotoCamera.picture_save('data/orginal_pictures')
         elif 'startVideo' in jsonReq['option']:
-            recorder.start_recording()     
+            g_activeCamera.videoCamera.recording_start()     
         elif 'stopVideo' in jsonReq['option']:
-            recorder.stop_recording()
+            g_activeCamera.videoCamera.recording_stop()
     return jsonify( {'return': 'done'} )
     
 @app.route('/api/getQRCode', methods = ['GET']) 
 def get_qrCode():
-    global modus
+    global g_modus
     if request.method == 'GET':
         qr = qrcode.QRCode(
             version=1,
@@ -189,11 +206,11 @@ def get_qrCode():
             box_size=10,
             border=4,
         )   
-        if modus == 1 or modus == 2:
+        if g_modus == 1 or g_modus == 2:
             list_of_files = glob.glob('data/pictures/*')
             list_of_files.sort(key=os.path.getctime)
             dataSrc = list_of_files[-1]
-        elif modus == 3:
+        elif g_modus == 3:
             list_of_files = glob.glob('data/videos/*')
             list_of_files.sort(key=os.path.getctime) 
             dataSrc = list_of_files[-1]
@@ -209,28 +226,28 @@ def get_qrCode():
     
 @app.route('/api/renderPicture', methods = ['GET']) 
 def get_picture():   
-    global modus
-    global anchorsMulti
-    global anchorSingle
+    global g_modus
+    global g_anchorsMulti
+    global g_anchorSingle
     time.sleep(2)
     if request.method == 'GET':   
         list_of_files = glob.glob('data/orginal_pictures/*')
         list_of_files.sort(key=os.path.getctime)
         pics = []
-        if modus == 1:
+        if g_modus == 1:
             #append last taken image
             pics.append(Image.open(list_of_files[-1]))
             layoutSrc = "static/pictures/LayoutSingle.png"
-            anchors = anchorSingle
+            anchors = g_anchorSingle
 
-        elif modus == 2:
+        elif g_modus == 2:
             pics = []
             for index in range(1,5): 
                 id = index * -1
                 print(list_of_files[id])
                 pics.append(Image.open(list_of_files[id]))
             layoutSrc = "static/pictures/LayoutMulti.png"
-            anchors = anchorsMulti
+            anchors = g_anchorsMulti
         
         compositeImg =  Image.new('RGBA', (Image.open(layoutSrc).size), (255, 0, 0, 0))
         #from https://www.tutorialspoint.com/python_pillow/Python_pillow_merging_images.htm
@@ -247,11 +264,11 @@ def get_picture():
 
 @app.route('/api/renderVideo', methods = ['GET'])
 def get_video():    
-    global modus
-    global recorder
+    global g_modus
+    global g_activeCamera
     time.sleep(2)
     if request.method == 'GET':
-        recorder.save_recording('data/videos')
+        g_activeCamera.videoCamera.recording_save('data/videos')
         list_of_files = glob.glob('data/videos/*')
         list_of_files.sort(key=os.path.getctime) 
         vidSrc = list_of_files[-1]
@@ -262,23 +279,21 @@ def get_video():
 # Helper functions
 #-------------------------------
 def gen():
-    global recorder
+    global g_activeCamera
     """Video streaming generator function."""
+    _lastWakeUp = time.time()
     while True:
-        start = time.time()
-        frame = recorder.get_last_capture()
-            
-        if len(frame) > 0:
-            ret, frameJPG = cv2.imencode('.jpg', frame)
-            frameShow  = frameJPG.tobytes()
-            yield (b'--frame\r\n'
-                   b'Content-Type: image/jpeg\r\n\r\n' + frameShow + b'\r\n')
-        processTime = (time.time() - start)
-        waitTime = 1 / 30 - processTime
-        #print(waitTime)
-        #print("Video Feed Process Time: " + str(processTime))
-        if waitTime > 0:
-            time.sleep(waitTime)
+        _currentTime = time.time()
+        if(_currentTime - _lastWakeUp > 1/30):
+            _lastWakeUp = time.time()
+            start = time.time()
+            frame = g_activeCamera.previewCamera.stream_capture()
+                
+            if len(frame) > 0:
+                ret, frameJPG = cv2.imencode('.jpg', frame)
+                frameShow  = frameJPG.tobytes()
+                yield (b'--frame\r\n'
+                    b'Content-Type: image/jpeg\r\n\r\n' + frameShow + b'\r\n')
 
 def findInserts(layoutSrc):
     img = Image.open(layoutSrc) 
@@ -327,45 +342,61 @@ def findInserts(layoutSrc):
     return imageAncors
 
 def checkCamera():
-    from cameras.webcam import cv_camera_connected
-    from cameras.dslrCamera import dsl_camera_connected
-    from cameras.piCamera import pi_camera_connected
+    from cameras.webcam import check_webcam
+    from cameras.dslrCamera import check_dslrCamera
+    from cameras.piCamera import check_piCamera
+    from cameras.cameraRecorder import CameraRecorder
     
-    global recorder  
-    global streamingCamera
+    global g_cameras  
+    global g_activeCamera
     #########################
     #Select which camera driver to use
     #########################
-    if dsl_camera_connected():
+    if check_dslrCamera():
         print('Found DSLR camera')
         from cameras.dslrCamera import Camera
-        streamingCamera.append(Camera())
+        dslrCameraContainer = cameraContainer()
+        dslrCamera = Camera()
+        dslrCameraContainer.fotoCamera = dslrCamera
+        dslrCameraContainer.previewCamera = dslrCamera
+        dslrCameraContainer.videoCamera = CameraRecorder(dslrCamera)
+        g_cameras.append(dslrCameraContainer)
     else:
-        streamingCamera.append(None)
-    if pi_camera_connected():
+        g_cameras.append(None)
+        
+    if check_piCamera():
         print('Found pi camera')
         from cameras.piCamera import Camera
-        streamingCamera.append(Camera())
+        piCameraContainer = cameraContainer()
+        piCamera = Camera()
+        piCameraContainer.fotoCamera = piCamera
+        piCameraContainer.previewCamera = piCamera
+        piCameraContainer.videoCamera = CameraRecorder(piCamera)
+        g_cameras.append(piCameraContainer)
     else:
-        streamingCamera.append(None)
+        g_cameras.append(None)
         
-    if cv_camera_connected() and not(pi_camera_connected()):
+    if check_webcam() and not(check_piCamera()):
         print('Found webcam camera')
-        from cameras.webcam import Camera
-        streamingCamera.append(Camera())
+        from cameras.webcam import Camera, Streamingcamera
+        cvCameraContainer = cameraContainer()
+        cvCamera = Camera()
+        cvCameraContainer.fotoCamera = cvCamera
+        cvCameraContainer.previewCamera = cvCamera
+        cvCameraContainer.videoCamera = CameraRecorder(cvCamera)
+        g_cameras.append(cvCameraContainer)
     else:
-        streamingCamera.append(None)
+        g_cameras.append(None)
     
     recorder = None
     
-    for mainCamera in streamingCamera:
+    for mainCamera in g_cameras:
         if mainCamera != None:
-            mainCamera.initialize('capture_stream', 30)
-            recorder = CameraRecorder(mainCamera)
+            mainCamera.fotoCamera.connect(30)
+            g_activeCamera.videoCamera = mainCamera.videoCamera
+            g_activeCamera.fotoCamera = mainCamera.fotoCamera
+            g_activeCamera.previewCamera = mainCamera.previewCamera
             break
-    
-    if recorder == None:
-        raise ValueError('No Camera found') 
 
 if __name__ == '__main__':
     print('Start application')
