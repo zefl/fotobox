@@ -287,7 +287,7 @@ def gen():
         if(_currentTime - _lastWakeUp > 1/30):
             _lastWakeUp = time.time()
             start = time.time()
-            frame = g_activeCamera.previewCamera.stream_capture()
+            frame = g_activeCamera.previewCamera.stream_show()
                 
             if len(frame) > 0:
                 ret, frameJPG = cv2.imencode('.jpg', frame)
@@ -378,7 +378,7 @@ def checkCamera():
         
     if check_webcam() and not(check_piCamera()):
         print('Found webcam camera')
-        from cameras.webcam import Camera, Streamingcamera
+        from cameras.webcam import Camera
         cvCameraContainer = cameraContainer()
         cvCamera = Camera()
         cvCameraContainer.fotoCamera = cvCamera

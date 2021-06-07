@@ -30,6 +30,10 @@ class IFotocamera(ABC):
         raise NotImplementedError 
     
     @abstractmethod    
+    def stream_show(self):
+        raise NotImplementedError
+    
+    @abstractmethod    
     def stream_start(self):
         raise NotImplementedError 
     
@@ -37,6 +41,3 @@ class IFotocamera(ABC):
     def stream_stop(self):
         raise NotImplementedError     
     
-    @abstractmethod    
-    def stream_capture(self):
-        raise NotImplementedError

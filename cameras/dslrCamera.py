@@ -11,6 +11,7 @@ try:
 except ImportError:
     pass  # gphoto2 is not supported if run on windows
 
+import multiprocessing as mp
 import io
 from PIL import Image, ImageFilter
 import copy
@@ -18,11 +19,10 @@ import numpy as np
 import psutil
 from fnmatch import fnmatchcase
 import sys
-from datetime import datetime
 import time
-import os
 
-from cameras.IFotocamera import IFotocamera
+from cameras.cameraBase import CameraBase
+from cameras.cameraBase import stream_run
 
 #from https://github.com/pibooth/pibooth/blob/master/pibooth/camera/gphoto.py
 def check_dslrCamera():
@@ -47,79 +47,24 @@ def check_dslrCamera():
 
     return False
 
-class Camera(IFotocamera):
-    ##################################      
-    #Common functions
-    ##################################            
-    def picture_take(self):
-        if not(self.streamActive):
-            self.frame = self._take_picture()
-            self.frameAvalible = True
-        
-    def picture_show(self):
-        if self.frameAvalible:
-            return _convert_to_cv2(self.frame)
-        else:
-            return []
-            
-    def picture_save(self, _folder="", _file=""):
-        if self.frameAvalible:
-            now = datetime.now()
-            picFrame = copy.copy(self.frame);
-            if(_file == ""):
-                _file = now.strftime('%Y_%m_%d_%H_%M_%S') 
-            picName = os.path.join(_folder, _file + ".jpg")
-            cv2.imwrite(picName, picFrame)  
-                
-    def stream_start(self):
-        #check if thread is active 
-        if not(self.streamActive):
-            # start background frame thread
-            self.thread = threading.Thread(target=self._stream_thread)
-            self.streamActive = True
-            self.thread.start()
-    
-    def stream_stop(self):
-        #Stop stream, thread will be stoped
-        self.streamActive = False
-    
-    def stream_capture(self):
-        if self.frameAvalible:
-            return _convert_to_cv2(self.frame)
-        else:
-            return []
-    
-    ##################################      
-    #Internal function
-    ##################################
+class Camera(CameraBase):       
     def __init__(self):
-        #################
-        #Variables for handling camera
-        #################
-        self.camera = None
-        self.stream = None
-        #################
-        #Variables for handling streaming
-        #################
-        self.frameAvalible = False
-        self.frame = []  # current frame is stored here
-        self.streamActive = False
-        self.thread = None
+        super().__init__()
 
     def connect(self, _fps: int = 0):
-        if self.camera == None:
+        if self._camera == None:
             self._cancleGphotoPrcess()
-            self.camera = gp.Camera()
-            self.framerate = _fps  
+            self._camera = gp.Camera()
+            self._frameRate = _fps  
             
             # camera setup
-            self.camera.init()
-            text = self.camera.get_summary()
+            self._camera.init()
+            text = self._camera.get_summary()
             print(text)
         
     def disconnect(self):
         print("close DLSR camera")
-        self.camera.exit()
+        self._camera.exit()
     
     def _cancleGphotoPrcess(self):
         for proc in psutil.process_iter():
@@ -137,7 +82,7 @@ class Camera(IFotocamera):
         """
         try:
             #LOGGER.debug('Setting option %s/%s=%s', section, option, value)
-            config = self.camera.get_config()
+            config = self._camera.get_config()
             child = config.get_child_by_name(section).get_child_by_name(option)
             if child.get_type() == gp.GP_WIDGET_RADIO:
                 choices = [c for c in child.get_choices()]
@@ -150,13 +95,13 @@ class Camera(IFotocamera):
                 #    "Invalid value '%s' for option %s (possible choices: %s), trying to set it anyway", value, option, choices)
                 print("invalid")
             child.set_value(value)
-            self.camera.set_config(config)
+            self._camera.set_config(config)
         except gp.GPhoto2Error as ex:
             #LOGGER.error('Unsupported option %s/%s=%s (%s), configure your DSLR manually', section, option, value, ex)
             print("Error")
 
     def quit(self):
-        gp.check_result(gp.gp_camera_exit(camera))
+        gp.check_result(gp.gp_camera_exit(_camera))
 
     def _convert_to_cv2(self, _frame):
         open_cv_image = np.array(_frame)
@@ -164,34 +109,27 @@ class Camera(IFotocamera):
         return frame
     
     def _take_picture(self):
-        set_config_value('actions', 'viewfinder', 0)
-        test = self.camera.capture(gp.GP_CAPTURE_IMAGE)
+        self.set_config_value('actions', 'viewfinder', 0)
+        test = self._camera.capture(gp.GP_CAPTURE_IMAGE)
         time.sleep(0.3)  # Necessary to let the time for the camera to save the image
         print(test)
 
 
     def _capture_stream(self):  
-        camFile =  self.camera.capture_preview()
+        camFile =  self._camera.capture_preview()
         frame = Image.open(io.BytesIO(camFile.get_data_and_size()))
-        return frame
+        return self._convert_to_cv2(frame)
+
+    def _create_process(self):
+            return mp.Process(target=_stream_runWebcam, args=(self._mp_FrameQueue, self._mp_StopEvent, self._frameRate,))
+
         
-        
-    def _stream_thread(self):
-        _desiredCyleTime = 1 / self.framerate #run this thread only as fast as nessecarry
-        while(self.streamActive):
-                self.streamActive = True
-                _startTimeCature = time.time()
-                #call camera to take picutre
-                self.frame = self._capture_stream()                                                                 
-                #check cycle time with respect to given cycel time
-                _endTimeCature = time.time()
-                _cyleTime = _endTimeCature - _startTimeCature
-                _waitTime = _desiredCyleTime - _cyleTime
-                if _waitTime > 0:
-                    time.sleep(_waitTime)
-                else:
-                    #print("Warning: Camera cannot take picture with given fps")       
-                    pass 
-        self.thread = None #stop thread
-        self.frameAvalible = False
-        self.frame=[] #delete picture
+"""Global Function which is called by subprocess
+
+:param queue: queue of parent class which holds frame data
+:param stopEvent : Eventflag which causes the process to stop
+:param frameRate : static framerate on which the camera should work
+"""
+def _stream_runWebcam(queue : mp.Queue, stopEvent: mp.Value, frameRate):
+    camera = Camera()
+    stream_run(camera, queue, stopEvent, frameRate)

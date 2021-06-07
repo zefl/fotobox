@@ -12,15 +12,14 @@ except ImportError:
     pass  # gphoto2 is not supported if run on windows
     
 import io
-import cv2
-import numpy as np
 import time
-from datetime import datetime
 import subprocess
 import sys
-import os
+import multiprocessing as mp
 
-from cameras.IFotocamera import IFotocamera
+from cameras.cameraBase import CameraBase
+from cameras.cameraBase import stream_run
+
 
 #from https://github.com/pibooth/pibooth/blob/master/pibooth/camera/rpi.py
 def check_piCamera():
@@ -41,92 +40,38 @@ def check_piCamera():
         pass
     return False
 
-
-class Camera(IFotocamera):
-    ##################################      
-    #Common functions
-    ##################################            
-    def picture_take(self):
-        if not(self.streamActive):
-            self.frame = self._take_picture()
-            self.frameAvalible = True
-        
-    def picture_show(self):
-        if self.frameAvalible:
-            return self.frame
-        else:
-            return []
-            
-    def picture_save(self, _folder="", _file=""):
-        if self.frameAvalible:
-            now = datetime.now()
-            picFrame = copy.copy(self.frame);
-            if(_file == ""):
-                _file = now.strftime('%Y_%m_%d_%H_%M_%S') 
-            picName = os.path.join(_folder, _file + ".jpg")
-            cv2.imwrite(picName, picFrame)  
-                
-    def stream_start(self):
-        #check if thread is active 
-        if not(self.streamActive):
-            # start background frame thread
-            self.thread = threading.Thread(target=self._stream_thread)
-            self.streamActive = True
-            self.thread.start()
-    
-    def stream_stop(self):
-        #Stop stream, thread will be stoped
-        self.streamActive = False
-    
-    def stream_capture(self):
-        if self.frameAvalible:
-            return self.frame
-        else:
-            return []
-    
-    ##################################      
-    #Internal function
-    ##################################
+class Camera(CameraBase):
     def __init__(self):
-        #################
-        #Variables for handling camera
-        #################
-        self.camera = None
-        self.stream = None
-        self.rawCapture = None
-        #################
-        #Variables for handling streaming
-        #################
-        self.frameAvalible = False
-        self.frame = []  # current frame is stored here
-        self.streamActive = False
-        self.thread = None
+        super().__init__()
 
     def connect(self, _fps: int = 0):
-        if self.camera == None:
-            self.camera = picamera.PiCamera()
-            self.framerate = _fps            
+        if self._camera == None:
+            self._camera = picamera.PiCamera()
+            self._framerate = _fps            
             
             # camera setup
-            self.camera.resolution = (640, 480)
-            self.camera.framerate = _fps
-            self.camera.hflip = False
-            self.camera.vflip = True
-            self.camera.video_stabilization = True
-            self.camera.iso = 100
+            self._camera.resolution = (640, 480)
+            self._camera.framerate = _fps
+            self._camera.hflip = False
+            self._camera.vflip = True
+            self._camera.video_stabilization = True
+            self._camera.iso = 100
 
             # let camera warm up
-            self.camera.start_preview()
+            self._camera.start_preview()
             time.sleep(2)
-            self.camera.stop_preview()
+            self._camera.stop_preview()
             
-            self.stream = io.BytesIO()
-            self.rawCapture = PiRGBArray(self.camera)
+            self._stream = io.BytesIO()
+            self._rawCapture = PiRGBArray(self.camera)
             
     def disconnect(self):
         #from https://www.raspberrypi.org/forums/viewtopic.php?t=227394
-        self.camera.close()
-        self.camera = None
+        self._camera.close()
+        self._camera = None
+
+    def _take_picture(self):
+        raise NotImplementedError
         
     def _capture_stream(self):
         #wait for next caputre
@@ -134,25 +79,17 @@ class Camera(IFotocamera):
             #get data via rawCaputre
             frame = data.array
             self.rawCapture.truncate(0) # reset stream for next frame
-            self.frameAvalible = True
             return frame
-            
-    def _stream_thread(self):
-        _desiredCyleTime = 1 / self.framerate #run this thread only as fast as nessecarry
-        while(self.streamActive):
-                self.streamActive = True
-                _startTimeCature = time.time()
-                #call camera to take picutre
-                self.frame = self._capture_stream()                                                                 
-                #check cycle time with respect to given cycel time
-                _endTimeCature = time.time()
-                _cyleTime = _endTimeCature - _startTimeCature
-                _waitTime = _desiredCyleTime - _cyleTime
-                if _waitTime > 0:
-                    time.sleep(_waitTime)
-                else:
-                    #print("Warning: Camera cannot take picture with given fps")       
-                    pass
-        self.thread = None #stop thread
-        self.frameAvalible = False
-        self.frame=[] #delete picture
+
+    def _create_process(self):
+        return mp.Process(target=_stream_runPicam, args=(self._mp_FrameQueue, self._mp_StopEvent, self._frameRate,))
+
+"""Global Function which is called by subprocess
+
+:param queue: queue of parent class which holds frame data
+:param stopEvent : Eventflag which causes the process to stop
+:param frameRate : static framerate on which the camera should work
+"""
+def _stream_runPicam(queue : mp.Queue, stopEvent: mp.Value, frameRate):
+    camera = Camera()
+    stream_run(camera, queue, stopEvent, frameRate)
