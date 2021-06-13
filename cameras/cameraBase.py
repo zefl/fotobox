@@ -12,7 +12,6 @@ import os
 
 from cameras.IFotocamera import IFotocamera
 
-
 class CameraBase(IFotocamera):
     def __init__(self):
         """Variables for handling camera
@@ -26,7 +25,8 @@ class CameraBase(IFotocamera):
         """
         self._process = None
         self._mp_StopEvent = mp.Value('i', lock=False)
-        self._mp_FrameQueue = mp.Queue(2)
+        """Two queues one for preview and one if during preview picture is taken"""
+        self._mp_FrameQueues = [mp.Queue(2),mp.Queue(2)] 
         self._frameRate = 30
 
     """Interface functions
@@ -34,7 +34,7 @@ class CameraBase(IFotocamera):
     def picture_take(self):
         """If subporcess is active use frame form this one to take picture"""
         if self._process.is_alive():
-            self._frame = self._mp_FrameQueue.get()
+            self._frame = self._mp_FrameQueues[1].get()
             self._frameAvalible = True   
         else:
             """Check if camera is still connect"""
@@ -64,6 +64,7 @@ class CameraBase(IFotocamera):
         """check if thread is active"""
         if self._process == None:
             self.disconnect()
+            """create process will be implemented by child on virtual in this context"""
             self._process = self._create_process()
             self._process.start()
 
@@ -74,8 +75,8 @@ class CameraBase(IFotocamera):
         self.connect()
     
     def stream_show(self):
-        if not(self._mp_FrameQueue.empty()):
-            return self._mp_FrameQueue.get()
+        if not(self._mp_FrameQueues[0].empty()):
+            return self._mp_FrameQueues[0].get()
         else:
             return []
     
@@ -103,7 +104,7 @@ class CameraBase(IFotocamera):
 :param frameRate : static framerate on which the camera should work
 :param streamCamera : specific instansiation of child class
 """
-def stream_run(streamCamera : CameraBase, queue : mp.Queue, stopEvent: mp.Value, frameRate : int):
+def stream_run(streamCamera : CameraBase, queues, stopEvent: mp.Value, frameRate : int):
     streamCamera.connect(frameRate)
     desiredCyleTime = 1 / frameRate #run this thread only as fast as nessecarry
     nextFrameTime = 0
@@ -112,8 +113,10 @@ def stream_run(streamCamera : CameraBase, queue : mp.Queue, stopEvent: mp.Value,
             if(currentTime > nextFrameTime):
                 nextFrameTime = currentTime + desiredCyleTime
                 #call camera to take picutre
-                if not(queue.full()):
-                    queue.put(streamCamera._capture_stream())                                                            
+                for queue in queues:
+                    if not(queue.full()):
+                        frame = streamCamera._capture_stream()
+                        queue.put(frame)                                                            
             if stopEvent.value:
                 break;
     stopEvent.value = False

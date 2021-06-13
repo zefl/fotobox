@@ -63,7 +63,7 @@ class Camera(CameraBase):
             self._camera.stop_preview()
             
             self._stream = io.BytesIO()
-            self._rawCapture = PiRGBArray(self.camera)
+            self._rawCapture = PiRGBArray(self._camera)
             
     def disconnect(self):
         #from https://www.raspberrypi.org/forums/viewtopic.php?t=227394
@@ -75,14 +75,14 @@ class Camera(CameraBase):
         
     def _capture_stream(self):
         #wait for next caputre
-        for data in self.camera.capture_continuous(self.rawCapture, format="bgr", use_video_port=True):
+        for data in self._camera.capture_continuous(self._rawCapture, format="bgr", use_video_port=True):
             #get data via rawCaputre
             frame = data.array
-            self.rawCapture.truncate(0) # reset stream for next frame
+            self._rawCapture.truncate(0) # reset stream for next frame
             return frame
 
     def _create_process(self):
-        return mp.Process(target=_stream_runPicam, args=(self._mp_FrameQueue, self._mp_StopEvent, self._frameRate,))
+        return mp.Process(target=_stream_runPicam, args=(self._mp_FrameQueues, self._mp_StopEvent, self._frameRate,))
 
 """Global Function which is called by subprocess
 

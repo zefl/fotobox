@@ -53,7 +53,7 @@ class Camera(CameraBase):
         return frame
 
     def _create_process(self):
-        return mp.Process(target=_stream_runWebcam, args=(self._mp_FrameQueue, self._mp_StopEvent, self._frameRate,))
+        return mp.Process(target=_stream_runWebcam, args=(self._mp_FrameQueues, self._mp_StopEvent, self._frameRate,))
 
 """Global Function which is called by subprocess
 

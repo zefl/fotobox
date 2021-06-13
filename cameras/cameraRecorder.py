@@ -125,7 +125,8 @@ class CameraRecorder(IVideocamera):
                         
                 if self.recordingActive:
                     #call camera to take picutre
-                    frame = self.camera.stream_show()      
+                    self.camera.picture_take()  
+                    frame = self.camera.picture_show()      
                     self.recordFrames.append(copy.copy(frame))
                     
                 if self.stopRecording and self.recordingActive:
