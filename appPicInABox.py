@@ -26,6 +26,8 @@ from PIL import Image
 from cameras.IFotocamera import IFotocamera
 from cameras.IVideocamera import IVideocamera
 
+import faulthandler; faulthandler.enable()
+
 #create Flask object with __name__ --> acutal python object
 app = Flask(__name__)
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
@@ -112,8 +114,6 @@ def pageOptions():
 
 @app.route('/picture')
 def pagePicture():
-    global g_activeCamera
-    g_activeCamera.previewCamera.stream_start() #start preview stream
     return render_template('picturePage.html') 
 
 #from https://gist.github.com/arusahni/9434953
@@ -131,6 +131,8 @@ def pageGallery():
 
 @app.route('/videoFeed')
 def pageVideoFeed():
+    global g_activeCamera
+    g_activeCamera.previewCamera.stream_start() #start preview stream
     #Video streaming route. Put this in the src attribute of an img tag
     #This gets called when the image inside the html is loaded
     return Response(gen(),
@@ -155,10 +157,12 @@ def settings():
             if g_settings[jsonReq['key']]['min'] <= int(newValue) and int(newValue) <= g_settings[jsonReq['key']]['max']:
                 if(jsonReq['key'] == 'camera'):
                     newCamera = g_cameras[int(jsonReq['value'])]
-                    print(newCamera)
                     if newCamera != None:
-                        g_activeCamera.previewCamera = None
+                        #stop old stream
+                        g_activeCamera.previewCamera.stream_stop()
+                        #load new camera
                         g_activeCamera.previewCamera = newCamera.previewCamera
+                        g_activeCamera.previewCamera.stream_start()
                     else:
                         #camera not active
                         return jsonify( {'return': 'error'} )
@@ -288,12 +292,12 @@ def gen():
             _lastWakeUp = time.time()
             start = time.time()
             frame = g_activeCamera.previewCamera.stream_show()
-                
-            if len(frame) > 0:
-                ret, frameJPG = cv2.imencode('.jpg', frame)
-                frameShow  = frameJPG.tobytes()
-                yield (b'--frame\r\n'
-                    b'Content-Type: image/jpeg\r\n\r\n' + frameShow + b'\r\n')
+            if type(frame) != 'NoneType':
+                if len(frame) > 0:
+                    ret, frameJPG = cv2.imencode('.jpg', frame)
+                    frameShow  = frameJPG.tobytes()
+                    yield (b'--frame\r\n'
+                        b'Content-Type: image/jpeg\r\n\r\n' + frameShow + b'\r\n')
 
 def findInserts(layoutSrc):
     img = Image.open(layoutSrc) 
@@ -357,6 +361,7 @@ def checkCamera():
         from cameras.dslrCamera import Camera
         dslrCameraContainer = cameraContainer()
         dslrCamera = Camera()
+        dslrCamera.connect(30)
         dslrCameraContainer.fotoCamera = dslrCamera
         dslrCameraContainer.previewCamera = dslrCamera
         dslrCameraContainer.videoCamera = CameraRecorder(dslrCamera)
@@ -369,6 +374,7 @@ def checkCamera():
         from cameras.piCamera import Camera
         piCameraContainer = cameraContainer()
         piCamera = Camera()
+        piCamera.connect(30)
         piCameraContainer.fotoCamera = piCamera
         piCameraContainer.previewCamera = piCamera
         piCameraContainer.videoCamera = CameraRecorder(piCamera)
@@ -376,11 +382,12 @@ def checkCamera():
     else:
         g_cameras.append(None)
         
-    if check_webcam() and not(check_piCamera()):
+    if check_webcam():
         print('Found webcam camera')
         from cameras.webcam import Camera
         cvCameraContainer = cameraContainer()
         cvCamera = Camera()
+        cvCamera.connect(30)
         cvCameraContainer.fotoCamera = cvCamera
         cvCameraContainer.previewCamera = cvCamera
         cvCameraContainer.videoCamera = CameraRecorder(cvCamera)
@@ -390,12 +397,11 @@ def checkCamera():
     
     recorder = None
     
-    for mainCamera in g_cameras:
-        if mainCamera != None:
-            mainCamera.fotoCamera.connect(30)
-            g_activeCamera.videoCamera = mainCamera.videoCamera
-            g_activeCamera.fotoCamera = mainCamera.fotoCamera
-            g_activeCamera.previewCamera = mainCamera.previewCamera
+    for camera in g_cameras:
+        if camera != None:
+            g_activeCamera.videoCamera = camera.videoCamera
+            g_activeCamera.fotoCamera = camera.fotoCamera
+            g_activeCamera.previewCamera = camera.previewCamera
             break
 
 if __name__ == '__main__':

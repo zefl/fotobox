@@ -6,6 +6,7 @@
 import copy
 import cv2
 from datetime import datetime
+import threading
 import multiprocessing as mp
 import time
 import os
@@ -24,18 +25,25 @@ class CameraBase(IFotocamera):
         """Variables for handling streaming
         """
         self._process = None
+        self._thread = None
         self._mp_StopEvent = mp.Value('i', lock=False)
         """Two queues one for preview and one if during preview picture is taken"""
         self._mp_FrameQueues = [mp.Queue(2),mp.Queue(2)] 
+        self._frame = []
         self._frameRate = 30
 
     """Interface functions
     """  
     def picture_take(self):
         """If subporcess is active use frame form this one to take picture"""
-        if self._process.is_alive():
-            self._frame = self._mp_FrameQueues[1].get()
-            self._frameAvalible = True   
+        if self._process:
+            if self._process.is_alive():
+                self._frame = self._mp_FrameQueues[1].get()
+                self._frameAvalible = True   
+        elif self._thread:
+            if self._thread.is_alive():
+                #self._frame = self._mp_FrameQueues[1].get()
+                self._frameAvalible = True   
         else:
             """Check if camera is still connect"""
             if self._camera == None:
@@ -59,24 +67,48 @@ class CameraBase(IFotocamera):
                 file = now.strftime('%Y_%m_%d_%H_%M_%S') 
             picName = os.path.join(folder, file + ".jpg")
             cv2.imwrite(picName, picFrame)  
-                
+    
+    def thread_start(self):
+        if self._process:
+            print("Stream process already up in running")
+        else:
+            if self._thread == None:
+                self._thread = threading.Thread(target=self._thread_run)
+                self._mp_StopEvent.value = False
+                self._thread.start()
+            
+    
+    def thread_stop(self):
+        self._mp_StopEvent.value = True
+    
     def stream_start(self):
+        self.thread_start()
+        return
         """check if thread is active"""
         if self._process == None:
             self.disconnect()
             """create process will be implemented by child on virtual in this context"""
             self._process = self._create_process()
+            self._mp_StopEvent.value = False
             self._process.start()
 
     def stream_stop(self):
+        self.thread_stop()
+        return
         #Stop stream, thread will be stoped
-        self._threadStopEvent = True
+        self._mp_StopEvent.value = True
         self._process.join()
+        self._process = None
         self.connect()
     
     def stream_show(self):
         if not(self._mp_FrameQueues[0].empty()):
             return self._mp_FrameQueues[0].get()
+        elif self._thread:
+            if self._thread.is_alive():
+                return self._frame
+            else:
+                return []
         else:
             return []
     
@@ -96,6 +128,21 @@ class CameraBase(IFotocamera):
 
     def _create_process(self):
         raise NotImplementedError
+
+    def _thread_run(self):
+        desiredCyleTime = 1 / self._frameRate #run this thread only as fast as nessecarry
+        nextFrameTime = 0
+        while True:
+            currentTime = time.time()
+            if(currentTime > nextFrameTime):
+                nextFrameTime = currentTime + desiredCyleTime
+                #call camera to take picutre
+                self._frame = self._capture_stream()                                                          
+            if self._mp_StopEvent.value:
+                break;
+        self._mp_StopEvent.value = False
+        self._thread = None #stop thread
+
 
 """Global Function which is called by subprocess
 

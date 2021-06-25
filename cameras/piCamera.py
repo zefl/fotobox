@@ -44,6 +44,11 @@ class Camera(CameraBase):
     def __init__(self):
         super().__init__()
 
+    def _connect(self, _fps: int = 0):
+        """There is a problem with closing the camera in one process and reopning it. 
+        Therfore the camera will always be a streaming camera
+        """
+
     def connect(self, _fps: int = 0):
         if self._camera == None:
             self._camera = picamera.PiCamera()
@@ -61,14 +66,20 @@ class Camera(CameraBase):
             self._camera.start_preview()
             time.sleep(2)
             self._camera.stop_preview()
-            
             self._stream = io.BytesIO()
             self._rawCapture = PiRGBArray(self._camera)
             
     def disconnect(self):
-        #from https://www.raspberrypi.org/forums/viewtopic.php?t=227394
-        self._camera.close()
-        self._camera = None
+        if self._camera:
+            #from https://www.raspberrypi.org/forums/viewtopic.php?t=227394
+            self._camera.stop_preview()
+            time.sleep(6)
+            self._camera.close()
+            self._rawCapture.close()
+            self._stream.close()
+            del self._camera
+            del self._rawCapture
+            del self._stream
 
     def _take_picture(self):
         raise NotImplementedError
@@ -90,6 +101,7 @@ class Camera(CameraBase):
 :param stopEvent : Eventflag which causes the process to stop
 :param frameRate : static framerate on which the camera should work
 """
-def _stream_runPicam(queue : mp.Queue, stopEvent: mp.Value, frameRate):
+def _stream_runPicam(queues, stopEvent: mp.Value, frameRate):
     camera = Camera()
-    stream_run(camera, queue, stopEvent, frameRate)
+    camera._connect(frameRate) #call private connect to create pi Camera instance
+    stream_run(camera, queues, stopEvent, frameRate)
