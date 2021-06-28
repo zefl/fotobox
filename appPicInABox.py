@@ -50,10 +50,13 @@ class cameraContainer():
         self.previewCamera = None
         self.fotoCamera = None
         self.videoCamera = None
+        self.timelapsCamera = None
 #holds active camera selection
 g_activeCamera = cameraContainer()
 #Holds list of available g_cameras
 g_cameras = []
+
+g_frame = []
 
 #-------------------------------
 # Webserver Functions
@@ -159,6 +162,7 @@ def settings():
                     newCamera = g_cameras[int(jsonReq['value'])]
                     if newCamera != None:
                         #stop old stream
+                        g_activeCamera.timelapsCamera.recording_stop()
                         g_activeCamera.previewCamera.stream_stop()
                         #load new camera
                         g_activeCamera.previewCamera = newCamera.previewCamera
@@ -166,7 +170,16 @@ def settings():
                     else:
                         #camera not active
                         return jsonify( {'return': 'error'} )
-                g_settings[jsonReq['key']]['value'] = jsonReq['value'] 
+                elif(jsonReq['key'] == 'timelaps'):
+                    if int(jsonReq['value']):
+                        g_activeCamera.timelapsCamera.recording_start()
+                    else:
+                        g_activeCamera.timelapsCamera.recording_stop()    
+                elif(jsonReq['key'] == 'timelapsCreate'):
+                    if int(jsonReq['value']):
+                        g_activeCamera.timelapsCamera.recording_save()
+                        return jsonify( {'return': 'done'} ) #return okay if no error before
+                g_settings[jsonReq['key']]['value'] = jsonReq['value']
                 return jsonify( {'return': 'done'} ) #return okay if no error before
         return jsonify( {'return': 'error'} ) #default error
     elif request.method == 'GET':
@@ -279,6 +292,21 @@ def get_video():
         resp = make_response(send_file(vidSrc, 'video/avi'))
         resp.headers['Content-Disposition'] = 'inline'
         return resp
+
+@app.route('/lastRawFrame', methods = ['GET'])
+def lastRawFrame():
+    #https://www.kite.com/python/answers/how-to-serialize-a-numpy-array-into-json-in-python
+    #https://stackoverflow.com/questions/58433450/how-to-send-ndarray-response-from-flask-server-to-python-client 
+    frameRaw = g_activeCamera.previewCamera.stream_show()
+    if type(frameRaw) != 'NoneType' and len(frameRaw) > 0:
+        return json.dumps(frameRaw.tolist())
+    else:
+        return None
+
+@app.route('/timelaps', methods = ['PUT'])
+def timelaps:
+    
+
 #-------------------------------
 # Helper functions
 #-------------------------------
@@ -287,17 +315,14 @@ def gen():
     """Video streaming generator function."""
     _lastWakeUp = time.time()
     while True:
-        _currentTime = time.time()
-        if(_currentTime - _lastWakeUp > 1/30):
-            _lastWakeUp = time.time()
-            start = time.time()
-            frame = g_activeCamera.previewCamera.stream_show()
-            if type(frame) != 'NoneType':
-                if len(frame) > 0:
-                    ret, frameJPG = cv2.imencode('.jpg', frame)
-                    frameShow  = frameJPG.tobytes()
-                    yield (b'--frame\r\n'
-                        b'Content-Type: image/jpeg\r\n\r\n' + frameShow + b'\r\n')
+        time.sleep(1/25)
+        frame = g_activeCamera.previewCamera.stream_show()
+        if type(frame) != 'NoneType':
+            if len(frame) > 0:
+                ret, frameJPG = cv2.imencode('.jpg', frame)
+                frameShow  = frameJPG.tobytes()
+                yield (b'--frame\r\n'
+                    b'Content-Type: image/jpeg\r\n\r\n' + frameShow + b'\r\n')
 
 def findInserts(layoutSrc):
     img = Image.open(layoutSrc) 
@@ -350,6 +375,7 @@ def checkCamera():
     from cameras.dslrCamera import check_dslrCamera
     from cameras.piCamera import check_piCamera
     from cameras.cameraRecorder import CameraRecorder
+    from cameras.timeLaps import CameraTimelapss
     
     global g_cameras  
     global g_activeCamera
@@ -365,6 +391,7 @@ def checkCamera():
         dslrCameraContainer.fotoCamera = dslrCamera
         dslrCameraContainer.previewCamera = dslrCamera
         dslrCameraContainer.videoCamera = CameraRecorder(dslrCamera)
+        dslrCameraContainer.timelapsCamera = CameraTimelapss(dslrCamera)
         g_cameras.append(dslrCameraContainer)
     else:
         g_cameras.append(None)
@@ -378,6 +405,7 @@ def checkCamera():
         piCameraContainer.fotoCamera = piCamera
         piCameraContainer.previewCamera = piCamera
         piCameraContainer.videoCamera = CameraRecorder(piCamera)
+        piCameraContainer.timelapsCamera = CameraTimelapss(piCamera)
         g_cameras.append(piCameraContainer)
     else:
         g_cameras.append(None)
@@ -391,6 +419,7 @@ def checkCamera():
         cvCameraContainer.fotoCamera = cvCamera
         cvCameraContainer.previewCamera = cvCamera
         cvCameraContainer.videoCamera = CameraRecorder(cvCamera)
+        cvCameraContainer.timelapsCamera = CameraTimelapss(cvCamera)
         g_cameras.append(cvCameraContainer)
     else:
         g_cameras.append(None)
@@ -402,6 +431,11 @@ def checkCamera():
             g_activeCamera.videoCamera = camera.videoCamera
             g_activeCamera.fotoCamera = camera.fotoCamera
             g_activeCamera.previewCamera = camera.previewCamera
+            g_activeCamera.timelapsCamera = camera.timelapsCamera
+            #start preview camera right away
+            g_activeCamera.previewCamera.stream_start()
+            while(g_activeCamera.previewCamera.stream_show() == []):
+                time.sleep(1)
             break
 
 if __name__ == '__main__':

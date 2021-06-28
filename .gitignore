@@ -3,6 +3,7 @@ cameras/__pycache__/
 data/videos/*
 data/pictures/*
 data/orginal_pictures/*
+data/timelaps/*
 workspace/env/
 flask_session/
 createEnv.txt

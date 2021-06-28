@@ -19,5 +19,19 @@
         "nameDE" : "Auswahl Camera (0-SpiegelReflex/1-RpiCamera/2-Webcam)",
         "min" : 0,
         "max" : 2
+    },
+    "timelaps":
+    {
+        "value" : 0,
+        "nameDE" : "Aktivieren der Timelaps 1=Aktive/0=Inaktive",
+        "min" : 0,
+        "max" : 1
+    },
+    "timelapsCreate":
+    {
+        "value" : 0,
+        "nameDE" : "Timelaps erstellen",
+        "min" : 0,
+        "max" : 1
     }
 }

@@ -19,7 +19,7 @@ def check_webcam():
     if not cv2:
         return False  # OpenCV is not installed
 
-    camera = cv2.VideoCapture(1) #todo make it usable with raspi
+    camera = cv2.VideoCapture(0) #todo make it usable with raspi
     if camera.isOpened():
         camera.release()
         return True
@@ -32,7 +32,7 @@ class Camera(CameraBase):
 
     def connect(self,  fps: int = 0):
         if self._camera == None:
-            self._camera =  cv2.VideoCapture(1)
+            self._camera =  cv2.VideoCapture(0)
             self._frameRate = fps   
     
     def disconnect(self):
