@@ -145,6 +145,10 @@ def pageVideoFeed():
 def pageImage(filename):
     return send_from_directory("data/pictures", filename)
 
+@app.route('/timelaps')
+def timelaps():
+    return render_template("timelaps.html", directory="data/timelaps")
+
 #-------------------------------
 # Rest API functions
 #-------------------------------
@@ -301,12 +305,13 @@ def lastRawFrame():
     if type(frameRaw) != 'NoneType' and len(frameRaw) > 0:
         return json.dumps(frameRaw.tolist())
     else:
-        return None
+        return None  
 
-@app.route('/timelaps', methods = ['PUT'])
-def timelaps:
-    
-
+@app.route('/status',methods = ['GET'])
+def status():
+    if request.method == 'GET':
+        if 'folder' in request.args:
+            return json.dumps(len(os.listdir(request.args['folder'])))
 #-------------------------------
 # Helper functions
 #-------------------------------
