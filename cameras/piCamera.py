@@ -60,7 +60,7 @@ class Camera(CameraBase):
             self._camera.hflip = False
             self._camera.vflip = True
             self._camera.video_stabilization = True
-            self._camera.iso = 100
+            self._camera.iso = 400
 
             # let camera warm up
             self._camera.start_preview()

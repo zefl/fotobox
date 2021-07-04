@@ -24,6 +24,7 @@ import requests
 from datetime import datetime
 from PIL import Image
 import glob
+import sys
 #from audioRecorder import audio
 
 from cameras.IFotocamera import IFotocamera
@@ -69,23 +70,34 @@ class CameraTimelapss():
         frames = []
         print("Save Timelaps")
         _files = glob.glob('data/timelaps/*.jpg')
-        minFrameSize= Image.open(_files[0]).size
+        minFrameSize = (0,0)
         _files.sort(key=os.path.getctime)
         for _file in _files:
-            image = Image.open(_file)
-            frames.append(image)
-            if image.size[0] * image.size[1] < minFrameSize[0] * minFrameSize[1]:
-                minFrameSize = frames.size
+            try:
+                image = Image.open(_file)
+                minPixel = minFrameSize[0] * minFrameSize[1]
+                currentPixel = image.size[0] * image.size[1]
+                if minPixel == 0 or currentPixel < minPixel:
+                    if currentPixel != 0:
+                        minFrameSize = image.size
+            except:
+                 print(f"Unexpected error: {sys.exc_info()[0]} in {_file}")
         fourcc = cv2.VideoWriter_fourcc(*'mp4v')
         video_file = os.path.join(folder, file +'.avi' )
         #used 30fps if 1 picture per second => 1 sec video 30 sec real life => 1hour real life     2 min video                           
         videoWriter = cv2.VideoWriter(video_file, fourcc, 60, minFrameSize) 
-        for frame in frames:
-            frame = frame.resize(minFrameSize, Image.ANTIALIAS)
-            open_cv_image = np.array(frame) 
-            # Convert RGB to BGR 
-            open_cv_image = open_cv_image[:, :, ::-1].copy() 
-            videoWriter.write(open_cv_image)
+        for _file in _files:
+            try:
+                self.process = (_files.index(_file)/len(_files))*100
+                print(f"Processe {self.process} %")
+                frame = Image.open(_file)
+                frame = frame.resize(minFrameSize, Image.ANTIALIAS)
+                open_cv_image = np.array(frame) 
+                # Convert RGB to BGR 
+                open_cv_image = open_cv_image[:, :, ::-1].copy() 
+                videoWriter.write(open_cv_image)
+            except:
+                print("Error in Pricture skiped")
         videoWriter.release()
         print("End Timelaps")
 
