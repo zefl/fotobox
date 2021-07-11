@@ -51,6 +51,7 @@ class Camera(CameraBase):
 
     def connect(self, _fps: int = 0):
         if self._camera == None:
+            print("[picInABox] Connect to pi camera")
             self._camera = picamera.PiCamera()
             self._framerate = _fps            
             
@@ -71,6 +72,7 @@ class Camera(CameraBase):
             
     def disconnect(self):
         if self._camera:
+            print("[picInABox] Disconnect pi camera")
             #from https://www.raspberrypi.org/forums/viewtopic.php?t=227394
             self._camera.stop_preview()
             time.sleep(6)
@@ -85,12 +87,18 @@ class Camera(CameraBase):
         raise NotImplementedError
         
     def _capture_stream(self):
-        #wait for next caputre
-        for data in self._camera.capture_continuous(self._rawCapture, format="bgr", use_video_port=True):
-            #get data via rawCaputre
-            frame = data.array
-            self._rawCapture.truncate(0) # reset stream for next frame
-            return frame
+        try:
+            #wait for next caputre
+            for data in self._camera.capture_continuous(self._rawCapture, format="bgr", use_video_port=True):
+                #get data via rawCaputre
+                frame = data.array
+                self._rawCapture.truncate(0) # reset stream for next frame
+                return frame
+        except:
+            print("[picInABox] Error in pi camera reading")
+            self.disconnect()
+            self.connect()
+
 
     def _create_process(self):
         return mp.Process(target=_stream_runPicam, args=(self._mp_FrameQueues, self._mp_StopEvent, self._frameRate,))

@@ -4,12 +4,10 @@
 #  	picInABox.py
 #  	author:zefl
 import os
-print('Current working directory: ' + (os.getcwd()))
+import sys
+print('Current working directory is: ' + (os.getcwd()))
 
 from flask import Flask, render_template, Response, request, redirect, url_for, jsonify, send_from_directory, send_file, make_response, g
-
-from flask import session
-from flask_session import Session
 
 import time
 import cv2
@@ -58,11 +56,13 @@ g_cameras = []
 
 g_frame = []
 
+g_init = False
+
 #-------------------------------
 # Webserver Functions
 # from https://flask-session.readthedocs.io/en/latest/
 # from https://pythonise.com/series/learning-flask/python-before-after-request
-#-------------------------------
+# -------------------------------
 @app.before_first_request
 def before_first_request_func():
 
@@ -79,21 +79,24 @@ def before_first_request_func():
     global g_anchorSingle
     global g_modus
     global g_settings
+    global g_init
     
-    g_modus = 1
-    g_anchorsMulti = findInserts("static/pictures/LayoutMulti.png")
-    g_anchorSingle = findInserts("static/pictures/LayoutSingle.png")
-    with open('static/default.json') as json_file:
-        data = json.load(json_file)
-        g_settings = data
-        
-    if not(os.path.exists("./data/orginal_pictures")):
-        os.makedirs("./data/orginal_pictures")
-    if not(os.path.exists("./data/pictures")):
-        os.makedirs("./data/pictures")
-    if not(os.path.exists("./data/videos")):
-        os.makedirs("./data/videos")
-
+    if g_init == False:
+        g_init = True
+        g_modus = 1
+        g_anchorsMulti = findInserts("static/pictures/LayoutMulti.png")
+        g_anchorSingle = findInserts("static/pictures/LayoutSingle.png")
+        with open('static/default.json') as json_file:
+            data = json.load(json_file)
+            g_settings = data
+            
+        if not(os.path.exists("./data/orginal_pictures")):
+            os.makedirs("./data/orginal_pictures")
+        if not(os.path.exists("./data/pictures")):
+            os.makedirs("./data/pictures")
+        if not(os.path.exists("./data/videos")):
+            os.makedirs("./data/videos")
+            
 #from https://www.youtube.com/watch?v=8qDdbcWmzCg
 #adds settings json to each page
 @app.context_processor
