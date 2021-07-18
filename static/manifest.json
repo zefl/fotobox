@@ -1,0 +1,16 @@
+{
+  "background_color": "gray",
+  "description": "Pic In A Box - Best fotobox for your party",
+  "display": "fullscreen",
+  "icons": [
+    {
+      "src": "pictures/logo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ],
+  "name": "Pic In A Box",
+  "short_name": "Pic In A Box",
+  "start_url": "/"
+}
+
