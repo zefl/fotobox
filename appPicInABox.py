@@ -187,11 +187,13 @@ def settings():
                         g_activeCamera.timelapsCamera.recording_save()
                         return jsonify( {'return': 'done'} ) #return okay if no error before
                 g_settings[jsonReq['key']]['value'] = jsonReq['value']
-                return jsonify( {'return': 'done'} ) #return okay if no error before
+                response = jsonify({'return': 'done'}, 200)
+                return response #return okay if no error before
         return jsonify( {'return': 'error'} ) #default error
     elif request.method == 'GET':
         if 'key' in request.args:
             return jsonify({'value': g_settings[request.args['key']]['value']}) 
+    
 
 @app.route('/api/modus', methods = ['POST', 'GET'])
 def setg_modus():
@@ -315,6 +317,23 @@ def status():
     if request.method == 'GET':
         if 'folder' in request.args:
             return json.dumps(len(os.listdir(request.args['folder'])))
+
+
+@app.route('/print',methods = ['POST'])
+def printing():
+    jsonReq = ""
+    if request.method == 'POST':
+        if request.content_type == 'application/x-www-form-urlencoded':
+            jsonReq = request.form.to_dict()
+        if  jsonReq['key'] == 'picture':
+                print(jsonReq['value'])
+                response = jsonify({'return': 'done'}, 200)
+                response.headers.add('Access-Control-Allow-Origin', '*')
+                return response #return okay if no error before
+        else:
+            response = jsonify({'return': 'error'}, 400)
+            response.headers.add('Access-Control-Allow-Origin', '*')
+            return response #return okay if no error before 
 #-------------------------------
 # Helper functions
 #-------------------------------

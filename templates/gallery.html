@@ -97,7 +97,7 @@
         <hr>
         {% for imageName in imageNames %}
         <div class="col-lg-3 col-md-4 col-xs-6 thumb" style="margin-top:10px;">
-            <a href="{{url_for('pageImage', filename=imageName)}}" data-lightbox="mygallery">
+            <a href="{{url_for('pageImage', filename=imageName)}}" data-lightbox="mygallery" print-link="{{imageName}}">
                 <img class="img-responsive image" src=" {{url_for('pageImage', filename=imageName)}}">
             </a>
         </div>
