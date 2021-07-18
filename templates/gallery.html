@@ -1,92 +1,31 @@
-<!DOCTYPE html>
-<!-- form https://github.com/ibrahimokdadov/upload_file_python/blob/master/src/templates/gallery.html-->
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-    
-    <!-- load styles-->
-    <link rel="stylesheet" href="{{url_for('static', filename='lightbox2-2.11.3/dist/css/lightbox.min.css')}}">   
-    <link rel="stylesheet" href="{{url_for('static', filename='bootstrap-3.3.7-dist/css/bootstrap.min.css')}}">
-    
-    
-    <!-- load scripts-->
-    <script type="text/javascript" src="{{url_for('static', filename='lightbox2-2.11.3/dist/js/lightbox-plus-jquery.min.js')}}"></script> 
+{% extends "base.html" %}
 
-    <style>
-    body{
-        background: url(../static/pictures/background.png) no-repeat center center fixed; 
-        -webkit-background-size: cover;
-        -moz-background-size: cover;
-        -o-background-size: cover;
-        background-size: cover;
-    }
-    
-    .header{
-        border-width:1px 1px 1px 1px;
-        border-top-left-radius:0px; 
-        border-top-right-radius:0px; 
-        border-bottom-right-radius:0px; 
-        border-bottom-left-radius:0px; 
-        min-height:80px; 
-        background-color:rgba(78,78,78,1);
-    }
-    
-    .button{padding: 0px 0px 0px 0px;
-        border-color: rgba(33,33,33,1);
-        border-style: solid;
-        border-width: 2px 2px 2px 2px;
-        border-top-left-radius: 15px;
-        border-top-right-radius: 15px;
-        border-bottom-right-radius: 15px;
-        border-bottom-left-radius: 15px;
-        background-image: none;
-        background-color: rgba(255,255,255,0.45);
-        color: rgba(0,0,0,1);
-        font-size: 22px;
-        font-weight: bold;
-        font-family: "Courier New", Courier, monospace;
-        text-align: center;
-    }
+{% block header %}
+Gallery
+{% endblock %}
 
-    .button:hover{border-color: rgba(0,0,0,1);
-        border-style: solid;
-        border-width: 2px 2px 2px 2px;
-        border-top-left-radius: 15px;
-        border-top-right-radius: 15px;
-        border-bottom-right-radius: 15px;
-        border-bottom-left-radius: 15px;
-        background-image: none;
-        background-color: rgba(163,159,159,0.01);
-        color: rgba(0,0,0,1);}
-        
-    .image{
-        filter: grayscale(100%);
-    }
-    
-    .image:hover{
-        filter: grayscale(0);
-        transform: scale(1.1);
-    }
-    </style>
+{% block script %}
+<!-- form https://github.com/ibrahimokdadov/upload_file_python/blob/master/src/templates/gallery.html-->  
+<!-- load styles-->
+<link rel="stylesheet" href="{{url_for('static', filename='lightbox2-2.11.3/dist/css/lightbox.min.css')}}">   
+<link rel="stylesheet" href="{{url_for('static', filename='bootstrap-3.3.7-dist/css/bootstrap.min.css')}}">
 
-</head>
-<body>
-<div class="header" style="margin: auto;">
-    <h1 style="text-align: center; font-size: 40px;margin:auto;">
-        <span style="font-size: 40px; font-family: 'Courier New', Courier, monospace; font-weight: bold; color: #ffffff;">Anschauen und Staunen</span>
-        
-        <img data-loading="lazy" role="presentation" data-scalestrategy="fit" src="../static/pictures/logo.png" style="display:block;margin:0;float:left;" height="80" width="80" />
-        <div style="margin-right: 0px;margin-top: 0px; width:80%; height:40px;float:left; position: relative;" >
-        </div>
-        <a href=".">
-            <div class="button" style="margin-right: 0px;margin-top: -20px; width:100px;height:40px;float:left;">
-                <span>Home</span>
-            </div>
-        </a>
-    </h1>
-</div>
+<!-- load scripts-->
+<script type="text/javascript" src="{{url_for('static', filename='lightbox2-2.11.3/dist/js/lightbox-plus-jquery.min.js')}}"></script> 
+{% endblock%}
 
+{% block styles %}  
+.image{
+    filter: grayscale(100%);
+}
+
+.image:hover{
+    filter: grayscale(0);
+    transform: scale(1.1);
+}
+{% endblock %}
+
+{% block content %}
 <div class="container">
 
     <div class="row">
@@ -104,5 +43,4 @@
         {% endfor %}
     </div>
 </div>
-</body>
-</html>
+{% endblock%}

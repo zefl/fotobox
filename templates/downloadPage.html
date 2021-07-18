@@ -1,54 +1,10 @@
-<!DOCTYPE html>
-<html>
-<head>
-<style>
-body{
-  background: url(../static/pictures/background.png) no-repeat center center fixed; 
-  -webkit-background-size: cover;
-  -moz-background-size: cover;
-  -o-background-size: cover;
-  background-size: cover;
-}
+{% extends "base.html" %}
 
-/* Header/logo Title */
-.header{
- border-width:1px 1px 1px 1px;
- border-top-left-radius:0px; 
- border-top-right-radius:0px; 
- border-bottom-right-radius:0px; 
- border-bottom-left-radius:0px; 
- min-height:80px; 
- background-color:rgba(78,78,78,1);
-}
+{% block header %}
+Es ist fertig
+{% endblock %}
 
-.button{padding: 0px 0px 0px 0px;
-border-color: rgba(33,33,33,1);
-border-style: solid;
-border-width: 2px 2px 2px 2px;
-border-top-left-radius: 15px;
-border-top-right-radius: 15px;
-border-bottom-right-radius: 15px;
-border-bottom-left-radius: 15px;
-background-image: none;
-background-color: rgba(255,255,255,0.45);
-color: rgba(0,0,0,1);
-font-size: 22px;
-font-weight: bold;
-font-family: "Courier New", Courier, monospace;
-text-align: center;}
-
-.button:hover{border-color: rgba(0,0,0,1);
-border-style: solid;
-border-width: 2px 2px 2px 2px;
-border-top-left-radius: 15px;
-border-top-right-radius: 15px;
-border-bottom-right-radius: 15px;
-border-bottom-left-radius: 15px;
-background-image: none;
-background-color: rgba(163,159,159,0.01);
-color: rgba(0,0,0,1);
-}
-
+{% block styles %}
 div.polaroid {
   background-color: rgba(220, 220, 220, 0.6);
   box-shadow: 0 40px 80px 0 rgba(0, 0, 0, 0.8), 0 6px 20px 0 rgba(0, 0, 0, 0.39);
@@ -59,7 +15,7 @@ div.polaroid {
   width: 100%;
   margin-top: 1%;
 }
-
+ 
 div.container {
   text-align: center;
   padding: 10px 20px;
@@ -82,32 +38,18 @@ div.container {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
+{% endblock %}
 
-</style>
-<link rel="stylesheet"  type="text/css" href="{{url_for('static', filename='countdown/countdown.css')}}"/>
-<link rel="stylesheet"  type="text/css" href="../static/countdown/countdown.css"/>
-</head>
-<body onload="startUpFunction()">
-<div class="header" style="margin: auto;">
-    <h1 style="text-align: center; font-size: 40px;margin:auto;">
-        <span style="font-size: 40px; font-family: 'Courier New', Courier, monospace; font-weight: bold; color: #ffffff;">Es ist Fertig</span>
-        
-        <img data-loading="lazy" role="presentation" data-scalestrategy="fit" src="../static/pictures/logo.png" style="display:block;margin:0;float:left;" height="80" width="80" />
-        <div style="margin-right: 0px;margin-top: 0px; width:80%; height:40px;float:left; position: relative;" >
-        </div>
-        <a href=".">
-            <div class="button" style="margin-right: 0px;margin-top: -20px; width:100px;height:40px;float:left;">
-                <span>Home</span>
-            </div>
-        </a>
-    </h1>
+{% block content %}
+<div id='content' class="polaroid" > 
 </div>
+{% endblock %}
 
-<div id='content' class="polaroid"> 
-
-<div>
-</body>
+{% block script %}
 <script>
+//https://stackoverflow.com/questions/19869639/how-to-call-a-javascript-function-within-an-html-body/19869671
+//https://www.w3schools.com/jsref/event_onload.asp
+document.addEventListener("DOMContentLoaded", startUpFunction);
 let modus = 0;
 
 video.addEventListener('loadeddata', function() {
@@ -166,4 +108,4 @@ function picload(){
     document.getElementById("loader").style.display = 'none';
 }
 </script>
-</html>
+{% endblock%}
