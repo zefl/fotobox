@@ -18,6 +18,7 @@ class CameraBase(IFotocamera):
         """Variables for handling camera
         """
         self._camera = None
+        self._connected = False
         """Variables for static picture
         """
         self._frame =[]
@@ -47,7 +48,7 @@ class CameraBase(IFotocamera):
         else:
             """Check if camera is still connect"""
             if self._camera == None:
-                self.connect()
+                self.connect(self._frameRate)
             self._frame = self._take_picture()
             self._frameAvalible = True
         
@@ -137,7 +138,13 @@ class CameraBase(IFotocamera):
             if(currentTime > nextFrameTime):
                 nextFrameTime = currentTime + desiredCyleTime
                 #call camera to take picutre
-                self._frame = self._capture_stream()                                                          
+                if self._connected:
+                    try:
+                        self._frame = self._capture_stream()      
+                    except:
+                        print("[picInABox] Error in camera reading")
+                        self.disconnect()
+                        self.connect(self._frameRate)                                                    
             if self._mp_StopEvent.value:
                 break;
         self._mp_StopEvent.value = False

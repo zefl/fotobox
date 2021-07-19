@@ -323,8 +323,11 @@ def status():
 def printing():
     jsonReq = ""
     if request.method == 'POST':
+        #get contet of post
         if request.content_type == 'application/x-www-form-urlencoded':
             jsonReq = request.form.to_dict()
+        
+        #check for picture tag
         if  jsonReq['key'] == 'picture':
                 print(jsonReq['value'])
                 response = jsonify({'return': 'done'}, 200)

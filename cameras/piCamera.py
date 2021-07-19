@@ -69,35 +69,30 @@ class Camera(CameraBase):
             self._camera.stop_preview()
             self._stream = io.BytesIO()
             self._rawCapture = PiRGBArray(self._camera)
+            self._connected = True
             
     def disconnect(self):
         if self._camera:
             print("[picInABox] Disconnect pi camera")
+            self._connected = False
             #from https://www.raspberrypi.org/forums/viewtopic.php?t=227394
             self._camera.stop_preview()
-            time.sleep(6)
+            time.sleep(3)
             self._camera.close()
             self._rawCapture.close()
             self._stream.close()
-            del self._camera
-            del self._rawCapture
-            del self._stream
 
     def _take_picture(self):
         raise NotImplementedError
         
     def _capture_stream(self):
-        try:
-            #wait for next caputre
-            for data in self._camera.capture_continuous(self._rawCapture, format="bgr", use_video_port=True):
-                #get data via rawCaputre
-                frame = data.array
-                self._rawCapture.truncate(0) # reset stream for next frame
-                return frame
-        except:
-            print("[picInABox] Error in pi camera reading")
-            self.disconnect()
-            self.connect()
+        #wait for next caputre
+        for data in self._camera.capture_continuous(self._rawCapture, format="bgr", use_video_port=True):
+            #get data via rawCaputre
+            frame = data.array
+            self._rawCapture.truncate(0) # reset stream for next frame
+            return frame
+
 
 
     def _create_process(self):
