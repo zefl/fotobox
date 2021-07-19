@@ -50,13 +50,14 @@ class Camera(CameraBase):
         """
 
     def connect(self, _fps: int = 0):
+        print("[picInABox] Connect to pi camera")
         if self._camera == None:
-            print("[picInABox] Connect to pi camera")
             self._camera = picamera.PiCamera()
             self._framerate = _fps            
             
             # camera setup
             self._camera.resolution = (640, 480)
+            self._frameSize = 640 * 480 * 3
             self._camera.framerate = _fps
             self._camera.hflip = False
             self._camera.vflip = True
@@ -70,6 +71,7 @@ class Camera(CameraBase):
             self._stream = io.BytesIO()
             self._rawCapture = PiRGBArray(self._camera)
             self._connected = True
+            print("[picInABox] Connect done")
             
     def disconnect(self):
         if self._camera:
@@ -81,17 +83,28 @@ class Camera(CameraBase):
             self._camera.close()
             self._rawCapture.close()
             self._stream.close()
+            self._camera = None
+    
+    def frameSize(self):
+        if self._frameSize:
+            return self._frameSize
+        else:
+            return 0
 
     def _take_picture(self):
         raise NotImplementedError
         
     def _capture_stream(self):
-        #wait for next caputre
-        for data in self._camera.capture_continuous(self._rawCapture, format="bgr", use_video_port=True):
-            #get data via rawCaputre
-            frame = data.array
-            self._rawCapture.truncate(0) # reset stream for next frame
-            return frame
+        try:
+            #wait for next caputre
+            for data in self._camera.capture_continuous(self._rawCapture, format="bgr", use_video_port=True):
+                #get data via rawCaputre
+                frame = data.array
+                self._rawCapture.truncate(0) # reset stream for next frame
+                return frame
+        except:
+            print("[picInABox] Error in reading Pi Camera")
+            raise RuntimeError("[picInABox] Error in reading Pi Camera")
 
 
 

@@ -120,6 +120,9 @@ class CameraBase(IFotocamera):
     
     def disconnect(self):
         raise NotImplementedError
+    
+    def frameSize(self):
+        raise NotImplementedError
 
     def _take_picture(self):
         raise NotImplementedError

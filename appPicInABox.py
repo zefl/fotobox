@@ -348,11 +348,13 @@ def gen():
         time.sleep(1/25)
         frame = g_activeCamera.previewCamera.stream_show()
         if type(frame) != 'NoneType':
-            if len(frame) > 0:
+            if len(frame) != g_activeCamera.previewCamera.frameSize():
                 ret, frameJPG = cv2.imencode('.jpg', frame)
                 frameShow  = frameJPG.tobytes()
                 yield (b'--frame\r\n'
                     b'Content-Type: image/jpeg\r\n\r\n' + frameShow + b'\r\n')
+            else:
+                print("[picInABox] Corrupt Image in Video stream")
 
 def findInserts(layoutSrc):
     img = Image.open(layoutSrc) 
