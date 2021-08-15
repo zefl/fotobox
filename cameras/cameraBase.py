@@ -133,6 +133,9 @@ class CameraBase(IFotocamera):
     def _create_process(self):
         raise NotImplementedError
 
+    def frameSize(self):
+        raise NotImplementedError
+
     def _thread_run(self):
         desiredCyleTime = 1 / self._frameRate #run this thread only as fast as nessecarry
         nextFrameTime = 0

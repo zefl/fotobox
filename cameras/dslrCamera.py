@@ -13,8 +13,7 @@ except ImportError:
 
 import multiprocessing as mp
 import io
-from PIL import Image, ImageFilter
-import copy
+from PIL import Image
 import numpy as np
 import psutil
 from fnmatch import fnmatchcase
@@ -60,11 +59,13 @@ class Camera(CameraBase):
             # camera setup
             self._camera.init()
             text = self._camera.get_summary()
-            print(text)
+            print(f"[picInABox] {text}")
         
     def disconnect(self):
-        print("close DLSR camera")
-        self._camera.exit()
+        print("[picInABox] Disconnect pi camera")
+        if self._camera:
+            self._camera.exit()
+            self._camera = None
     
     def _cancleGphotoPrcess(self):
         for proc in psutil.process_iter():
@@ -101,7 +102,7 @@ class Camera(CameraBase):
             print("Error")
 
     def quit(self):
-        gp.check_result(gp.gp_camera_exit(_camera))
+        gp.check_result(gp.gp_camera_exit(self._camera))
 
     def _convert_to_cv2(self, _frame):
         open_cv_image = np.array(_frame)
@@ -109,19 +110,23 @@ class Camera(CameraBase):
         return frame
     
     def _take_picture(self):
-        self.set_config_value('actions', 'viewfinder', 0)
+        #self.set_config_value('actions', 'viewfinder', 0)
         test = self._camera.capture(gp.GP_CAPTURE_IMAGE)
         time.sleep(0.3)  # Necessary to let the time for the camera to save the image
         print(test)
 
 
     def _capture_stream(self):  
-        camFile =  self._camera.capture_preview()
-        frame = Image.open(io.BytesIO(camFile.get_data_and_size()))
-        return self._convert_to_cv2(frame)
+        try:
+            camFile =  self._camera.capture_preview()
+            frame = Image.open(io.BytesIO(camFile.get_data_and_size()))
+            return self._convert_to_cv2(frame)
+        except:
+            print("[picInABox] Error in reading DSLR Camera")
+            raise RuntimeError("[picInABox] Error in reading DSLR Camera")
 
     def _create_process(self):
-            return mp.Process(target=_stream_runWebcam, args=(self._mp_FrameQueue, self._mp_StopEvent, self._frameRate,))
+        return mp.Process(target=_stream_runDslrCam, args=(self._mp_FrameQueue, self._mp_StopEvent, self._frameRate,))
 
         
 """Global Function which is called by subprocess
@@ -130,6 +135,7 @@ class Camera(CameraBase):
 :param stopEvent : Eventflag which causes the process to stop
 :param frameRate : static framerate on which the camera should work
 """
-def _stream_runWebcam(queue : mp.Queue, stopEvent: mp.Value, frameRate):
+def _stream_runDslrCam(queue : mp.Queue, stopEvent: mp.Value, frameRate):
     camera = Camera()
+    camera.connect(frameRate)
     stream_run(camera, queue, stopEvent, frameRate)
