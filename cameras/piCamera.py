@@ -90,10 +90,7 @@ class Camera(CameraBase):
             return self._frameSize
         else:
             return 0
-
-    def _take_picture(self):
-        raise NotImplementedError
-        
+       
     def _capture_stream(self):
         try:
             #wait for next caputre

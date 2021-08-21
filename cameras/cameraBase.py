@@ -49,8 +49,7 @@ class CameraBase(IFotocamera):
             """Check if camera is still connect"""
             if self._camera == None:
                 self.connect(self._frameRate)
-            self._frame = self._take_picture()
-            self._frameAvalible = True
+            self._take_picture()
         
     def picture_show(self):
         if self._frameAvalible:
@@ -60,14 +59,16 @@ class CameraBase(IFotocamera):
             return []
             
     def picture_save(self, folder="", file=""):
+        now = datetime.now()
+        picFrame = copy.copy(self._frame);
+        if(file == ""):
+            """create new filename if no filename was given"""
+            file = now.strftime('%Y_%m_%d_%H_%M_%S') 
+        picName = os.path.join(folder, file + ".jpg")
         if self._frameAvalible:
-            now = datetime.now()
-            picFrame = copy.copy(self._frame);
-            if(file == ""):
-                """create new filename if no filename was given"""
-                file = now.strftime('%Y_%m_%d_%H_%M_%S') 
-            picName = os.path.join(folder, file + ".jpg")
             cv2.imwrite(picName, picFrame)  
+        else:
+           self._save_picture(picName) 
     
     def thread_start(self):
         if self._process:
@@ -95,6 +96,9 @@ class CameraBase(IFotocamera):
 
     def stream_stop(self):
         self.thread_stop()
+        while self._thread != None:
+            #Wait for thread to end
+            pass
         return
         #Stop stream, thread will be stoped
         self._mp_StopEvent.value = True
@@ -126,14 +130,14 @@ class CameraBase(IFotocamera):
 
     def _take_picture(self):
         raise NotImplementedError
-        
+
+    def _save_picture(self, pic_targert):
+        raise NotImplementedError
+
     def _capture_stream(self):
         raise NotImplementedError
 
     def _create_process(self):
-        raise NotImplementedError
-
-    def frameSize(self):
         raise NotImplementedError
 
     def _thread_run(self):

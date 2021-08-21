@@ -1,0 +1,19 @@
+from appPicInABox import *
+
+#import signal
+import atexit
+
+atexit.register(exit)
+#signal.signal(signal.SIGINT, exit_gracefully)
+#signal.signal(signal.SIGTERM, exit_gracefully)
+
+def _atexit(*args):
+    import uwsgi
+    exit('Uswgi call')
+
+if __name__ == "__main__":
+    #import uwsgi
+    import syslog
+    #uwsgi.atexit = _atexit
+    syslog.syslog(syslog.LOG_INFO,"[PicInABox] Start Application")
+    #app.run(host = '0.0.0.0', threaded = True, port = 80)

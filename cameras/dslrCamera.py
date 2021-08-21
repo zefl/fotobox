@@ -54,16 +54,20 @@ class Camera(CameraBase):
         if self._camera == None:
             self._cancleGphotoPrcess()
             self._camera = gp.Camera()
-            self._frameRate = _fps  
+            self._frameRate = _fps
+            self._frameSize = 0 #todo get framesize from camera
+            self._lastCapture = None
             
             # camera setup
             self._camera.init()
             text = self._camera.get_summary()
-            print(f"[picInABox] {text}")
+            self._connected = True
+            print(f"[picInABox] Connect to dslr {text}")
         
     def disconnect(self):
-        print("[picInABox] Disconnect pi camera")
+        print("[picInABox] Disconnect dslr camera")
         if self._camera:
+            self._connected = False
             self._camera.exit()
             self._camera = None
     
@@ -103,30 +107,38 @@ class Camera(CameraBase):
 
     def quit(self):
         gp.check_result(gp.gp_camera_exit(self._camera))
-
-    def _convert_to_cv2(self, _frame):
-        open_cv_image = np.array(_frame)
-        frame = open_cv_image[:, :, ::-1].copy()
-        return frame
+   
+    def frameSize(self):
+        if self._frameSize:
+            return self._frameSize
+        else:
+            return 0
     
     def _take_picture(self):
         #self.set_config_value('actions', 'viewfinder', 0)
-        test = self._camera.capture(gp.GP_CAPTURE_IMAGE)
+        self._lastCapture = self._camera.capture(gp.GP_CAPTURE_IMAGE)
         time.sleep(0.3)  # Necessary to let the time for the camera to save the image
-        print(test)
 
+    def _save_picture(self, pic_targert):
+        if self._lastCapture:
+            camera_file = self._camera.file_get(
+            self._lastCapture.folder, self._lastCapture.name, gp.GP_FILE_TYPE_NORMAL)
+            camera_file.save(pic_targert)   
+            self._lastCapture = None 
 
     def _capture_stream(self):  
         try:
             camFile =  self._camera.capture_preview()
-            frame = Image.open(io.BytesIO(camFile.get_data_and_size()))
-            return self._convert_to_cv2(frame)
+            file_data = camFile.get_data_and_size()
+            image = Image.open(io.BytesIO(file_data))
+            frame = np.array(image)[:, :, ::-1]
+            return frame
         except:
             print("[picInABox] Error in reading DSLR Camera")
             raise RuntimeError("[picInABox] Error in reading DSLR Camera")
 
     def _create_process(self):
-        return mp.Process(target=_stream_runDslrCam, args=(self._mp_FrameQueue, self._mp_StopEvent, self._frameRate,))
+        return mp.Process(target=_stream_runDslrCam, args=(self._mp_FrameQueues, self._mp_StopEvent, self._frameRate,))
 
         
 """Global Function which is called by subprocess
@@ -135,7 +147,7 @@ class Camera(CameraBase):
 :param stopEvent : Eventflag which causes the process to stop
 :param frameRate : static framerate on which the camera should work
 """
-def _stream_runDslrCam(queue : mp.Queue, stopEvent: mp.Value, frameRate):
+def _stream_runDslrCam(queues, stopEvent: mp.Value, frameRate):
     camera = Camera()
     camera.connect(frameRate)
-    stream_run(camera, queue, stopEvent, frameRate)
+    stream_run(camera, queues, stopEvent, frameRate)
