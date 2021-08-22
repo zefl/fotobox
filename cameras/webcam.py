@@ -33,12 +33,21 @@ class Camera(CameraBase):
     def connect(self,  fps: int = 0):
         if self._camera == None:
             self._camera =  cv2.VideoCapture(0)
-            self._frameRate = fps   
-    
+            self._frameRate = fps
+            self._frameSize = 0
+            self._connected = True
+
     def disconnect(self):
         if self._camera:
+            self._connected = False
             self._camera.release()
             self._camera = None
+
+    def frameSize(self):
+        if self._frameSize:
+            return self._frameSize
+        else:
+            return 0
 
     def _take_picture(self):
         check, frame = self._camera.read()
@@ -52,6 +61,8 @@ class Camera(CameraBase):
         check, frame = self._camera.read()
         if check:
             frame = cv2.flip(frame, 1)
+            if self._frameSize == 0:
+                self._frameSize == len(frame)
         else:
             frame = []
         return frame

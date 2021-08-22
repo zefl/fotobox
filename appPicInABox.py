@@ -326,7 +326,8 @@ def printing():
         #get contet of post
         if request.content_type == 'application/x-www-form-urlencoded':
             jsonReq = request.form.to_dict()
-        
+        else:
+            jsonReq = json.loads(request.data)
         #check for picture tag
         if  jsonReq['key'] == 'picture':
                 print(jsonReq['value'])
@@ -355,6 +356,8 @@ def gen():
                     b'Content-Type: image/jpeg\r\n\r\n' + frameShow + b'\r\n')
             else:
                 print("[picInABox] Corrupt Image in Video stream")
+        else:
+            raise RuntimeError("[picInABox] No Frametype given")
 
 def findInserts(layoutSrc):
     img = Image.open(layoutSrc) 

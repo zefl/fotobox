@@ -102,6 +102,17 @@ function startUpFunction(){
 
 function printing(){
  console.log("printing Picture");
+ var xhttp = new XMLHttpRequest();
+  var jsonObj = null
+  xhttp.onreadystatechange = function() {
+      if (this.readyState == 4 && this.status == 200) {
+        jsonObj = JSON.parse(this.responseText);
+        modus = jsonObj.option
+      }
+  };
+  xhttp.open("POST", "print");
+  xhttp.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+  xhttp.send(JSON.stringify({key:"picture", value:"last"}));
 }
 
 function picload(){

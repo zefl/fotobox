@@ -5,63 +5,96 @@ Ihr habt die Wahl ...
 {% endblock%}
 
 {% block content %}
-
-<div style="width:276px;height:276px;overflow:hidden; margin:auto;">
-    <img role="presentation" src="../static/pictures/logo.png" style="display:block;margin:auto;" height="276" width="276" />
-</div>
-
-<div style="width:580px; height:181px; margin-top:-100px;">
-    <img src="../static/pictures/arrow.png" class="rotate90" style="margin-left:50%;width:181px;height:181px;opacity:1; -webkit-transform: scaleX(-1); transform: scaleX(-1) rotate(90deg);" />
-</div>
-
-<div style="width:580px; height:181px; margin-left:50%; margin-top:-181px; float:left;">
-    <img src="../static/pictures/arrow.png" class="rotate90" style="margin-left:50%;width:181px;height:181px;opacity:1" />
+<div class="container">
+    <div class="row"> 
+        <div class="col">
+            <div class="d-flex align-items-center justify-content-end" style="height: 276px">
+                <img src="../static/pictures/arrow.png" class="rotate90" style="width:181px;height:181px;opacity:1; -webkit-transform: scaleX(-1); transform: scaleX(-1) rotate(90deg);" />
+            </div>
+        </div>
+        <div class="col-6">
+            <img role="presentation" src="../static/pictures/logo.png" style="display:block;margin:auto;" height="276" width="276" />
+        </div>
+        <div class="col">
+            <div class="d-flex align-items-center justify-content-start" style="height: 276px">
+                <img src="../static/pictures/arrow.png" class="rotate90" style="width:181px;height:181px;opacity:1" />
+            </div>
+        </div>
+    </div>
 </div>
 
 
 
 <!-- from https://stackoverflow.com/questions/6180256/post-from-an-a-tag -->
 <!-- from http://www.corelangs.com/css/box/center-div.html -->
-<form action="api/modus?option=1" method="POST">
-    <input type="hidden" />
-    <a href="#" onclick="this.parentNode.submit()" style="text-decoration: none; "> 
-        <div style="margin-left: 50px;margin-top:34px;width:580px;height:68px;">
-                <div class="button" style="width:513px;height:68px;float:left;" id="kamera">
-                    <span >Einzelfoto starten!</span>
+<div class="row justify-content-md-center">
+    <div class="col-4 mx-auto">
+        <form action="api/modus?option=1" method="POST">
+            <input type="hidden" />
+            <a href="#" onclick="this.parentNode.submit()" style="text-decoration: none; "> 
+                <div>
+                    <div class="button" style="width:350px;height:68px;float:left;" id="kamera">
+                        <span >Einzelfoto starten!</span>
+                    </div>
+                    <div style="width:45px;height:45px;margin-left:6px;margin-top:6px;float:left;">
+                        <img src="../static/pictures/kamera.png" style="height:100%;opacity:1" />
+                    </div>
                 </div>
-                <div style="width:45px;height:45px;margin-left:6px;margin-top:6px;float:left;">
-                    <img src="../static/pictures/kamera.png" style="height:100%;opacity:1" />
-                </div>
-        </div>
-    </a>
-</form>
+            </a>
+        </form>
+    </div>
+    <div class="col-1">
 
-<form action="api/modus?option=2" method="POST">
-    <input type="hidden" />
-    <a href="#" onclick="this.parentNode.submit()" style="text-decoration: none; "> 
-        <div style="margin-left: 50px;margin-top:34px;width:580px;height:68px;">
-                <div class="button" style="width:513px;height:68px;float:left;" id="kamera4">
-                    <span >4'er Fotosession starten!</span>
+    </div>
+    <div class="col-4 mx-auto">
+        <form action="api/modus?option=2" method="POST">
+            <input type="hidden" />
+            <a href="#" onclick="this.parentNode.submit()" style="text-decoration: none; "> 
+                <div>
+                    <div class="button" style="width:350px;height:68px;float:left;" id="kamera4">
+                        <span >4'er Fotosession starten!</span>
+                    </div>
+                    <div style="width:45px;height:45px;margin-left:6px;margin-top:6px;float:left;">
+                        <img src="../static/pictures/kamera4.png" style="height:100%;opacity:1" />
+                    </div>
                 </div>
-                <div style="width:45px;height:45px;margin-left:6px;margin-top:6px;float:left;">
-                    <img src="../static/pictures/kamera4.png" style="height:100%;opacity:1" />
-                </div>
-        </div>
-    </a>
-</form>
+            </a>
+        </form>
+    </div>
+  </div>
 
-<form action="api/modus?option=3" method="POST">
-    <input type="hidden" />
-    <a href="#" onclick="this.parentNode.submit()" style="text-decoration: none; "> 
-        <div style="margin-left:800px;margin-top:-170px;width:580px;height:68px;float:left;">
-                <div class="button" style="width:513px;height:68px;float:left;" id="video">
-                    <span >Kurzvideo aufnehmen!</span>
+  <div style="height: 50px;">
+
+  </div>
+
+  <div class="row">
+    <div class="col-4 mx-auto">
+        <form action="api/modus?option=3" method="POST">
+            <input type="hidden" />
+            <a href="#" onclick="this.parentNode.submit()" style="text-decoration: none; "> 
+                <div>
+                        <div class="button" style="width:350px;height:68px;float:left;" id="video">
+                            <span >Kurzvideo aufnehmen!</span>
+                        </div>
+                        <div style="width:45px;height:45px;margin-left:6px;margin-top:6px;float:left">
+                            <img src="../static/pictures/video.png" style="height:100%;opacity:1" />
+                        </div>
                 </div>
-                <div style="width:45px;height:45px;margin-left:6px;margin-top:6px;float:left">
-                    <img src="../static/pictures/video.png" style="height:100%;opacity:1" />
-                </div>
-        </div>
-    </a>
-</form>
+            </a>
+        </form>
+    </div>
+    <div class="col-1">
+
+    </div>
+    <div class="col-4 mx-auto">
+
+    </div>
+  </div>
+
+
+
+
+
+
 
 {% endblock %}
