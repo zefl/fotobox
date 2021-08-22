@@ -21,10 +21,25 @@ from datetime import datetime
 from io import BytesIO
 from PIL import Image
 
-from cameras.IFotocamera import IFotocamera
-from cameras.IVideocamera import IVideocamera
-
-import faulthandler; faulthandler.enable()
+def exit():
+    global g_cameras
+    print('At exit called', uwsgi.worker_id())
+    #syslog.syslog(syslog.LOG_INFO,'[PicInABox] Exit is done')
+        
+    for camera in g_cameras:
+        if camera:
+            camera.fotoCamera.disconnect()
+            camera.previewCamera.stream_stop()
+            camera.previewCamera.disconnect()
+            camera.timelapsCamera.recording_stop()
+            camera.timelapsCamera.disconnect()          
+            #camera.videoCamera.disconnect()
+#from https://github.com/unbit/uwsgi/issues/2063            
+try:
+    import uwsgi
+    uwsgi.atexit = exit
+except ImportError:
+    pass
 
 #create Flask object with __name__ --> acutal python object
 app = Flask(__name__)
@@ -49,6 +64,7 @@ class cameraContainer():
         self.fotoCamera = None
         self.videoCamera = None
         self.timelapsCamera = None
+
 #holds active camera selection
 g_activeCamera = cameraContainer()
 #Holds list of available g_cameras
@@ -57,6 +73,8 @@ g_cameras = []
 g_frame = []
 
 g_init = False
+
+g_printer = None
 
 #-------------------------------
 # Webserver Functions
@@ -165,15 +183,25 @@ def settings():
         if  jsonReq['key'] in g_settings:
             newValue = jsonReq['value'] 
             if g_settings[jsonReq['key']]['min'] <= int(newValue) and int(newValue) <= g_settings[jsonReq['key']]['max']:
-                if(jsonReq['key'] == 'camera'):
-                    newCamera = g_cameras[int(jsonReq['value'])]
-                    if newCamera != None:
+                if(jsonReq['key'] == 'previewCamera'):
+                    camera = g_cameras[int(jsonReq['value'])]
+                    if camera != None:
                         #stop old stream
                         g_activeCamera.timelapsCamera.recording_stop()
                         g_activeCamera.previewCamera.stream_stop()
                         #load new camera
-                        g_activeCamera.previewCamera = newCamera.previewCamera
+                        g_activeCamera.previewCamera = camera.previewCamera
+                        g_activeCamera.timelapsCamera = camera.timelapsCamera
                         g_activeCamera.previewCamera.stream_start()
+                    else:
+                        #camera not active
+                        return jsonify( {'return': 'error'} )
+                elif(jsonReq['key'] == 'fotoCamera'): 
+                    camera = g_cameras[int(jsonReq['value'])]
+                    if camera != None:
+                        #load new camera
+                        g_activeCamera.fotoCamera = camera.fotoCamera
+                        g_activeCamera.videoCamera = camera.videoCamera
                     else:
                         #camera not active
                         return jsonify( {'return': 'error'} )
@@ -187,7 +215,8 @@ def settings():
                         g_activeCamera.timelapsCamera.recording_save()
                         return jsonify( {'return': 'done'} ) #return okay if no error before
                 g_settings[jsonReq['key']]['value'] = jsonReq['value']
-                response = jsonify({'return': 'done'}, 200)
+                response = jsonify({'return': 'done'})
+                response.status_code = 200
                 return response #return okay if no error before
         return jsonify( {'return': 'error'} ) #default error
     elif request.method == 'GET':
@@ -321,6 +350,7 @@ def status():
 
 @app.route('/print',methods = ['POST'])
 def printing():
+    global g_printer
     jsonReq = ""
     if request.method == 'POST':
         #get contet of post
@@ -331,6 +361,7 @@ def printing():
         #check for picture tag
         if  jsonReq['key'] == 'picture':
                 print(jsonReq['value'])
+                g_printer.print_picture(os.path.join("data/pictures/", jsonReq['value']))
                 response = jsonify({'return': 'done'}, 200)
                 response.headers.add('Access-Control-Allow-Origin', '*')
                 return response #return okay if no error before
@@ -346,16 +377,16 @@ def gen():
     """Video streaming generator function."""
     _lastWakeUp = time.time()
     while True:
-        time.sleep(1/25)
+        time.sleep(1/20)
         frame = g_activeCamera.previewCamera.stream_show()
         if type(frame) != 'NoneType':
-            if len(frame) != g_activeCamera.previewCamera.frameSize():
+            if len(frame) != 0: # g_activeCamera.previewCamera.frameSize():
                 ret, frameJPG = cv2.imencode('.jpg', frame)
                 frameShow  = frameJPG.tobytes()
                 yield (b'--frame\r\n'
                     b'Content-Type: image/jpeg\r\n\r\n' + frameShow + b'\r\n')
             else:
-                print("[picInABox] Corrupt Image in Video stream")
+                print(f"[picInABox] Corrupt Image in Video stream frame should be {len(frame)} but is {g_activeCamera.previewCamera.frameSize()}")
         else:
             raise RuntimeError("[picInABox] No Frametype given")
 
@@ -412,13 +443,18 @@ def checkCamera():
     from cameras.cameraRecorder import CameraRecorder
     from cameras.timeLaps import CameraTimelapss
     
+    from printers.printer import Printer
+    global g_printer
+
+    g_printer = Printer()
+    
     global g_cameras  
     global g_activeCamera
     #########################
     #Select which camera driver to use
     #########################
     if check_dslrCamera():
-        print('Found DSLR camera')
+        print('[picInABox] Found DSLR camera')
         from cameras.dslrCamera import Camera
         dslrCameraContainer = cameraContainer()
         dslrCamera = Camera()
@@ -432,7 +468,7 @@ def checkCamera():
         g_cameras.append(None)
         
     if check_piCamera():
-        print('Found pi camera')
+        print('[picInABox] Found pi camera')
         from cameras.piCamera import Camera
         piCameraContainer = cameraContainer()
         piCamera = Camera()
@@ -446,7 +482,7 @@ def checkCamera():
         g_cameras.append(None)
         
     if check_webcam():
-        print('Found webcam camera')
+        print('[picInABox] Found webcam camera')
         from cameras.webcam import Camera
         cvCameraContainer = cameraContainer()
         cvCamera = Camera()
@@ -470,8 +506,10 @@ def checkCamera():
             #start preview camera right away
             g_activeCamera.previewCamera.stream_start()
             while(g_activeCamera.previewCamera.stream_show() == []):
+                print("[picInABox] Wait for first capture")
                 time.sleep(1)
             break
+    print("[picInABox] Cameras init done")
 
 if __name__ == '__main__':
     print('Start application')
