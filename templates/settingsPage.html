@@ -17,12 +17,130 @@ background-color: lightyellow;
 input:onchange{
 background-color: lightred;
 }
+  
+/* Style the tab */
+.tab {
+  overflow: hidden;
+  border: 1px solid #ccc;
+  background-color: #f1f1f1;
+}
+
+/* Style the buttons inside the tab */
+.tab button {
+  background-color: inherit;
+  float: left;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  padding: 14px 16px;
+  transition: 0.3s;
+  font-size: 17px;
+}
+
+/* Change background color of buttons on hover */
+.tab button:hover {
+  background-color: #ddd;
+}
+
+/* Create an active/current tablink class */
+.tab button.active {
+  background-color: #ccc;
+}
+
+/* Style the tab content */
+.tabcontent {
+  display: none;
+  padding: 6px 12px;
+  border: 1px solid #ccc;
+  border-top: none;
+}
+
+input:onchange{
+  background-color: lightred;
+  }
+  
+  .switch {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 34px;
+  }
+  
+  .switch input { 
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+  
+  .slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    -webkit-transition: .4s;
+    transition: .4s;
+  }
+  
+  .slider:before {
+    position: absolute;
+    content: "";
+    height: 26px;
+    width: 26px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    -webkit-transition: .4s;
+    transition: .4s;
+  }
+  
+  input:checked + .slider {
+    background-color: #2196F3;
+  }
+  
+  input:focus + .slider {
+    box-shadow: 0 0 1px #2196F3;
+  }
+  
+  input:checked + .slider:before {
+    -webkit-transform: translateX(26px);
+    -ms-transform: translateX(26px);
+    transform: translateX(26px);
+  }
+  
+  /* Rounded sliders */
+  .slider.round {
+    border-radius: 34px;
+  }
+  
+  .slider.round:before {
+    border-radius: 50%;
+  }
+
 {% endblock %}
 
 {% block script %}
-<link rel="stylesheet" href="{{url_for('static', filename='bootstrap-3.3.7-dist/css/bootstrap.min.css')}}">
 
 <script>
+//This scritp is used for tab management
+function openTab(evt, tabName) {
+  var i, tabcontent, tablinks;
+  tabcontent = document.getElementsByClassName("tabcontent");
+  for (i = 0; i < tabcontent.length; i++) {
+    tabcontent[i].style.display = "none";
+  }
+  tablinks = document.getElementsByClassName("tablinks");
+  for (i = 0; i < tablinks.length; i++) {
+    tablinks[i].className = tablinks[i].className.replace(" active", "");
+  }
+  document.getElementById(tabName).style.display = "block";
+  evt.currentTarget.className += " active";
+}
+
+
+//This scritp is used for settings page
 function onChange(key){
   element = document.getElementById(key); 
   value = element.value; 
@@ -54,12 +172,55 @@ function onChange(key){
   xhttp.send(JSON.stringify({'key':key, 'value':value}));
 }
 
+//This scritp is used for timelapse settings
+document.addEventListener("DOMContentLoaded", loadPage);
+var timeout = setInterval(loadPage, 5000);    
+
+function loadPage(){
+  var xhttp = new XMLHttpRequest();
+  xhttp.onreadystatechange = function() {
+    if (this.readyState == 4 && this.status == 200) {
+      document.getElementById("number").innerHTML = this.responseText;
+    }
+  };
+  xhttp.open("GET", "status?folder={{ directory }}");
+  xhttp.send();
+}
+
+//from https://www.w3schools.com/howto/howto_css_switch.asp
+function activateCheckbox(checkbox, key) {
+  if(checkbox.checked == true){
+    value=1;
+    console.log("checked");
+  }
+  else{
+    value=0;
+    console.log("unchecked");
+  }
+
+  var xhttp = new XMLHttpRequest();
+  xhttp.onreadystatechange = function() {
+    if (this.readyState == 4 && this.status == 200) {
+      console.log("Done");
+    }
+  };
+  xhttp.open("POST", "api/setting");
+  xhttp.setRequestHeader("Content-Type", "application/json;charset=UTF-");
+  xhttp.send(JSON.stringify({'key':key, 'value':value}));
+}
 </script>
 {% endblock%}
 
 {% block content %}
-  <div class="row">
-    <div class="col-md-4">
+  <!-- from https://www.w3schools.com/howto/tryit.asp?filename=tryhow_js_tabs-->
+  <div class="tab">
+    <button class="tablinks" onclick="openTab(event, 'Camera')">Kamera Einstellungen</button>
+    <button class="tablinks" onclick="openTab(event, 'Timelaps')">Timelaps</button>
+  </div>
+  
+  <div id="Camera" class="tabcontent">
+    <div class="row">
+      <div class="col-md-4">
         <!-- # wil not reload Page-->
         {% for setting in settings %}
         <div class="row">
@@ -71,9 +232,44 @@ function onChange(key){
           </div>
         </div>
         {% endfor %}
-    </div>
-    <div class="col-md-8">
-      <img src="{{ url_for('pageVideoFeed') }}" style="width:100%; height: 78vh; margin-top: 1%;"> 
+      </div>
+      <div class="col-md-1">
+
+      </div>
+      <div class="col-md-6">
+        <img src="{{ url_for('pageVideoFeed') }}" style="width:100%; height: 78vh;"> 
+      </div>
     </div>
   </div>
+  
+  <div id="Timelaps" class="tabcontent">
+    <div class="row">
+      <div class="col-md-4">
+        <div class="row">
+          <div class="col-md-4"></div>
+          <div class="col-md-8">
+            <p>Aktivieren</p>
+            <label class="switch">
+              <input type="checkbox" onchange="activateCheckbox(this, 'timelaps')">
+              <span class="slider round"></span>
+            </label>
+          </div>
+          <div class="col-md-4"></div>
+          <div class="col-md-8">
+            <p>Rendern</p>
+            <label class="switch">
+              <input type="checkbox" onchange="activateCheckbox(this, 'timelapsCreate')">
+              <span class="slider round"></span>
+            </label>
+          </div>
+          <div class="col-md-4"></div>
+          <div class="col-md-8">
+            <p>Anzahl Bilder</p>
+            <p id="number"></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
 {% endblock %}

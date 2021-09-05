@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-
 import cups
 import tempfile
 import os.path as osp
@@ -22,8 +21,9 @@ Bug Fixes see
 https://www.voss.earth/2018/08/31/kurztipp-canon-selphy-wlan-drucker-cp910-oder-cp1300-unter-linux-cups-verwenden/
 https://askubuntu.com/questions/1180926/connect-canon-selphy-cp1200-via-usb-ubuntu-19-04
 """
-class Printer(object):
+class Printer(Logger):
     def __init__(self, name='default', max_pages=-1, counters=None):
+        super().__init__()
         self._conn = cups.Connection()
         self.name = None
         self.max_pages = max_pages
@@ -62,4 +62,5 @@ class Printer(object):
                 self._conn.printFile(self.name, fp.name, osp.basename(picture), {})
         else:
             self._conn.printFile(self.name, picture, osp.basename(picture), {})
+        super().print_picture(picture)
         print("File '%s' sent to the printer", picture)

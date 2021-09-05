@@ -130,7 +130,7 @@ def pageStart():
 
 @app.route('/settings')
 def pageSettings():
-    return render_template('settingsPage.html')
+    return render_template('settingsPage.html', directory="data/timelaps")
 
 @app.route('/options')
 def pageOptions():
@@ -165,10 +165,6 @@ def pageVideoFeed():
 @app.route('/upload/<filename>')
 def pageImage(filename):
     return send_from_directory("data/pictures", filename)
-
-@app.route('/timelaps')
-def timelaps():
-    return render_template("timelaps.html", directory="data/timelaps")
 
 #-------------------------------
 # Rest API functions
@@ -361,6 +357,11 @@ def printing():
         #check for picture tag
         if  jsonReq['key'] == 'picture':
                 print(jsonReq['value'])
+                if jsonReq['value'] == 'last':
+                    # If last is given use the last taken picture
+                    list_of_files = glob.glob('data/pictures/*')
+                    list_of_files.sort(key=os.path.getctime)
+                    jsonReq['value'] = list_of_files[-1]
                 g_printer.print_picture(os.path.join("data/pictures/", jsonReq['value']))
                 response = jsonify({'return': 'done'}, 200)
                 response.headers.add('Access-Control-Allow-Origin', '*')
@@ -443,10 +444,13 @@ def checkCamera():
     from cameras.cameraRecorder import CameraRecorder
     from cameras.timeLaps import CameraTimelapss
     
-    from printers.printer import Printer
     global g_printer
-
-    g_printer = Printer()
+    try:
+        from printers.printer import Printer
+        g_printer = Printer()
+    except:
+        from printers.virtualPrinter import VirtualPrinter
+        g_printer = VirtualPrinter()
     
     global g_cameras  
     global g_activeCamera

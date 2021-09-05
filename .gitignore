@@ -1,9 +1,12 @@
 __pycache__/
+.vscode/
 cameras/__pycache__/
 data/videos/*
 data/pictures/*
 data/orginal_pictures/*
 data/timelaps/*
+data/*.csv
 workspace/env/
 flask_session/
 createEnv.txt
+BildAlsHintergrundFürFotobox.pptx
