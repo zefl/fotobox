@@ -75,7 +75,7 @@ class CameraBase(IFotocamera):
             print("Stream process already up in running")
         else:
             if self._thread == None:
-                self._thread = threading.Thread(target=self._thread_run)
+                self._thread = threading.Thread(name='CameraStreamThread', target=self._thread_run)
                 self._mp_StopEvent.value = False
                 self._thread.start()
             

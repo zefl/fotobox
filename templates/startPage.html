@@ -4,11 +4,13 @@
 Viel Spaß beim feiern und fotografieren
 {% endblock %}
 
+{% block script %}
+<script type="text/javascript" src="{{url_for('static', filename='long-press-event/long-press-event.js')}}"></script>
+{% endblock %}
+
 {% block content %}
-<div style="width:276px;height:276px;overflow:hidden; margin:0 auto;">
-    <a href="settings" style="text-decoration: none; "> 
-        <img role="presentation" src="../static/pictures/logo.png" style="display:block;margin:0" height="276" width="276" data-width="276" data-height="276">
-    </a>
+<div id="logo" data-long-press-delay="2000" style="width:276px;height:276px;overflow:hidden; margin:0 auto;">
+    <img role="presentation" src="../static/pictures/logo.png" style="display:block;margin:0" height="276" width="276" data-width="276" data-height="276">
 </div>
 
 <a href="options" style="text-decoration: none; "> 
@@ -32,4 +34,20 @@ Viel Spaß beim feiern und fotografieren
             </div>
     </div>
 </a>
+
+<script>
+    // grab the element
+    var el = document.getElementById('logo');
+    // listen for the long-press event
+    el.addEventListener('long-press', function(e) {
+    
+      // stop the event from bubbling up
+      e.preventDefault()
+    
+      location.href = '/settings';
+
+    });
+    
+</script>
+    
 {% endblock %}

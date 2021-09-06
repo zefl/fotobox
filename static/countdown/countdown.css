@@ -6,7 +6,7 @@ src: url("SpecialElite-Regular.ttf");
 .base-timer {
   position: relative;
   width: 33vw; 
-  font-size: 180px;
+  font-size: 7vw;
 }
 
 .base-timer__svg {
