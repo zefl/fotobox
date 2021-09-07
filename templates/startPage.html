@@ -4,6 +4,30 @@
 Viel Spaß beim Feiern und Fotografieren
 {% endblock %}
 
+{% block styles %}
+.choose {
+    margin:0 auto;
+    margin-top:34px; 
+    width:580px; 
+    height:68px; 
+    line-height: 68px; /* needs to be the same as hight*/
+}
+.choose_botton{
+    width:513px;
+    height:68px;
+    float:left 
+}
+
+.choose_img{
+    width:45px;
+    height:45px;
+    margin-left:6px;
+    margin-top:6px;
+    float:left;
+    text-align:center;
+}
+{% endblock %}
+
 {% block script %}
 <script type="text/javascript" src="{{url_for('static', filename='long-press-event/long-press-event.js')}}"></script>
 {% endblock %}
@@ -13,27 +37,27 @@ Viel Spaß beim Feiern und Fotografieren
     <img role="presentation" src="../static/pictures/logo.png" style="display:block;margin:0" height="276" width="276" data-width="276" data-height="276">
 </div>
 
-<a href="options" style="text-decoration: none; "> 
-    <div style="margin:0 auto;margin-top:34px;width:580px;height:68px;">
-            <div class="button" style="width:513px;height:68px;float:left" id="kamera">
+<div class="choose">
+    <a href="options" style="text-decoration: none; "> 
+            <div class="button choose_botton" id="kamera">
                 <span >Fotospaß starten!</span>
             </div>
-            <div style="width:45px;height:45px;margin-left:6px;margin-top:6px;float:left">
+            <div class="choose_img">
                 <img src="../static/pictures/kamera.png" style="height:100%;opacity:1" />
             </div>
-    </div>
-</a>
+    </a>
+</div>
 
-<a href="gallery" style="text-decoration: none; "> 
-    <div style="margin:0 auto;margin-top:34px;width:580px;height:68px;">
-            <div class="button" style="width:513px;height:68px;float:left " id="gallery">
+<div class="choose">
+    <a href="gallery" style="text-decoration: none; "> 
+            <div class="button choose_botton" id="gallery">
                 <span >Hier geht´s zur Galerie</span>
             </div>
-            <div style="width:45px;height:45px;margin-left:6px;margin-top:6px;float:left">
+            <div class="choose_img">
                 <img src="../static/pictures/gallery.png" style="height:100%;opacity:1" />
             </div>
-    </div>
-</a>
+    </a>
+</div>
 
 <script>
     // grab the element

@@ -16,7 +16,7 @@
     "triggerDelay" :    
     {
         "value" : 0,
-        "nameDE" : "Zeit zwischen Triggern des Fotos und wirklichem auslösen der Kamera in sec",
+        "nameDE" : "Zeit zwischen Triggern des Fotos und wirklichem ausloesen der Kamera in sec",
         "min" : 0,
         "max" : 20
     },
