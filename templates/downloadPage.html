@@ -111,6 +111,12 @@ function startUpFunction(){
                       .image{
                         height: 15vh;
                       }
+                      /* https://www.w3schools.com/css/css3_shadows_box.asp
+                      https://www.w3schools.com/howto/howto_css_rounded_images.asp */
+                      .image_button{
+                        box-shadow:  0 4px 8px 0 grey, 0 6px 20px 0 grey;
+                        border-radius: 5%;
+                      }
                     </style>
                     <div id="loader" style="float:left;">
                         <div class="loader"></div>
@@ -122,11 +128,11 @@ function startUpFunction(){
                         <img class="image" src="api/getQRCode"/> 
                         <div style="height: 5vh;"></div>
                         <a href="/picture">
-                          <img class="image" data-loading="lazy" role="presentation" data-scalestrategy="fit"  src="../static/pictures/kameraRetake.png"/> 
+                          <img class="image image_button" data-loading="lazy" role="presentation" data-scalestrategy="fit"  src="../static/pictures/kameraRetake.png"/> 
                           <p> Noch einmal </p>
                         </a>
                         <a href="#">
-                          <img class="image" src="../static/pictures/print.png" onclick="printing()"/> 
+                          <img class="image image_button" src="../static/pictures/print.png" onclick="printing()"/> 
                           <p > Druck mich </p>
                         </a>
                     </div>

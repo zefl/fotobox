@@ -129,8 +129,7 @@ class Camera(CameraBase):
 
     def _save_picture(self, pic_targert):
         if self._lastCapture:
-            camera_file = self._camera.file_get(
-            self._lastCapture.folder, self._lastCapture.name, gp.GP_FILE_TYPE_NORMAL)
+            camera_file = self._camera.file_get(self._lastCapture.folder, self._lastCapture.name, gp.GP_FILE_TYPE_NORMAL)
             camera_file.save(pic_targert)   
             self._lastCapture = None 
 
