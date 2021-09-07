@@ -52,17 +52,17 @@ let fotoCount = 0
 
 function statemachine(transition){
     var done=false;
-    console.log(state);
-    console.log(transition);
+    console.log('State: ' + state);
+    console.log('Transition: ' + transition);
     switch(state){
         case 'Init':
             if(transition == 'InitialStart'){ 
-                startTimer({{ settings['countDown']['value']}});
+                startTimer({{settings['countDown']['value']}}, {{settings['triggerDelay']['value']}}, 'countdown');
                 state = 'waitForTimeout'
             }
             break;
         case 'waitForTimeout':
-            if(transition == 'TimerFinish'){
+            if(transition == 'Trigger'){
                 //Capature Foto
                 var xhttp = new XMLHttpRequest();
                 var jsonObj = null
@@ -80,7 +80,7 @@ function statemachine(transition){
                     xhttp.send(JSON.stringify({option:"takePciture"}));
                 }
                 else if(modus == 3){
-                    startTimer({{ settings['timeVideo']['value']}},'video');
+                    startTimer({{settings['timeVideo']['value']}},  0, 'video');
                     xhttp.send(JSON.stringify({option:"startVideo"}));
                 }
             }
@@ -100,12 +100,12 @@ function statemachine(transition){
                     done = true;
                     break;
                 }
-                startTimer({{ settings['countDown']['value'] }},'countdown');
+                startTimer({{settings['countDown']['value']}}, {{settings['triggerDelay']['value']}}, 'countdown');
                 state = 'waitForTimeout'
                 break;
             } 
         }
-        else if(transition == 'TimerFinish'){
+        else if(transition == 'Trigger'){
             if (modus == 3){                //viedo
                 var xhttp = new XMLHttpRequest();
                 var jsonObj = null
@@ -163,12 +163,12 @@ let timerInterval = null;
 let remainingPathColor = COLOR_CODES.info.color;
 
 function onTimesUp() {
+  document.getElementById("base-timer-label").innerHTML = "Cheese";
   clearInterval(timerInterval);
   timerInterval = null;
-  statemachine('TimerFinish')
 }
 
-function startTimer(time, type) {
+function startTimer(time, trigger_before_end, type) {
     //reset
     console.log("Start Timer");
     timePassed = 0;  
@@ -196,8 +196,17 @@ function startTimer(time, type) {
         setCircleDasharray();
         setRemainingPathColor(timeLeft);
 
+        if (timeLeft === trigger_before_end) {
+          if(type == 'countdown'){
+            statemachine('Trigger')
+          }
+        }
+
         if (timeLeft === 0) {
           onTimesUp();
+          if(type == 'video'){
+            statemachine('Trigger')
+          }
         }
       }, 1000);
     }

@@ -45,3 +45,24 @@ def findInserts(layoutSrc):
                 imageAncors.append(item)
         lastAncor = item
     return imageAncors
+
+def resetUsbViaName(name):
+    #see https://wiki.ubuntuusers.de/usbreset/
+    import subprocess
+    import re
+    #see https://stackoverflow.com/questions/8110310/simple-way-to-query-connected-usb-devices-info-in-python
+    dev_tree = subprocess.check_output("lsusb")
+    device_re = re.compile(b"Bus\s+(?P<bus>\d+)\s+Device\s+(?P<device>\d+).+ID\s(?P<id>\w+:\w+)\s(?P<tag>.+)$", re.I)
+    for i in dev_tree.split(b'\n'):
+        if i:
+            info = device_re.match(i)
+            if info:
+                dinfo = info.groupdict()
+                dinfo['device'] = '/dev/bus/usb/%s/%s' % (dinfo.pop('bus').decode('ascii'), dinfo.pop('device').decode('ascii'))
+                if name in dinfo['tag'].decode('ascii'):
+                    result = subprocess.run(['usbreset', dinfo['device']])
+                    if result.returncode == 0:
+                        return True
+                    else:
+                        return False
+    return False

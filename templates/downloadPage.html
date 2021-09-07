@@ -38,6 +38,7 @@ div.container {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
+
 {% endblock %}
 
 {% block content %}
@@ -47,6 +48,35 @@ div.container {
 
 {% block script %}
 <script>
+//https://stackoverflow.com/questions/7071472/javascript-timeout-when-no-actions-from-user-for-specified-time
+
+attachEvent(window,'load',function(){
+  var idleSeconds = 300; //Idle time to 5 min
+  var idleTimer;
+  function resetTimer(){
+    clearTimeout(idleTimer);
+    idleTimer = setTimeout(whenUserIdle,idleSeconds*1000);
+  }
+  attachEvent(document.body,'mousemove',resetTimer);
+  attachEvent(document.body,'keydown',resetTimer);
+  attachEvent(document.body,'click',resetTimer);
+  
+  resetTimer(); // Start the timer when the page loads
+});
+
+function attachEvent(obj,evt,fnc,useCapture){
+  if (obj.addEventListener){
+    obj.addEventListener(evt,fnc,!!useCapture);
+    return true;
+  } else if (obj.attachEvent){
+    return obj.attachEvent("on"+evt,fnc);
+  }
+}
+
+function whenUserIdle(){
+  location.href = '/';
+}
+
 //https://stackoverflow.com/questions/19869639/how-to-call-a-javascript-function-within-an-html-body/19869671
 //https://www.w3schools.com/jsref/event_onload.asp
 document.addEventListener("DOMContentLoaded", startUpFunction);
@@ -67,16 +97,37 @@ function startUpFunction(){
             const div = document.createElement('div');
             if(modus == 1 || modus == 2){
                 div.innerHTML = `
+                    <style>
+                      a, a:hover, a:focus, a:active {
+                        text-decoration: none;
+                        color: inherit;
+                      }
+                      .text {
+                        font-weight: bold;
+                        font-size: 3vh;
+                        font-family: "Lucida Console"
+                      }
+
+                      .image{
+                        height: 15vh;
+                      }
+                    </style>
                     <div id="loader" style="float:left;">
                         <div class="loader"></div>
                     </div>
                     <div style="width:80%; margin-left:5%; margin-top: 1%;">
                         <img id="picure" onload="picload()" src="api/renderPicture" style="width:100%;height: 78vh; "/> 
                     </div>
-                    <div style="width:8%; margin-left:87.5%; float:left; margin-top:-59vh;";>
-                        <img src="api/getQRCode" style="height: 18vh; "/> 
+                    <div class="text" style="width:15%; margin-left:85%; float:left; margin-top:-70vh;text-align: center;";>
+                        <img class="image" src="api/getQRCode"/> 
+                        <div style="height: 5vh;"></div>
+                        <a href="/picture">
+                          <img class="image" data-loading="lazy" role="presentation" data-scalestrategy="fit"  src="../static/pictures/kameraRetake.png"/> 
+                          <p> Noch einmal </p>
+                        </a>
                         <a href="#">
-                            <img src="../static/pictures/print.png" onclick="printing()" style="height: 18vh;"/> 
+                          <img class="image" src="../static/pictures/print.png" onclick="printing()"/> 
+                          <p > Druck mich </p>
                         </a>
                     </div>
               `;

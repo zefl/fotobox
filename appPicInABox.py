@@ -23,7 +23,6 @@ from PIL import Image
 
 def exit():
     global g_cameras
-    print('At exit called', uwsgi.worker_id())
     #syslog.syslog(syslog.LOG_INFO,'[PicInABox] Exit is done')
         
     for camera in g_cameras:
@@ -34,12 +33,6 @@ def exit():
             camera.timelapsCamera.recording_stop()
             camera.timelapsCamera.disconnect()          
             #camera.videoCamera.disconnect()
-#from https://github.com/unbit/uwsgi/issues/2063            
-try:
-    import uwsgi
-    uwsgi.atexit = exit
-except ImportError:
-    pass
 
 #create Flask object with __name__ --> acutal python object
 app = Flask(__name__)
@@ -67,6 +60,12 @@ class cameraContainer():
 
 #holds active camera selection
 g_activeCamera = cameraContainer()
+
+from enum import Enum
+class enCamera(Enum):
+    DSLR = 0
+    PI = 1
+    WEBCAM = 2
 #Holds list of available g_cameras
 g_cameras = []
 
@@ -91,8 +90,6 @@ def before_first_request_func():
     from utils.utils import findInserts 
     print("This function will run once ")
     
-    checkCamera()
-
     global g_anchorsMulti
     global g_anchorSingle
     global g_modus
@@ -114,6 +111,8 @@ def before_first_request_func():
             os.makedirs("./data/pictures")
         if not(os.path.exists("./data/videos")):
             os.makedirs("./data/videos")
+
+    checkCamera()
             
 #from https://www.youtube.com/watch?v=8qDdbcWmzCg
 #adds settings json to each page
@@ -274,7 +273,15 @@ def get_qrCode():
         img = qr.make_image(fill_color="black", back_color="white")
         img.save(img_buf)
         img_buf.seek(0)
-        return send_file(img_buf, mimetype='image/jpg') 
+        if g_settings['qrCode']['value']:
+            return send_file(img_buf, mimetype='image/jpg') 
+        else:
+            data = np.zeros((512,512,4))
+            img = Image.fromarray(data, 'RGBA')
+            img_buf = BytesIO()
+            img.save(img_buf, 'PNG')
+            img_buf.seek(0)
+            return send_file(img_buf, mimetype='image/png' )  
     
 @app.route('/api/renderPicture', methods = ['GET']) 
 def get_picture():   
@@ -311,7 +318,7 @@ def get_picture():
         finalImg = Image.alpha_composite(compositeImg, layoutImg) 
         imgSrc = "data/pictures/"+ datetime.now().strftime('%Y_%m_%d_%H_%M_%S') +"_4Pics.jpg"
         finalImg = finalImg.convert('RGB')
-        finalImg.save(imgSrc, "JPEG") 
+        finalImg.save(imgSrc) 
         return send_file(imgSrc, mimetype='image/jpg') 
 
 @app.route('/api/renderVideo', methods = ['GET'])
@@ -363,7 +370,7 @@ def printing():
                     list_of_files = glob.glob('data/pictures/*')
                     list_of_files.sort(key=os.path.getctime)
                     jsonReq['value'] = list_of_files[-1]
-                g_printer.print_picture(os.path.join("data/pictures/", jsonReq['value']))
+                g_printer.print_picture(os.path.join(jsonReq['value']))
                 response = jsonify({'return': 'done'}, 200)
                 response.headers.add('Access-Control-Allow-Origin', '*')
                 return response #return okay if no error before
@@ -408,10 +415,15 @@ def checkCamera():
     
     global g_cameras  
     global g_activeCamera
+    global g_settings
     #########################
     #Select which camera driver to use
     #########################
-    if check_dslrCamera():
+    dsl_connected = check_dslrCamera()
+    pi_camera_connected = check_piCamera()
+    webcam_connected = check_webcam()
+
+    if dsl_connected:
         print('[picInABox] Found DSLR camera')
         from cameras.dslrCamera import Camera
         dslrCameraContainer = cameraContainer()
@@ -425,7 +437,7 @@ def checkCamera():
     else:
         g_cameras.append(None)
         
-    if check_piCamera():
+    if pi_camera_connected:
         print('[picInABox] Found pi camera')
         from cameras.piCamera import Camera
         piCameraContainer = cameraContainer()
@@ -439,7 +451,7 @@ def checkCamera():
     else:
         g_cameras.append(None)
         
-    if check_webcam():
+    if webcam_connected:
         print('[picInABox] Found webcam camera')
         from cameras.webcam import Camera
         cvCameraContainer = cameraContainer()
@@ -452,22 +464,36 @@ def checkCamera():
         g_cameras.append(cvCameraContainer)
     else:
         g_cameras.append(None)
+       
+    if pi_camera_connected and dsl_connected:
+        g_settings['fotoCamera']['value'] = enCamera.DSLR.value
+        g_activeCamera.videoCamera = g_cameras[enCamera.DSLR.value].videoCamera
+        g_activeCamera.fotoCamera = g_cameras[enCamera.DSLR.value].fotoCamera
+        g_settings['previewCamera']['value'] = enCamera.PI.value
+        g_activeCamera.previewCamera = g_cameras[enCamera.PI.value].previewCamera 
+        g_activeCamera.timelapsCamera = g_cameras[enCamera.PI.value].timelapsCamera
+    else:
+        for camera in g_cameras:
+            if camera != None:
+                g_settings['fotoCamera']['value'] = g_cameras.index(camera)
+                g_activeCamera.videoCamera = camera.videoCamera
+                g_activeCamera.fotoCamera = camera.fotoCamera
+                g_settings['previewCamera']['value'] = g_cameras.index(camera)
+                g_activeCamera.previewCamera = camera.previewCamera
+                g_activeCamera.timelapsCamera = camera.timelapsCamera
+                break
     
-    recorder = None
-    
-    for camera in g_cameras:
-        if camera != None:
-            g_activeCamera.videoCamera = camera.videoCamera
-            g_activeCamera.fotoCamera = camera.fotoCamera
-            g_activeCamera.previewCamera = camera.previewCamera
-            g_activeCamera.timelapsCamera = camera.timelapsCamera
-            #start preview camera right away
-            g_activeCamera.previewCamera.stream_start()
-            while(g_activeCamera.previewCamera.stream_show() == []):
-                print("[picInABox] Wait for first capture")
-                time.sleep(1)
-            break
-    print("[picInABox] Cameras init done")
+    if g_activeCamera.previewCamera != None:
+        #start preview camera right away
+        g_activeCamera.previewCamera.stream_start()
+        while(g_activeCamera.previewCamera.stream_show() == []):
+            print("[picInABox] Wait for first capture")
+            time.sleep(1)
+        print("[picInABox] Cameras init done")
+        if g_settings['timelaps']['value'] == 1:
+            g_activeCamera.timelapsCamera.recording_start()
+    else:
+        print("[picInABox] No Camera Found")
 
 if __name__ == '__main__':
     print('Start application')

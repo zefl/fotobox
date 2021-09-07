@@ -6,6 +6,8 @@ import os.path as osp
 
 from PIL import Image
 
+from printers.logger import Logger
+
 PAPER_FORMATS = {
     '2x6': (2, 6),      # 2x6 pouces - 5x15 cm - 51x152 mm
     '3,5x5': (3.5, 5),  # 3,5x5 pouces - 9x13 cm - 89x127 mm
@@ -17,6 +19,7 @@ PAPER_FORMATS = {
 
 """
 use cups to install the printer via http://localhost:631/
+set options via printers -> maintenance->setDefaultOptions
 Bug Fixes see
 https://www.voss.earth/2018/08/31/kurztipp-canon-selphy-wlan-drucker-cp910-oder-cp1300-unter-linux-cups-verwenden/
 https://askubuntu.com/questions/1180926/connect-canon-selphy-cp1200-via-usb-ubuntu-19-04
