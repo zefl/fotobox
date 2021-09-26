@@ -132,8 +132,8 @@ function startUpFunction(){
                           <p> Noch einmal </p>
                         </a>
                         <a href="#">
-                          <img class="image image_button" src="../static/pictures/print.png" onclick="printing()"/> 
-                          <p > Druck mich </p>
+                          <img id="printing" class="image image_button" src="../static/pictures/print.png" onclick="printing()"/> 
+                          <p id="text"> Druck mich </p>
                         </a>
                     </div>
               `;
@@ -159,6 +159,17 @@ function startUpFunction(){
 
 function printing(){
  console.log("printing Picture");
+ var button = document.getElementById('printing')
+ var text = document.getElementById('text')
+ 
+ button.style.display = 'none';
+ text.style.display = 'none';
+
+ setTimeout( function(){
+  button.style.display = 'inline';
+  text.style.display = 'inline';
+ },8000)
+
  var xhttp = new XMLHttpRequest();
   var jsonObj = null
   xhttp.onreadystatechange = function() {

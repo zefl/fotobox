@@ -18,11 +18,12 @@ def findInserts(layoutSrc):
             while imgData[loopIndex][3] == item[3]:
                 loopIndex += 1
             #search for end of y
-            ancor['width'] = loopIndex - index;
+            ancor['width'] = loopIndex - index
             loopIndex = index
             while imgData[loopIndex][3] == item[3]:
                 loopIndex += width
-            ancor['height'] = int(loopIndex / width) - ancor['y'];
+
+            ancor['height'] = int(loopIndex / width) - ancor['y']
             imageLines.append(ancor)
         oldTransprancy = item[3]
     
