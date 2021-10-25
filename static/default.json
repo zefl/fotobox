@@ -72,5 +72,32 @@
         "nameDE" : "QR Code zum download aktivieren",
         "min" : 0,
         "max" : 1
+    },
+    "singlePicture":
+    {
+        "group" : "camera",
+        "type" : "bool",
+        "value" : 1,
+        "nameDE" : "Aktivieren einzel Foto",
+        "min" : 0,
+        "max" : 1
+    },
+    "multiPicture":
+    {
+        "group" : "camera",
+        "type" : "bool",
+        "value" : 1,
+        "nameDE" : "Aktivieren mehrfach Foto",
+        "min" : 0,
+        "max" : 1
+    },
+    "videoPicture":
+    {
+        "group" : "camera",
+        "type" : "bool",
+        "value" : 0,
+        "nameDE" : "Aktivieren Video funktion",
+        "min" : 0,
+        "max" : 1
     }
 }

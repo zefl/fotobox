@@ -184,7 +184,7 @@ def pageSettings():
 @app.route('/options')
 def pageOptions():
     #[Single Foto, 4'er Session Foto, Video]
-    return render_template('chooseOption.html', enable=[True, True, False])
+    return render_template('chooseOption.html', enable=[g_settings.singlePicture, g_settings.multiPicture, g_settings.videoPicture])
 
 @app.route('/picture')
 def pagePicture():
