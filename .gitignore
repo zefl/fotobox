@@ -7,6 +7,5 @@ data/orginal_pictures/*
 data/timelaps/*
 data/*.csv
 workspace/env/
-flask_session/
 createEnv.txt
-BildAlsHintergrundFürFotobox.pptx
+*.pptx

@@ -39,6 +39,11 @@ app = Flask(__name__)
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 app.secret_key = "sdbngiusdngdsgbiursbng"
 
+with open('static/default.json') as json_file:
+    data = json.load(json_file)
+    from settings.settings import Settings
+    g_settings = Settings(**data)
+
 #create session to store setting data
 #from https://flask-session.readthedocs.io/en/latest/
 #do not use session better to use global var
@@ -49,7 +54,7 @@ app.secret_key = "sdbngiusdngdsgbiursbng"
 g_modus = None
 g_anchorsMulti = []
 g_anchorSingle = []
-g_settings = None
+
 
 class cameraContainer():
     def __init__(self):
@@ -74,6 +79,54 @@ g_frame = []
 g_init = False
 
 g_printer = None
+
+
+#-------------------------------
+# Settings Functions
+#-------------------------------
+@g_settings.Callback('previewCamera')
+def set_preview_camera(value):
+    global g_activeCamera
+    camera = g_cameras[int(value)]
+    if camera:
+        #stop old stream
+        if g_activeCamera.timelapsCamera:
+            g_activeCamera.timelapsCamera.recording_stop()
+        if g_activeCamera.previewCamera:    
+            g_activeCamera.previewCamera.stream_stop()
+        #load new camera
+        g_activeCamera.previewCamera = camera.previewCamera
+        g_activeCamera.timelapsCamera = camera.timelapsCamera
+        g_activeCamera.previewCamera.stream_start()
+        return {'return': 'okay'}
+    #no camera found
+    return {'return': 'error'}
+
+@g_settings.Callback('fotoCamera')
+def set_foto_camera(value):
+    global g_activeCamera
+    camera = g_cameras[int(value)]
+    if camera != None:
+        #load new camera
+        g_activeCamera.fotoCamera = camera.fotoCamera
+        g_activeCamera.videoCamera = camera.videoCamera
+        return {'return': 'okay'}
+    #no camera found
+    return {'return': 'error'}
+
+@g_settings.Callback('timelaps')
+def activate_timelaps(value):
+    if int(value):
+        g_activeCamera.timelapsCamera.recording_start()
+    else:
+        g_activeCamera.timelapsCamera.recording_stop()   
+    return {'return': 'okay'}
+
+@g_settings.Callback('timelapsCreate')
+def create_timelaps(value):
+    if int(value):
+        g_activeCamera.timelapsCamera.recording_save()
+    return {'return': 'done'} #return okay if no error before    
 
 #-------------------------------
 # Webserver Functions
@@ -100,11 +153,8 @@ def before_first_request_func():
         g_init = True
         g_modus = 1
         g_anchorsMulti = findInserts("static/pictures/LayoutMulti.png")
-        g_anchorSingle = findInserts("static/pictures/LayoutSingle.png")
-        with open('static/default.json') as json_file:
-            data = json.load(json_file)
-            g_settings = data
-            
+        g_anchorSingle = findInserts("static/pictures/LayoutSingle.png")  
+
         if not(os.path.exists("./data/orginal_pictures")):
             os.makedirs("./data/orginal_pictures")
         if not(os.path.exists("./data/pictures")):
@@ -119,7 +169,7 @@ def before_first_request_func():
 @app.context_processor
 def context_processor():
     global g_settings
-    return dict(settings=g_settings)
+    return dict(settings=g_settings.get_json())
 #-------------------------------
 # Web pages
 #-------------------------------
@@ -177,47 +227,15 @@ def settings():
     if request.method == 'POST':
         jsonReq = json.loads(request.data)
         if  jsonReq['key'] in g_settings:
-            newValue = jsonReq['value'] 
-            if g_settings[jsonReq['key']]['min'] <= int(newValue) and int(newValue) <= g_settings[jsonReq['key']]['max']:
-                if(jsonReq['key'] == 'previewCamera'):
-                    camera = g_cameras[int(jsonReq['value'])]
-                    if camera != None:
-                        #stop old stream
-                        g_activeCamera.timelapsCamera.recording_stop()
-                        g_activeCamera.previewCamera.stream_stop()
-                        #load new camera
-                        g_activeCamera.previewCamera = camera.previewCamera
-                        g_activeCamera.timelapsCamera = camera.timelapsCamera
-                        g_activeCamera.previewCamera.stream_start()
-                    else:
-                        #camera not active
-                        return jsonify( {'return': 'error'} )
-                elif(jsonReq['key'] == 'fotoCamera'): 
-                    camera = g_cameras[int(jsonReq['value'])]
-                    if camera != None:
-                        #load new camera
-                        g_activeCamera.fotoCamera = camera.fotoCamera
-                        g_activeCamera.videoCamera = camera.videoCamera
-                    else:
-                        #camera not active
-                        return jsonify( {'return': 'error'} )
-                elif(jsonReq['key'] == 'timelaps'):
-                    if int(jsonReq['value']):
-                        g_activeCamera.timelapsCamera.recording_start()
-                    else:
-                        g_activeCamera.timelapsCamera.recording_stop()    
-                elif(jsonReq['key'] == 'timelapsCreate'):
-                    if int(jsonReq['value']):
-                        g_activeCamera.timelapsCamera.recording_save()
-                        return jsonify( {'return': 'done'} ) #return okay if no error before
-                g_settings[jsonReq['key']]['value'] = jsonReq['value']
-                response = jsonify({'return': 'done'})
-                response.status_code = 200
-                return response #return okay if no error before
+            g_settings[jsonReq['key']] = jsonReq['value'] 
+            ret = g_settings.SetItemOkay()
+            response = jsonify(ret)
+            response.status_code = 200
+            return response #return okay if no error before
         return jsonify( {'return': 'error'} ) #default error
     elif request.method == 'GET':
         if 'key' in request.args:
-            return jsonify({'value': g_settings[request.args['key']]['value']}) 
+            return jsonify({'value': g_settings[request.args['key']]}) 
     
 
 @app.route('/api/modus', methods = ['POST', 'GET'])
@@ -466,19 +484,19 @@ def checkCamera():
         g_cameras.append(None)
        
     if pi_camera_connected and dsl_connected:
-        g_settings['fotoCamera']['value'] = enCamera.DSLR.value
+        g_settings['fotoCamera'] = enCamera.DSLR.value
         g_activeCamera.videoCamera = g_cameras[enCamera.DSLR.value].videoCamera
         g_activeCamera.fotoCamera = g_cameras[enCamera.DSLR.value].fotoCamera
-        g_settings['previewCamera']['value'] = enCamera.PI.value
+        g_settings['previewCamera']= enCamera.PI.value
         g_activeCamera.previewCamera = g_cameras[enCamera.PI.value].previewCamera 
         g_activeCamera.timelapsCamera = g_cameras[enCamera.PI.value].timelapsCamera
     else:
         for camera in g_cameras:
             if camera != None:
-                g_settings['fotoCamera']['value'] = g_cameras.index(camera)
+                g_settings['fotoCamera'] = g_cameras.index(camera)
                 g_activeCamera.videoCamera = camera.videoCamera
                 g_activeCamera.fotoCamera = camera.fotoCamera
-                g_settings['previewCamera']['value'] = g_cameras.index(camera)
+                g_settings['previewCamera'] = g_cameras.index(camera)
                 g_activeCamera.previewCamera = camera.previewCamera
                 g_activeCamera.timelapsCamera = camera.timelapsCamera
                 break
@@ -490,7 +508,7 @@ def checkCamera():
             print("[picInABox] Wait for first capture")
             time.sleep(1)
         print("[picInABox] Cameras init done")
-        if g_settings['timelaps']['value'] == 1:
+        if g_settings['timelaps'] == 1:
             g_activeCamera.timelapsCamera.recording_start()
     else:
         print("[picInABox] No Camera Found")

@@ -1,6 +1,8 @@
 {
     "timeVideo" :
     {
+        "group" : "camera",
+        "type" : "input",
         "value" : 2,
         "nameDE" : "Aufnahmezeit des Videos in sec",
         "min" : 1,
@@ -8,6 +10,8 @@
     },
     "countDown" :    
     {
+        "group" : "camera",
+        "type" : "input",
         "value" : 5,
         "nameDE" : "Countdown bis zum Foto in sec",
         "min" : 1,
@@ -15,6 +19,8 @@
     },
     "triggerDelay" :    
     {
+        "group" : "camera",
+        "type" : "input",
         "value" : 0,
         "nameDE" : "Zeit zwischen Triggern des Fotos und wirklichem ausloesen der Kamera in sec",
         "min" : 0,
@@ -22,27 +28,37 @@
     },
     "previewCamera":
     {
+        "group" : "camera",
+        "type" : "array",
         "value" : 0,
-        "nameDE" : "Auswahl Vorschau (0-SpiegelReflex/1-RpiCamera/2-Webcam)",
+        "values" : ["Spiegel Reflex", "Front Kamera", "Webcam"],
+        "nameDE" : "Auswahl Vorschau",
         "min" : 0,
         "max" : 2
     },
     "fotoCamera":
     {
+        "group" : "camera",
+        "type" : "array",
         "value" : 0,
-        "nameDE" : "Auswahl Fotocamera (0-SpiegelReflex/1-RpiCamera/2-Webcam)",
+        "values" : ["Spiegel Reflex", "Front Kamera", "Webcam"],
+        "nameDE" : "Auswahl Fotocamera",
         "min" : 0,
         "max" : 2
     },
     "timelaps":
     {
+        "group" : "timelaps",
+        "type" : "bool",
         "value" : 0,
-        "nameDE" : "Aktivieren der Timelaps 1=Aktive/0=Inaktive",
+        "nameDE" : "Aktivieren der Timelaps",
         "min" : 0,
         "max" : 1
     },
     "timelapsCreate":
     {
+        "group" : "timelaps",
+        "type" : "bool",
         "value" : 0,
         "nameDE" : "Timelaps erstellen",
         "min" : 0,
@@ -50,8 +66,10 @@
     },
     "qrCode":
     {
+        "group" : "other",
+        "type" : "bool",
         "value" : 0,
-        "nameDE" : "QR Code zum download erstellen",
+        "nameDE" : "QR Code zum download aktivieren",
         "min" : 0,
         "max" : 1
     }

@@ -1,5 +1,33 @@
 {% extends "base.html" %}
 
+{% macro create_settings(group) %}
+{% for setting in settings %}
+{% if settings[setting]['group'] ==  group %}
+<div class="row" style="min-height: 4vw;">
+  <div class="col-md-8">
+    <label style="font-size:20px;" for="{{ setting }}">{{ settings[setting]['nameDE'] }}</label>
+  </div>
+  <div class="col-md-4">
+    {% if settings[setting]['type'] == "input" %}
+    <input style="font-size:20px;" size="4" id="{{ setting}}" placeholder="{{ settings[setting]['value'] }}" onchange="onChange('{{ setting }}')" ></input>
+    {% elif settings[setting]['type'] == "bool" %}
+    <label class="switch">
+      <input type="checkbox" {% if settings[setting]['value'] == 1%} checked {% endif %} onchange="activateCheckbox(this, '{{ setting}}')">
+      <span class="slider round"></span>
+    </label>
+    {% elif settings[setting]['type'] == "array" %}
+    <select name="plan" id="{{ setting }}" onchange="onChange('{{ setting }}')" ready="initElement('{{ setting }}', 2)">
+      {% for value in settings[setting]['values'] %}
+      <option value="{{ loop.index0 }}" {% if settings[setting]['value'] == loop.index0%} selected {% endif %}>{{ value }}</option>
+      {% endfor %}
+    </select>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+{% endfor %}
+{% endmacro %}
+
 {% block header %}
 Einstellungen
 {% endblock %}
@@ -106,7 +134,6 @@ input:onchange{
   .slider.round:before {
     border-radius: 50%;
   }
-
 {% endblock %}
 
 {% block script %}
@@ -135,14 +162,14 @@ function onChange(key){
   var xhttp = new XMLHttpRequest();
   xhttp.onreadystatechange = function() {
     if (this.readyState == 4 && this.status == 200) {
-      jsonObj = JSON.parse(this.responseText);
+      jsonObj = JSON.parse(this.responseText)
       ret = jsonObj.return
       var xhttpReq = new XMLHttpRequest();
       xhttpReq.onreadystatechange = function() {
         if (this.readyState == 4 && this.status == 200) {
-          jsonObj = JSON.parse(this.responseText);
+          jsonObj = JSON.parse(this.responseText)
           valueRet = jsonObj.value
-          if(ret == "done"){
+          if(ret == "okay"){
             element.style.backgroundColor = "white";
           }
           else{
@@ -160,9 +187,9 @@ function onChange(key){
   xhttp.send(JSON.stringify({'key':key, 'value':value}));
 }
 
-//This scritp is used for timelapse settings
+//This scritp is used for update timelapse
 document.addEventListener("DOMContentLoaded", loadPage);
-var timeout = setInterval(loadPage, 5000);    
+var timeout = setInterval(loadPage, 2000);    
 
 function loadPage(){
   var xhttp = new XMLHttpRequest();
@@ -204,26 +231,17 @@ function activateCheckbox(checkbox, key) {
   <div class="tab">
     <button class="tablinks" onclick="openTab(event, 'Camera')">Kamera Einstellungen</button>
     <button class="tablinks" onclick="openTab(event, 'Timelaps')">Timelaps</button>
+    <button class="tablinks" onclick="openTab(event, 'Other')">Anderes</button>
   </div>
   
   <div id="Camera" class="tabcontent">
     <div class="container">
       <div class="row">
         <div class="col-md-4">
-          <!-- # wil not reload Page-->
-          {% for setting in settings %}
-          <div class="row">
-            <div class="col-md-8">
-              <label style="font-size:20px;" for="{{ setting }}">{{ settings[setting]['nameDE'] }}</label>
-            </div>
-            <div class="col-md-4">
-              <input style="font-size:20px;" size="4" id="{{ setting}}" placeholder="{{ settings[setting]['value'] }}" onchange="onChange('{{ setting }}')" ></input>
-            </div>
-          </div>
-          {% endfor %}
+          {{ create_settings('camera') }}
         </div>
         <div class="col-md-2">
-
+          <!-- divder-->
         </div>
         <div class="col-md-6">
           <img src="{{ url_for('pageVideoFeed') }}" style="width:100%; height: 78vh;"> 
@@ -236,30 +254,24 @@ function activateCheckbox(checkbox, key) {
     <div class="container">
       <div class="row">
         <div class="col-md-4">
-          <div class="row">
-            <div class="col-md-4"></div>
+          <div class="row" style="min-height: 3vw;">
             <div class="col-md-8">
-              <p>Aktivieren</p>
-              <label class="switch">
-                <input type="checkbox" onchange="activateCheckbox(this, 'timelaps')">
-                <span class="slider round"></span>
-              </label>
+              <label style="font-size:20px;">Anzahl Bilder</label>
             </div>
-            <div class="col-md-4"></div>
-            <div class="col-md-8">
-              <p>Rendern</p>
-              <label class="switch">
-                <input type="checkbox" onchange="activateCheckbox(this, 'timelapsCreate')">
-                <span class="slider round"></span>
-              </label>
-            </div>
-            <div class="col-md-4"></div>
-            <div class="col-md-8">
-              <p>Anzahl Bilder</p>
-              <p id="number"></p>
+            <div class="col-md-4">
+              <label style="font-size:20px;" id="number"></label>
             </div>
           </div>
+          {{ create_settings('timelaps') }}
         </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="Other" class="tabcontent">
+    <div class="container">
+      <div class="row">
+        {{ create_settings('other') }}
       </div>
     </div>
   </div>
