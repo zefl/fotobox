@@ -1,5 +1,7 @@
 {% extends "base.html" %}
 
+{% from "_notification.html" import notification_css,notification_html,notification_js %}
+
 {% block header %}
 Viel Spaß beim Feiern und Fotografieren
 {% endblock %}
@@ -26,9 +28,12 @@ Viel Spaß beim Feiern und Fotografieren
     float:left;
     text-align:center;
 }
+
+{{ notification_css() }}
 {% endblock %}
 
 {% block script %}
+<script src="https://kit.fontawesome.com/b99e675b6e.js"></script>
 <script type="text/javascript" src="{{url_for('static', filename='long-press-event/long-press-event.js')}}"></script>
 {% endblock %}
 
@@ -73,5 +78,7 @@ Viel Spaß beim Feiern und Fotografieren
     });
     
 </script>
+
+{{ notification_js() }}
     
 {% endblock %}

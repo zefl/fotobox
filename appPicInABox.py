@@ -7,7 +7,8 @@ import os
 import sys
 print('Current working directory is: ' + (os.getcwd()))
 
-from flask import Flask, render_template, Response, request, redirect, url_for, jsonify, send_from_directory, send_file, make_response, g
+from flask import Flask, render_template, Response, request, redirect, url_for, jsonify, send_from_directory, send_file, make_response
+from settings.settings import Settings
 
 import time
 import cv2
@@ -15,11 +16,12 @@ import numpy as np
 
 import glob
 import json 
-import copy
 import qrcode
 from datetime import datetime
 from io import BytesIO
 from PIL import Image
+
+import queue
 
 def exit():
     global g_cameras
@@ -41,20 +43,13 @@ app.secret_key = "sdbngiusdngdsgbiursbng"
 
 with open('static/default.json') as json_file:
     data = json.load(json_file)
-    from settings.settings import Settings
     g_settings = Settings(**data)
-
-#create session to store setting data
-#from https://flask-session.readthedocs.io/en/latest/
-#do not use session better to use global var
-#SESSION_TYPE = 'filesystem'
-#app.config.from_object(__name__)
-#Session(app)
 
 g_modus = None
 g_anchorsMulti = []
 g_anchorSingle = []
 
+g_error = queue.Queue(20)
 
 class cameraContainer():
     def __init__(self):
@@ -73,13 +68,9 @@ class enCamera(Enum):
     WEBCAM = 2
 #Holds list of available g_cameras
 g_cameras = []
-
 g_frame = []
-
 g_init = False
-
 g_printer = None
-
 
 #-------------------------------
 # Settings Functions
@@ -258,7 +249,8 @@ def action():
     if request.method == 'POST':
         if 'takePciture' in jsonReq['option']:
             g_activeCamera.fotoCamera.picture_take()
-            g_activeCamera.fotoCamera.picture_save('data/orginal_pictures')
+            number_of_files = len(glob.glob('data/orginal_pictures/*'))
+            g_activeCamera.fotoCamera.picture_save('data/orginal_pictures',f'foto_{number_of_files + 1}')
         elif 'startVideo' in jsonReq['option']:
             g_activeCamera.videoCamera.recording_start()     
         elif 'stopVideo' in jsonReq['option']:
@@ -277,11 +269,11 @@ def get_qrCode():
         )   
         if g_modus == 1 or g_modus == 2:
             list_of_files = glob.glob('data/pictures/*')
-            list_of_files.sort(key=os.path.getctime)
+            list_of_files.sort()
             dataSrc = list_of_files[-1]
         elif g_modus == 3:
             list_of_files = glob.glob('data/videos/*')
-            list_of_files.sort(key=os.path.getctime) 
+            list_of_files.sort() 
             dataSrc = list_of_files[-1]
         qr.add_data(dataSrc)
         qr.make(fit=True)
@@ -291,7 +283,7 @@ def get_qrCode():
         img = qr.make_image(fill_color="black", back_color="white")
         img.save(img_buf)
         img_buf.seek(0)
-        if g_settings['qrCode']['value']:
+        if g_settings['qrCode']:
             return send_file(img_buf, mimetype='image/jpg') 
         else:
             data = np.zeros((512,512,4))
@@ -309,7 +301,7 @@ def get_picture():
     time.sleep(2)
     if request.method == 'GET':   
         list_of_files = glob.glob('data/orginal_pictures/*')
-        list_of_files.sort(key=os.path.getctime)
+        list_of_files.sort()
         pics = []
         if g_modus == 1:
             #append last taken image
@@ -347,7 +339,7 @@ def get_video():
     if request.method == 'GET':
         g_activeCamera.videoCamera.recording_save('data/videos')
         list_of_files = glob.glob('data/videos/*')
-        list_of_files.sort(key=os.path.getctime) 
+        list_of_files.sort() 
         vidSrc = list_of_files[-1]
         resp = make_response(send_file(vidSrc, 'video/avi'))
         resp.headers['Content-Disposition'] = 'inline'
@@ -365,9 +357,20 @@ def lastRawFrame():
 
 @app.route('/status',methods = ['GET'])
 def status():
+    global g_error
     if request.method == 'GET':
         if 'folder' in request.args:
             return json.dumps(len(os.listdir(request.args['folder'])))
+        elif 'error' in request.args:
+            if not(g_error.empty()):
+                error = g_error.get()
+                response = jsonify({'status': 'error', 'description' : error})
+                response.status_code = 400
+                return response
+            else:
+                response = jsonify({'status': 'okay', 'description' : 'none'}, 200)
+                response.status_code = 200
+                return response
 
 
 @app.route('/print',methods = ['POST'])
@@ -396,6 +399,7 @@ def printing():
             response = jsonify({'return': 'error'}, 400)
             response.headers.add('Access-Control-Allow-Origin', '*')
             return response #return okay if no error before 
+
 #-------------------------------
 # Helper functions
 #-------------------------------
