@@ -107,7 +107,10 @@ class CameraTimelapss():
         self._threadActive = True
         while(self._threadActive):
             time.sleep(self._picturePerMinute / 60)
-            self._camera.picture_take()
+            try:
+                self._camera.picture_take()
+            except:
+                print("Error in timelaps picture take")
             self._mp_FrameQueue.put(self._camera.picture_show())
         self._thread = None
 
