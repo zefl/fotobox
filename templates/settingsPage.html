@@ -1,5 +1,7 @@
 {% extends "base.html" %}
 
+{% from "_notification.html" import notification_css,notification_html,notification_js %}
+
 {% macro create_settings(group) %}
 {% for setting in settings %}
 {% if settings[setting]['group'] ==  group %}
@@ -134,10 +136,11 @@ input:onchange{
   .slider.round:before {
     border-radius: 50%;
   }
+
+  {{ notification_css() }}
 {% endblock %}
 
 {% block script %}
-
 <script>
 //This scritp is used for tab management
 function openTab(evt, tabName) {
@@ -168,14 +171,7 @@ function onChange(key){
       xhttpReq.onreadystatechange = function() {
         if (this.readyState == 4 && this.status == 200) {
           jsonObj = JSON.parse(this.responseText)
-          valueRet = jsonObj.value
-          if(ret == "okay"){
-            element.style.backgroundColor = "white";
-          }
-          else{
-            element.style.backgroundColor = "LightCoral";
-            document.getElementById(key).value = valueRet; 
-          }
+          document.getElementById(key).value = jsonObj.value; 
         }
       }
       xhttpReq.open("GET", "api/setting?key="+key, true);
@@ -192,14 +188,17 @@ document.addEventListener("DOMContentLoaded", loadPage);
 var timeout = setInterval(loadPage, 2000);    
 
 function loadPage(){
-  var xhttp = new XMLHttpRequest();
-  xhttp.onreadystatechange = function() {
-    if (this.readyState == 4 && this.status == 200) {
-      document.getElementById("number").innerHTML = this.responseText;
-    }
-  };
-  xhttp.open("GET", "status?folder={{ directory }}");
-  xhttp.send();
+  var tab = document.getElementById("Timelaps");
+  if (tab.style.display == "block") {
+    var xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function() {
+      if (this.readyState == 4 && this.status == 200) {
+        document.getElementById("number").innerHTML = this.responseText;
+      }
+    };
+    xhttp.open("GET", "status?folder={{ directory }}");
+    xhttp.send();
+  }
 }
 
 //from https://www.w3schools.com/howto/howto_css_switch.asp
@@ -223,7 +222,20 @@ function activateCheckbox(checkbox, key) {
   xhttp.setRequestHeader("Content-Type", "application/json;charset=UTF-");
   xhttp.send(JSON.stringify({'key':key, 'value':value}));
 }
+
+function save() {
+  var xhttp = new XMLHttpRequest();
+  xhttp.onreadystatechange = function() {
+    if (this.readyState == 4 && this.status == 200) {
+      console.log("Done");
+    }
+  };
+  xhttp.open("POST", "api/setting");
+  xhttp.setRequestHeader("Content-Type", "application/json;charset=UTF-");
+  xhttp.send(JSON.stringify('save'));
+}
 </script>
+{{ notification_js() }}
 {% endblock%}
 
 {% block content %}
@@ -232,6 +244,12 @@ function activateCheckbox(checkbox, key) {
     <button class="tablinks" onclick="openTab(event, 'Camera')">Kamera Einstellungen</button>
     <button class="tablinks" onclick="openTab(event, 'Timelaps')">Timelaps</button>
     <button class="tablinks" onclick="openTab(event, 'Other')">Anderes</button>
+    <button class="tablinks" onclick="openTab(event, 'Data')">Daten</button>
+    <a href=" " onclick="save()">
+      <div class="button" style="margin-right: 8px; margin-top: 8px; width:100px; height:40px; float:right;">
+        <span>Save</span>
+      </div>
+    </a>
   </div>
   
   <div id="Camera" class="tabcontent">
@@ -272,6 +290,18 @@ function activateCheckbox(checkbox, key) {
     <div class="container">
       <div class="row">
         {{ create_settings('other') }}
+      </div>
+    </div>
+  </div>
+
+  <div id="Data" class="tabcontent">
+    <div class="container">
+      <div class="row" style="margin-top: 10px;">
+        <a href="/api/data?get">
+          <div class="button">
+            <span>Download ZIP File</span>
+          </div>
+        </a>
       </div>
     </div>
   </div>

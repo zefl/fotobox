@@ -4,11 +4,12 @@
 #  	picInABox.py
 #  	author:zefl
 import os
-import sys
+import shutil
 print('Current working directory is: ' + (os.getcwd()))
 
 from flask import Flask, render_template, Response, request, redirect, url_for, jsonify, send_from_directory, send_file, make_response
 from settings.settings import Settings
+from error.error import Error
 
 import time
 import cv2
@@ -20,8 +21,6 @@ import qrcode
 from datetime import datetime
 from io import BytesIO
 from PIL import Image
-
-import queue
 
 def exit():
     global g_cameras
@@ -41,15 +40,20 @@ app = Flask(__name__)
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 app.secret_key = "sdbngiusdngdsgbiursbng"
 
-with open('static/default.json') as json_file:
-    data = json.load(json_file)
-    g_settings = Settings(**data)
+try:
+    with open('static/user.json') as json_file:
+        data = json.load(json_file)
+except:
+    with open('static/default.json') as json_file:
+        data = json.load(json_file)
+
+g_settings = Settings(**data)
 
 g_modus = None
 g_anchorsMulti = []
 g_anchorSingle = []
 
-g_error = queue.Queue(20)
+g_error = Error();
 
 class cameraContainer():
     def __init__(self):
@@ -89,9 +93,9 @@ def set_preview_camera(value):
         g_activeCamera.previewCamera = camera.previewCamera
         g_activeCamera.timelapsCamera = camera.timelapsCamera
         g_activeCamera.previewCamera.stream_start()
-        return {'return': 'okay'}
+        return {'status': 'Okay'}
     #no camera found
-    return {'return': 'error'}
+    return {'status': 'Error', 'description': 'Kamera nicht verfügbar'}
 
 @g_settings.Callback('fotoCamera')
 def set_foto_camera(value):
@@ -101,9 +105,9 @@ def set_foto_camera(value):
         #load new camera
         g_activeCamera.fotoCamera = camera.fotoCamera
         g_activeCamera.videoCamera = camera.videoCamera
-        return {'return': 'okay'}
+        return {'status': 'Okay'}
     #no camera found
-    return {'return': 'error'}
+    return {'status': 'Error', 'description': 'Kamera nicht verfügbar'}
 
 @g_settings.Callback('timelaps')
 def activate_timelaps(value):
@@ -111,13 +115,13 @@ def activate_timelaps(value):
         g_activeCamera.timelapsCamera.recording_start()
     else:
         g_activeCamera.timelapsCamera.recording_stop()   
-    return {'return': 'okay'}
+    return {'status': 'Okay'}
 
 @g_settings.Callback('timelapsCreate')
 def create_timelaps(value):
     if int(value):
         g_activeCamera.timelapsCamera.recording_save()
-    return {'return': 'done'} #return okay if no error before    
+    return {'status': 'Okay'} #return okay if no error before    
 
 #-------------------------------
 # Webserver Functions
@@ -215,15 +219,24 @@ def settings():
     global g_activeCamera  
     global g_cameras
     global g_settings
+    global g_error
     if request.method == 'POST':
         jsonReq = json.loads(request.data)
-        if  jsonReq['key'] in g_settings:
-            g_settings[jsonReq['key']] = jsonReq['value'] 
-            ret = g_settings.SetItemOkay()
-            response = jsonify(ret)
-            response.status_code = 200
-            return response #return okay if no error before
-        return jsonify( {'return': 'error'} ) #default error
+        if 'save' in jsonReq:
+            with open('static/user.json', 'w') as f:
+                json.dump(g_settings.get_json(), f)
+                response = jsonify({'status': 'okay'}, 200)
+                response.status_code = 200
+                return response
+        else:
+            if jsonReq['key'] in g_settings:
+                g_settings[jsonReq['key']] = jsonReq['value'] 
+                ret = g_settings.SetItemOkay()
+                g_error.put(ret)
+                response = jsonify()
+                response.status_code = 200
+                return response #return okay if no error before
+            return jsonify( {'return': 'error'} ) #default error
     elif request.method == 'GET':
         if 'key' in request.args:
             return jsonify({'value': g_settings[request.args['key']]}) 
@@ -355,20 +368,32 @@ def lastRawFrame():
     else:
         return None  
 
-@app.route('/status',methods = ['GET'])
+@app.route('/api/data', methods = ['GET'])
+def zipFile():
+    if "get" in request.query_string.decode("utf-8") :
+        file_name = "all_picutres_" + datetime.now().strftime('%Y_%m_%d_%H_%M_%S')
+        shutil.make_archive(file_name, 'zip', "data/")
+        return send_file(file_name + '.zip',
+                mimetype = 'zip',
+                attachment_filename= file_name + '.zip',
+                as_attachment = True)
+    elif "remove" in request.query_string.decode("utf-8"):
+        pass
+
+@app.route('/status' ,methods = ['GET'])
 def status():
     global g_error
     if request.method == 'GET':
         if 'folder' in request.args:
             return json.dumps(len(os.listdir(request.args['folder'])))
         elif 'error' in request.args:
-            if not(g_error.empty()):
-                error = g_error.get()
-                response = jsonify({'status': 'error', 'description' : error})
+            error = g_error.get()
+            if error:
+                response = jsonify(error)
                 response.status_code = 400
                 return response
             else:
-                response = jsonify({'status': 'okay', 'description' : 'none'}, 200)
+                response = jsonify({'type': 'Okay', 'description' : 'none'})
                 response.status_code = 200
                 return response
 
@@ -392,11 +417,13 @@ def printing():
                     list_of_files.sort(key=os.path.getctime)
                     jsonReq['value'] = list_of_files[-1]
                 g_printer.print_picture(os.path.join(jsonReq['value']))
-                response = jsonify({'return': 'done'}, 200)
+                response = jsonify({'return': 'done'})
+                response.status_code = 200
                 response.headers.add('Access-Control-Allow-Origin', '*')
                 return response #return okay if no error before
         else:
-            response = jsonify({'return': 'error'}, 400)
+            response = jsonify({'return': 'error'})
+            response.status_code = 400
             response.headers.add('Access-Control-Allow-Origin', '*')
             return response #return okay if no error before 
 

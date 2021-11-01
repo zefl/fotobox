@@ -84,12 +84,12 @@ https://github.com/codingmarket07/Notification-Alert-Messages-
 {% endmacro %}
 
 {% macro notification_html() %}
-'<div class="alert_wrapper"><div class="alert_inner"><div class="alert_item alert_info"><div class="icon data_icon"><i class="fas fa-info-circle"></i></div><div class="data"><p class="title"><span>type:</span>User action pending</p><p class="sub">Lorem ipsum dolor sit amet.</p></div><div class="icon close" onclick="close(this)"><i class="fas fa-times"></i></div></div></div></div>'
+'<div class="alert_wrapper"><div class="alert_inner"><div class="alert_item"><div class="icon data_icon"><i class="fas"></i></div><div class="data"><p class="title"><span>type:</span>User action pending</p><p class="sub">Lorem ipsum dolor sit amet.</p></div><div class="icon close" onclick="close(this)"><i class="fas fa-times"></i></div></div></div></div>'
 {% endmacro %}
 
 {% macro notification_js() %}
 <script>
-	var timeout = setInterval(pollNotification, 20000);   
+	var timeout = setInterval(pollNotification, 500);   
 
 	function close(element){
 		var div = document.getElementById('test');
@@ -105,25 +105,41 @@ https://github.com/codingmarket07/Notification-Alert-Messages-
 		return div.firstChild; 
 	}
 
+	function remove(event, uuid) {
+		console.log(uuid)
+		var div = document.getElementById(uuid);
+		div.remove()
+	}
+
 	function pollNotification() {
 		var xhttp = new XMLHttpRequest();
   		xhttp.onreadystatechange = function() {
-			console.log(this.status)  
-			console.log(this.readyState)  
-			if (this.readyState == 4 && this.status == 200) {
+			//Handle only error
+			if (this.readyState == 4 && this.status == 400) {
 				jsonObj = JSON.parse(this.responseText)
-      			ret = jsonObj.return
-			} else if (this.readyState == 4 && this.status == 400) {
 				var div = createElementFromHTML({{ notification_html() }});
-				div.setAttribute('id','test');
+				div.setAttribute('id',jsonObj.uuid);
+				var text = div.getElementsByClassName('sub')
+				text[0].innerText = jsonObj.description 
 				document.body.appendChild(div);
+				var fas = div.getElementsByClassName("fas");
 				var alert_item = div.getElementsByClassName("alert_item");
-				alert_item[0].addEventListener('click', function (event) {
-					var div = document.getElementById('test');
-					console.log(div)
-					div.remove()
-					alert('Hi!');
-				});
+				var title = div.getElementsByClassName("title");
+				switch (jsonObj.status) {
+					case 'Info':
+						fas[0].classList.add("fa-info-circle")
+						alert_item[0].classList.add("alert_info")
+						title[0].innerHTML  = "<span>Info</span>"
+						break
+					case 'Error':
+					default:
+						fas[0].classList.add("fa-bomb")
+						alert_item[0].classList.add("alert_error")
+						title[0].innerHTML = "<span>Fehler</span>"
+						break
+				}
+				// from https://stackoverflow.com/a/23024673
+				alert_item[0].addEventListener('click', remove.bind(null, event, jsonObj.uuid));
 				alert_item[0].style.top = "50%";
 			}
 		}

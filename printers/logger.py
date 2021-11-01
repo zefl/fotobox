@@ -9,9 +9,6 @@ class Logger(object):
         if not(os.path.exists(self._path)):
             os.makedirs(self._path)
         self._fieldnames = ['picutre_name', 'time']
-
-    def __del__(self):
-        self._csvFile.close()
     
     def print_picture(self, name):
         with  open(os.path.join(self._path, self._logFile), 'a+', newline='') as file:

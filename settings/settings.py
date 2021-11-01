@@ -8,7 +8,7 @@ class Settings(dict):
     def __init__(self, **kwargs):
         self._metadata = dict(kwargs)
         self._callbacks = {}
-        self._ret = json.dumps( {'return': 'error'} )
+        self._ret = json.dumps( {'status': 'Error'} )
 
         if kwargs:
             for tag in kwargs:
@@ -30,10 +30,13 @@ class Settings(dict):
                 if key in self._callbacks:
                     self._ret = self._callbacks[key](value)
                 else: 
-                    self._ret = {'return': 'okay'}
-                if self._ret['return'] == 'okay':
+                    self._ret = {'status': 'Okay'}
+
+                if self._ret['status'] == 'Okay':
                     self._metadata[key]['value'] = value
                     super().__setitem__(key, value)
+            else:
+                self._ret = {'status' : 'Error', 'description' : 'Wert auserhalb des Bereiches'}
 
     def __getattr__(self, attr):
         return self.__getitem__(attr)
@@ -45,13 +48,6 @@ class Settings(dict):
         else:
             if self._metadata[key]['min'] <= int(value) and int(value) <= self._metadata[key]['max']:
                 self.__setitem__(key, value)
-                # self._value = value
-                # if key in self._callbacks:
-                #     self._ret = self._callbacks[key](value)
-                # else: 
-                #     self._ret = json.dumps( {'return': 'okay'} )
-                # if self._ret['return'] == 'okay':
-                #     self.__setitem__(key, value)
 
     def Callback(self, key):
         def inner(func):
