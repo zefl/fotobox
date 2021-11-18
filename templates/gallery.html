@@ -1,5 +1,7 @@
 {% extends "base.html" %}
 
+{% from "_notification.html" import notification_css,notification_html,notification_js %}
+
 {% block header %}
 Galerie
 {% endblock %}
@@ -23,6 +25,7 @@ Galerie
     filter: grayscale(0);
     transform: scale(1.1);
 }
+{{ notification_css() }}
 {% endblock %}
 
 {% block content %}
@@ -40,4 +43,7 @@ Galerie
         {% endfor %}
     </div>
 </div>
+
+{{ notification_js() }}
+
 {% endblock%}

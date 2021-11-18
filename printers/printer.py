@@ -3,6 +3,7 @@
 import cups
 import tempfile
 import os.path as osp
+import time
 
 from PIL import Image
 
@@ -31,6 +32,7 @@ class Printer(Logger):
         self.name = None
         self.max_pages = max_pages
         self.count = counters
+        self.busy = False
 
         if not name or name.lower() == 'default':
             self.name = self._conn.getDefault()
@@ -47,11 +49,18 @@ class Printer(Logger):
             else:
                 print("No printer named '%s' in CUPS (see http://localhost:631)", name)
         else:
+            self._conn.cancelAllJobs(self.name)
+            self._conn.enablePrinter(self.name)
             print("Connected to printer '%s'", self.name)
 
-    def print_picture(self, picture, copies=1):
-        """Send a file to the CUPS server to the default printer.
-        """
+    def check_status(self):
+        status = self._conn.getPrinterAttributes(self.name)
+        if(status['printer-state-reasons'][0] != 'none'):
+            self._conn.cancelAllJobs(self.name) #reset all jobs
+            self._conn.enablePrinter(self.name) #reset printer -> resets error
+            return(status['printer-state-message'])
+
+    def printing(self, picture, copies=1):
         if not self.name:
             raise EnvironmentError("No printer found (check config file or CUPS config)")
         if not osp.isfile(picture):
@@ -62,8 +71,35 @@ class Printer(Logger):
                 picture = Image.open(picture)
                 # Don't call setup factory hook here, as the selected parameters
                 # are the one necessary to render several pictures on same page.
-                self._conn.printFile(self.name, fp.name, osp.basename(picture), {})
+                ret = self._conn.printFile(self.name, fp.name, osp.basename(picture), {})
         else:
-            self._conn.printFile(self.name, picture, osp.basename(picture), {})
+            job_id = self._conn.printFile(self.name, picture, osp.basename(picture), {})
+            job_info = self._conn.getJobAttributes(job_id)
+            start_print_time = time.time()
+            while(job_info['job-state'] == 5): # job_info['job-state-reasons']==job-printing
+                time.sleep(1)
+                job_info = self._conn.getJobAttributes(job_id)
+                if (time.time() - start_print_time > 60):
+                    error = self.check_status()
+                    if error:
+                        return error
+                    return "Timeout Error - Error in Printer"
+            job_info = self._conn.getJobAttributes(job_id)
+            if job_info['job-state'] == 3 or job_info['job-state'] == 4:
+                # job_info['job-state-reasons'] => printer-stopped   
+                error = self.check_status()
+                if not(error):
+                    error = job_info['job-printer-state-message']
+                return error
         super().print_picture(picture)
         print("File '%s' sent to the printer", picture)
+
+    def print_picture(self, picture, copies=1):
+        """Send a file to the CUPS server to the default printer.
+        """
+        if self.busy:
+            return "Letzter Druck Job noch nicht abgeschlossen"
+        self.busy = True
+        ret = self.printing(picture, copies)
+        self.busy = False
+        return ret

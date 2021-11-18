@@ -415,8 +415,13 @@ def printing():
                     # If last is given use the last taken picture
                     list_of_files = glob.glob('data/pictures/*')
                     list_of_files.sort(key=os.path.getctime)
-                    jsonReq['value'] = list_of_files[-1]
-                g_printer.print_picture(os.path.join(jsonReq['value']))
+                    file = list_of_files[-1]
+                else:
+                    file = os.path.join('data/pictures/',jsonReq['value'])
+                ret = g_printer.print_picture(file)
+                if ret:
+                    error = {'status': 'Error', 'description': ret}
+                    g_error.put(error)
                 response = jsonify({'return': 'done'})
                 response.status_code = 200
                 response.headers.add('Access-Control-Allow-Origin', '*')
