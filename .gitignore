@@ -6,6 +6,8 @@ data/pictures/*
 data/orginal_pictures/*
 data/timelaps/*
 data/*.csv
+static/user.json
 workspace/env/
 createEnv.txt
 *.pptx
+*.zip

@@ -1,3 +1,5 @@
+{% from "_login.html" import login_css,login_html %}
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -55,7 +57,7 @@ color: rgba(0,0,0,1);
 -webkit-transform: rotate(90deg);
 transform: rotate(90deg);
 }
-
+{{ login_css() }}
 {% block styles %}
 {% endblock%}
 
@@ -70,24 +72,29 @@ transform: rotate(90deg);
 <body id="mainBody">
 
 <div class="header" style="margin: auto;">
-    <div class="d-flex justify-content-between align-items-center bd-highlight mb-3"">
+    <div class="d-flex justify-content-between align-items-center bd-highlight mb-3">
       <div class="p-2">
         <img data-loading="lazy" role="presentation" data-scalestrategy="fit" src="../static/pictures/logo.png" style="display:block;margin:0;float:left;" height="70vh" width="70vw" />
       </div>
-      <div class="p-2">
+      <div>
         <span style="font-size: 30px; font-family: 'Courier New', Courier, monospace; font-weight: bold; color: #ffffff;">{% block header %}{% endblock%}</span>
       </div>
+      <div onclick="document.getElementById('id01').style.display='block'" style="position: absolute; right: 150px; margin-top: -10px; color: rgba(255,255,255,0.45);">
+        <i class="fas fa-2x fa-wifi"></i>
+      </div> 
       <div class="p-2">
         <a href=".">
-            <div class="button" style="margin-right: 0px; margin-top: -10px; width:100px; height:40px; float:left;">
-                <span>Home</span>
-            </div>
+          <div class="button" style="margin-right: 0px; margin-top: -10px; width:100px; height:40px; float:left;">
+            <span>Home</span>
+          </div>
         </a>
       </div>
     </div>
 </div>
 
 {% block content %}{% endblock %}
+
+{{ login_html() }}
 
 </body>
 

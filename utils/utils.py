@@ -67,3 +67,12 @@ def resetUsbViaName(name):
                     else:
                         return False
     return False
+    
+def getWifiList():
+    import os
+    import re
+    cmd = os.popen('sudo iw dev wlan0 scan | grep SSID')
+    wifi = cmd.read()
+    wifi = re.findall(r"SSID: (.+)\n" ,wifi)
+    wifi = list(set(wifi))
+    return wifi
