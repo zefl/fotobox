@@ -76,3 +76,37 @@ def getWifiList():
     wifi = re.findall(r"SSID: (.+)\n" ,wifi)
     wifi = list(set(wifi))
     return wifi
+
+def getActivWifi():
+    import os
+    import re
+    cmd = os.popen('iwgetid')
+    wifi = cmd.read()
+    wifi = re.findall(r'ESSID:"(.+)"' ,wifi)
+    if wifi[0]: 
+        return True
+    else:
+        return False
+
+def checkInternetConnection():
+    import requests
+    url = "http://www.google.com"
+    timeout = 5
+    try:
+	    request = requests.get(url, timeout=timeout)
+	    return True
+    except (requests.ConnectionError, requests.Timeout) as exception:
+	    return False
+
+def connectToWifi(essid, password):
+    import os
+    network = f"""network={{
+        ssid="{essid}"
+        psk="{password}"
+    }}"""
+
+    # TODO update if network is present, restart wifi after tyed in
+    with open('/etc/wpa_supplicant/wpa_supplicant.conf', 'a+') as f:
+        f.write("\n" + network)
+    
+    # TODO return true false if connected to internet

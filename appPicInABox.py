@@ -10,6 +10,7 @@ print('Current working directory is: ' + (os.getcwd()))
 from flask import Flask, render_template, Response, request, redirect, url_for, jsonify, send_from_directory, send_file, make_response
 from settings.settings import Settings
 from error.error import Error
+from upload.mega_io import MegaNz
 
 import time
 import cv2
@@ -75,6 +76,7 @@ g_cameras = []
 g_frame = []
 g_init = False
 g_printer = None
+g_file_server = MegaNz()
 
 #-------------------------------
 # Settings Functions
@@ -273,6 +275,7 @@ def action():
 @app.route('/api/getQRCode', methods = ['GET']) 
 def get_qrCode():
     global g_modus
+    global g_file_server
     if request.method == 'GET':
         qr = qrcode.QRCode(
             version=1,
@@ -280,31 +283,35 @@ def get_qrCode():
             box_size=10,
             border=4,
         )   
-        if g_modus == 1 or g_modus == 2:
-            list_of_files = glob.glob('data/pictures/*')
-            list_of_files.sort()
-            dataSrc = list_of_files[-1]
-        elif g_modus == 3:
-            list_of_files = glob.glob('data/videos/*')
-            list_of_files.sort() 
-            dataSrc = list_of_files[-1]
-        qr.add_data(dataSrc)
-        qr.make(fit=True)
-        #from https://stackoverflow.com/questions/26417328/how-to-serve-a-generated-qr-image-using-pythons-qrcode-on-flask
-        #from https://stackoverflow.com/questions/24920728/convert-pillow-image-into-stringio
         img_buf = BytesIO()
-        img = qr.make_image(fill_color="black", back_color="white")
-        img.save(img_buf)
-        img_buf.seek(0)
+
         if g_settings['qrCode']:
-            return send_file(img_buf, mimetype='image/jpg') 
-        else:
-            data = np.zeros((512,512,4))
-            img = Image.fromarray(data, 'RGBA')
-            img_buf = BytesIO()
-            img.save(img_buf, 'PNG')
-            img_buf.seek(0)
-            return send_file(img_buf, mimetype='image/png' )  
+            if g_modus == 1 or g_modus == 2:
+                list_of_files = glob.glob('data/pictures/*')
+                list_of_files.sort()
+                dataSrc = list_of_files[-1]
+            elif g_modus == 3:
+                list_of_files = glob.glob('data/videos/*')
+                list_of_files.sort() 
+                dataSrc = list_of_files[-1]
+            if g_file_server.Connect():
+                if g_file_server.UploadPicture(dataSrc):
+                    download_link = g_file_server.GetLastUploadLink()
+                    qr.add_data(download_link)
+                    qr.make(fit=True)
+                    #from https://stackoverflow.com/questions/26417328/how-to-serve-a-generated-qr-image-using-pythons-qrcode-on-flask
+                    #from https://stackoverflow.com/questions/24920728/convert-pillow-image-into-stringio
+                    img = qr.make_image(fill_color="black", back_color="white")
+                    img.save(img_buf)
+                    img_buf.seek(0)
+                    return send_file(img_buf, mimetype='image/jpg') 
+        #defaul return 
+        data = np.zeros((512,512,4))
+        img = Image.fromarray(data, 'RGBA')
+        img_buf = BytesIO()
+        img.save(img_buf, 'PNG')
+        img_buf.seek(0)
+        return send_file(img_buf, mimetype='image/png' )  
     
 @app.route('/api/renderPicture', methods = ['GET']) 
 def get_picture():   
@@ -432,6 +439,37 @@ def printing():
             response.headers.add('Access-Control-Allow-Origin', '*')
             return response #return okay if no error before 
 
+@app.route('/wifi',methods = ['POST','GET'])
+def wifi():
+    from utils.utils import getWifiList, getActivWifi, checkInternetConnection, connectToWifi
+    global g_error
+    if request.method == 'GET':
+        if 'all' in request.args:
+            wifi = getWifiList()
+            response = jsonify(wifi)
+            response.status_code = 200
+            return response
+        elif 'active' in request.args:
+            wifi = getActivWifi()
+            response = jsonify(wifi)
+            response.status_code = 200
+            return response
+        elif 'internet' in request.args:
+            wifi = checkInternetConnection()
+            response = jsonify(wifi)
+            response.status_code = 200
+            return response
+    elif request.method == 'POST':
+        jsonReq = json.loads(request.data)
+        if 'wifi' in jsonReq and 'psw' in jsonReq:
+            connectToWifi(jsonReq['wifi'],jsonReq['psw'])
+            response = jsonify()
+            response.status_code = 200
+            return response
+    else:
+        response = jsonify({'return': 'error'})
+        response.status_code = 400
+        return response
 #-------------------------------
 # Helper functions
 #-------------------------------

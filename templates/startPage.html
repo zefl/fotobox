@@ -2,6 +2,8 @@
 
 {% from "_notification.html" import notification_css,notification_html,notification_js %}
 
+{% from "_login.html" import login_css,login_html,login_js %}
+
 {% block header %}
 Viel Spaß beim Feiern und Fotografieren
 {% endblock %}
@@ -30,6 +32,8 @@ Viel Spaß beim Feiern und Fotografieren
 }
 
 {{ notification_css() }}
+  
+{{ login_css() }}
 {% endblock %}
 
 {% block script %}
@@ -79,5 +83,9 @@ Viel Spaß beim Feiern und Fotografieren
 </script>
 
 {{ notification_js() }}
+
+{{ login_html() }}
+
+{{ login_js() }}
     
 {% endblock %}

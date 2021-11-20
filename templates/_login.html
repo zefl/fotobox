@@ -118,26 +118,115 @@ span.psw {
 
 {% macro login_html() %}
 <div id="id01" class="modal">
-  <form class="modal-content-box animate" action="/action_page.php" method="post">
+  <form id="formWiFi" action="javascript:wifiLogin()" method="post" class="modal-content-box animate" >
 
     <div class="container">
       <label for="uname"><b>Verfügbar Netzwerke</b></label>
       <select name="network" id="network">
-        <option value="volvo">Volvo</option>
-        <option value="saab">Saab</option>
-        <option value="opel">Opel</option>
-        <option value="audi">Audi</option>
+
       </select>
 
-      <label for="psw"><b>Password</b></label>
       <input type="password" placeholder="Enter Password" name="psw" required>
         
       <button class="loginbtn" type="submit">Login</button>
     </div>
 
     <div class="container" style="background-color:#f1f1f1">
-      <button type="cancelbtn" onclick="document.getElementById('id01').style.display='none'" class="cancelbtn">Cancel</button>
+      <button type="cancelbtn" onclick="document.getElementById('id01').style.display='none';" class="cancelbtn">Cancel</button>
     </div>
   </form>
 </div>
+
+<div id="load-spinner" style="font-size: 24px;position:absolute;top:20%;right:40%;display:none;">
+  <i class="fas fa-spinner fa-pulse fa-10x"></i>
+</div>
+{% endmacro %}
+
+{% macro check_wifi_js() %}
+<script type="text/javascript">
+  function checkWifi(){
+    var xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function() {
+      if (this.readyState == 4 && this.status == 200) {
+        json = JSON.parse(this.responseText)
+        if(json == true){
+          var xhttp = new XMLHttpRequest();
+          xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+              json = JSON.parse(this.responseText)
+              if(json == true){
+                document.getElementById('wifi').style.color='rgb(0, 255, 0)'; 
+              }
+              else {
+                document.getElementById('wifi').style.color='#2196F3'; 
+                document.getElementById('no_inet').style.display='block';
+              }
+            }
+          }
+          xhttp.open("GET", "wifi?internet");
+          xhttp.send();  
+
+        }
+      }
+    }
+    xhttp.open("GET", "wifi?active");
+    xhttp.send();      
+ 
+  }
+  checkWifi();
+ </script>
+{% endmacro %}
+
+{% macro login_js() %}
+<script>
+  function updateWifiList() {
+    document.getElementById('load-spinner').style.display='block';
+    var xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function() {
+      if (this.readyState == 4 && this.status == 200) {
+        json = JSON.parse(this.responseText)
+        select = document.getElementById('network');
+        for(var i = 0; i < json.length; i++) {
+          var obj = json[i];
+          var opt = document.createElement('option');
+          opt.value = obj;
+          opt.innerHTML = obj;
+          select.appendChild(opt);
+        }
+        document.getElementById('load-spinner').style.display='none';
+        document.getElementById('id01').style.display='block'
+      }
+    }
+    xhttp.open("GET", "wifi?all");
+    xhttp.send();
+  }
+
+  // Get the modal
+  var modal = document.getElementById('id01');
+
+  // When the user clicks anywhere outside of the modal, close it
+  window.onclick = function(event) {
+      if (event.target == modal) {
+          modal.style.display = "none";
+      }
+  }
+
+  function wifiLogin() {
+    var form  = document.getElementById('formWiFi');
+    var wifi = form.elements['network'].value;
+    var password = form.elements['psw'].value;
+    console.log(password)
+    var xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function() {
+      if (this.readyState == 4 && this.status == 200) {
+        // update if wifi is found
+        checkWifi();
+      }
+    }
+    xhttp.open("POST", "wifi");
+    xhttp.setRequestHeader("Content-Type", "application/json;charset=UTF-");
+    xhttp.send(JSON.stringify({'wifi':wifi, 'psw':password}));
+  }
+
+</script>
 {% endmacro %}

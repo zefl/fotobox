@@ -138,6 +138,7 @@ input:onchange{
   }
 
   {{ notification_css() }}
+
 {% endblock %}
 
 {% block script %}
@@ -185,7 +186,7 @@ function onChange(key){
 
 //This scritp is used for update timelapse
 document.addEventListener("DOMContentLoaded", loadPage);
-var timeout = setInterval(loadPage, 2000);    
+var timeout = setInterval(loadPage, 5000);    
 
 function loadPage(){
   var tab = document.getElementById("Timelaps");
