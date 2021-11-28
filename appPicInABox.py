@@ -265,7 +265,7 @@ def action():
         if 'takePciture' in jsonReq['option']:
             g_activeCamera.fotoCamera.picture_take()
             number_of_files = len(glob.glob('data/orginal_pictures/*'))
-            g_activeCamera.fotoCamera.picture_save('data/orginal_pictures',f'foto_{number_of_files + 1}')
+            g_activeCamera.fotoCamera.picture_save('data/orginal_pictures',f'foto_{(number_of_files + 1):08}')
         elif 'startVideo' in jsonReq['option']:
             g_activeCamera.videoCamera.recording_start()     
         elif 'stopVideo' in jsonReq['option']:
@@ -311,7 +311,7 @@ def get_qrCode():
         img_buf = BytesIO()
         img.save(img_buf, 'PNG')
         img_buf.seek(0)
-        return send_file(img_buf, mimetype='image/png' )  
+        return send_file(img_buf, mimetype='image/png')  
     
 @app.route('/api/renderPicture', methods = ['GET']) 
 def get_picture():   
@@ -346,7 +346,9 @@ def get_picture():
         layoutImg = Image.open(layoutSrc) 
         #from https://pythontic.com/image-processing/pillow/alpha-composite
         finalImg = Image.alpha_composite(compositeImg, layoutImg) 
-        imgSrc = "data/pictures/"+ datetime.now().strftime('%Y_%m_%d_%H_%M_%S') +"_4Pics.jpg"
+        #imgSrc = "data/pictures/"+ datetime.now().strftime('%Y_%m_%d_%H_%M_%S') +"_4Pics.jpg"
+        number_of_files = len(glob.glob('data/pictures/*'))
+        imgSrc = os.path.join('data/pictures/',f'foto_{(number_of_files + 1):08}.jpg')
         finalImg = finalImg.convert('RGB')
         finalImg.save(imgSrc) 
         return send_file(imgSrc, mimetype='image/jpg') 

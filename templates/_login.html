@@ -165,7 +165,6 @@ span.psw {
           }
           xhttp.open("GET", "wifi?internet");
           xhttp.send();  
-
         }
       }
     }
@@ -184,7 +183,7 @@ span.psw {
     var xhttp = new XMLHttpRequest();
     xhttp.onreadystatechange = function() {
       if (this.readyState == 4 && this.status == 200) {
-        json = JSON.parse(this.responseText)
+        json = JSON.parse(this.responseText);
         select = document.getElementById('network');
         for(var i = 0; i < json.length; i++) {
           var obj = json[i];
@@ -194,28 +193,17 @@ span.psw {
           select.appendChild(opt);
         }
         document.getElementById('load-spinner').style.display='none';
-        document.getElementById('id01').style.display='block'
+        document.getElementById('id01').style.display='block';
       }
     }
     xhttp.open("GET", "wifi?all");
     xhttp.send();
   }
 
-  // Get the modal
-  var modal = document.getElementById('id01');
-
-  // When the user clicks anywhere outside of the modal, close it
-  window.onclick = function(event) {
-      if (event.target == modal) {
-          modal.style.display = "none";
-      }
-  }
-
   function wifiLogin() {
     var form  = document.getElementById('formWiFi');
     var wifi = form.elements['network'].value;
     var password = form.elements['psw'].value;
-    console.log(password)
     var xhttp = new XMLHttpRequest();
     xhttp.onreadystatechange = function() {
       if (this.readyState == 4 && this.status == 200) {

@@ -83,7 +83,7 @@ def getActivWifi():
     cmd = os.popen('iwgetid')
     wifi = cmd.read()
     wifi = re.findall(r'ESSID:"(.+)"' ,wifi)
-    if wifi[0]: 
+    if wifi: 
         return True
     else:
         return False

@@ -134,7 +134,7 @@ function startUpFunction(){
                           <i class="fas fa-spinner fa-pulse fa-5x"></i>
                           <div style="height: 5vh;"></div>
                         </div>
-                        <img id="qr-code" class="image" style="display: none;" onload="disableSpinner()" src="api/getQRCode"/> 
+                        <img id="qr-code" class="image" style="display: none;" onload="disableSpinner()"> 
                         <span id="qr-dwonload" style="display: none;">Download</span>
                         <a href="/picture">
                           <img class="image image_button" data-loading="lazy" role="presentation" data-scalestrategy="fit"  src="../static/pictures/kameraRetake.png"/> 
@@ -153,7 +153,7 @@ function startUpFunction(){
                       <source src="/api/renderVideo" type="video/mp4" style="width:80%; height: 78vh; margin-top: 1%;">
                       Your browser does not support the video tag.
                     </video>
-                    <img src="api/getQRCode" style="width:10%; height: 18vh; "/> 
+                    <img id="qr-code" style="width:10%; height: 18vh; "/> 
               `;
             }
             document.getElementById('content').appendChild(div); 
@@ -202,6 +202,7 @@ function printing(){
 
 function picload(){
     document.getElementById("loader").style.display = 'none';
+    document.getElementById("qr-code").src="api/getQRCode";
 }
 </script>
 

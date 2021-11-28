@@ -118,7 +118,8 @@ def _stream_recording(stopEvent: mp.Value, queue: mp.Queue):
     while(True):
         #req = requests.get('http://127.0.0.1:5000/lastRawFrame')
         if not(queue.empty()):
-            picName = os.path.join("data/timelaps", datetime.now().strftime('%Y_%m_%d_%H_%M_%S')  + ".jpg")
+            number_of_files = len(glob.glob('data/timelaps/*'))
+            picName = os.path.join("data/timelaps", f'foto_{(number_of_files + 1):08}'  + ".jpg")
             cv2.imwrite(picName, queue.get())
         if stopEvent.value:
             break
