@@ -100,13 +100,35 @@ def checkInternetConnection():
 
 def connectToWifi(essid, password):
     import os
-    network = f"""network={{
-        ssid="{essid}"
-        psk="{password}"
-    }}"""
+    import re
+    # see https://programmerall.com/article/8884208824/
+    # use wpa_cli to add network
+    cmd = os.popen("wpa_cli -i wlan0 list_network")
+    networks = re.findall('(\d+)\s'+essid+'',cmd.read())
+    if networks:
+        # found existing network
+        network = networks[0]
+        cmd = os.popen("wpa_cli -i wlan0 remove_network {network}")
 
-    # TODO update if network is present, restart wifi after tyed in
-    with open('/etc/wpa_supplicant/wpa_supplicant.conf', 'a+') as f:
-        f.write("\n" + network)
-    
-    # TODO return true false if connected to internet
+    cmd = os.popen("wpa_cli -i wlan0 add_network")
+    network = int(cmd.read())
+    while True:
+        cmd = os.popen(f"wpa_cli -i wlan0 set_network {network} ssid '\"{essid}\"'")
+        if cmd.read() != "OK\n":
+            break
+        cmd = os.popen(f"wpa_cli -i wlan0 set_network {network} psk '\"{password}\"'")
+        if cmd.read() != "OK\n":
+            break
+        cmd = os.popen(f"wpa_cli -i wlan0 set_network {network} scan_ssid 1")
+        if cmd.read() != "OK\n":
+            break
+        cmd = os.popen(f"wpa_cli -i wlan0 set_network {network} priority 1")
+        if cmd.read() != "OK\n":
+            break
+        cmd = os.popen("wpa_cli -i wlan0 save_config")
+        if cmd.read() != "OK\n":
+            break
+        cmd = os.popen(f"wpa_cli -i wlan0 select_network {network}")
+        if cmd.read() != "OK\n":
+            break
+        return True
