@@ -342,7 +342,7 @@ def get_picture():
         #from https://www.tutorialspoint.com/python_pillow/Python_pillow_merging_images.htm
         for ancor in anchors:
             print(anchors.index(ancor))
-            compositeImg.paste(pics[anchors.index(ancor)].resize((ancor['width'], ancor['height'])),(ancor['x'], ancor['y']),0)
+            compositeImg.paste(pics[anchors.index(ancor)].resize((ancor['width'], ancor['height']),Image.LANCZOS),(ancor['x'], ancor['y'])) # from https://www.geeksforgeeks.org/python-pil-image-resize-method/
         layoutImg = Image.open(layoutSrc) 
         #from https://pythontic.com/image-processing/pillow/alpha-composite
         finalImg = Image.alpha_composite(compositeImg, layoutImg) 
@@ -350,7 +350,7 @@ def get_picture():
         number_of_files = len(glob.glob('data/pictures/*'))
         imgSrc = os.path.join('data/pictures/',f'foto_{(number_of_files + 1):08}.jpg')
         finalImg = finalImg.convert('RGB')
-        finalImg.save(imgSrc) 
+        finalImg.save(imgSrc, quality=100, subsampling=0) #from data https://jdhao.github.io/2019/07/20/pil_jpeg_image_quality/
         return send_file(imgSrc, mimetype='image/jpg') 
 
 @app.route('/api/renderVideo', methods = ['GET'])
