@@ -10,7 +10,6 @@ Galerie
 <!-- form https://github.com/ibrahimokdadov/upload_file_python/blob/master/src/templates/gallery.html-->  
 <!-- load styles-->
 <link rel="stylesheet" href="{{url_for('static', filename='lightbox2-2.11.3/dist/css/lightbox.min.css')}}">   
-<link rel="stylesheet" href="{{url_for('static', filename='bootstrap-3.3.7-dist/css/bootstrap.min.css')}}">
 
 <!-- load scripts-->
 <script type="text/javascript" src="{{url_for('static', filename='lightbox2-2.11.3/dist/js/lightbox-plus-jquery.min.js')}}"></script> 
@@ -35,9 +34,9 @@ Galerie
 
         <hr>
         {% for imageName in imageNames %}
-        <div class="col-lg-3 col-md-4 col-xs-6 thumb" style="margin-top:10px;">
+        <div class="col-lg-3 col-md-4 col-sm-6 thumb" style="margin-top:10px;">
             <a href="{{url_for('pageImage', filename=imageName)}}" data-lightbox="mygallery" print-link="{{imageName}}">
-                <img class="img-responsive image" src=" {{url_for('pageImage', filename=imageName)}}">
+                <img class="img-fluid image" src=" {{url_for('pageImage', filename=imageName)}}">
             </a>
         </div>
         {% endfor %}
