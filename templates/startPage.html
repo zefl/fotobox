@@ -31,6 +31,16 @@ Viel Spaß beim Feiern und Fotografieren
     text-align:center;
 }
 
+.not-selectable {
+    /* https://stackoverflow.com/questions/2310734/how-to-make-html-text-unselectable */
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+
 {{ notification_css() }}
   
 {{ login_css() }}
@@ -41,7 +51,7 @@ Viel Spaß beim Feiern und Fotografieren
 {% endblock %}
 
 {% block content %}
-<div id="logo" data-long-press-delay="2000" style="width:276px;height:276px;overflow:hidden; margin:0 auto;">
+<div class="not-selectable" id="logo" data-long-press-delay="2000" style="width:276px;height:276px;overflow:hidden; margin:0 auto;">
     <img role="presentation" src="../static/pictures/logo.png" style="display:block;margin:0" height="276" width="276" data-width="276" data-height="276">
 </div>
 

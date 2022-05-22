@@ -22,6 +22,7 @@ import qrcode
 from datetime import datetime
 from io import BytesIO
 from PIL import Image
+import requests
 
 def exit():
     global g_cameras
@@ -54,8 +55,9 @@ g_modus = None
 g_anchorsMulti = []
 g_anchorSingle = []
 
-g_error = Error();
+g_error = Error()
 
+g_url = ""
 class cameraContainer():
     def __init__(self):
         self.previewCamera = None
@@ -212,6 +214,24 @@ def pageVideoFeed():
 @app.route('/upload/<filename>')
 def pageImage(filename):
     return send_from_directory("data/pictures", filename)
+
+# @app.route('/mirror-url/<url>')
+# def mirror(url):
+#     global g_url
+#     g_url = url
+#     r = requests.get('http://' + g_url)
+#     return r.content
+
+# @app.route('/<path:path>')
+# def generic(path):
+#     global g_url
+#     if request.method == 'POST':
+#         print(path)
+#     elif request.method == 'HEAD':
+#         print(path)
+#     elif request.method == 'GET':
+#         r = requests.get('http://' + g_url + "/" + path)
+#         return r.content
 
 #-------------------------------
 # Rest API functions
@@ -464,9 +484,15 @@ def wifi():
     elif request.method == 'POST':
         jsonReq = json.loads(request.data)
         if 'wifi' in jsonReq and 'psw' in jsonReq:
-            connectToWifi(jsonReq['wifi'],jsonReq['psw'])
-            response = jsonify()
-            response.status_code = 200
+            ret = connectToWifi(jsonReq['wifi'],jsonReq['psw'])
+            g_error.put(ret)
+            response = Response(status=ret["status_code"])
+            return response
+        else:
+            error = {'status': 'Error', 'description': 'No wifi passwort or wifi selected'}
+            g_error.put(error)
+            response = jsonify({'return': 'error'})
+            response.status_code = 400
             return response
     else:
         response = jsonify({'return': 'error'})

@@ -118,7 +118,7 @@ span.psw {
 
 {% macro login_html() %}
 <div id="id01" class="modal">
-  <form id="formWiFi" action="javascript:wifiLogin()" method="post" class="modal-content-box animate" >
+  <form id="formWiFi" action="javascript:void(0)" class="modal-content-box animate" >
 
     <div class="container">
       <label for="uname"><b>Verfügbar Netzwerke</b></label>
@@ -128,7 +128,11 @@ span.psw {
 
       <input type="password" placeholder="Enter Password" name="psw" required>
         
-      <button class="loginbtn" type="submit">Login</button>
+      <button class="loginbtn" onclick="wifiLogin()" type="submit">Login</button>
+
+      <div id="load-spinner-form" style="font-size: 24px;position:absolute;top:20%;right:40%;display:none;">
+        <i class="fas fa-spinner fa-pulse fa-10x"></i>
+      </div>
     </div>
 
     <div class="container" style="background-color:#f1f1f1">
@@ -146,20 +150,24 @@ span.psw {
 <script type="text/javascript">
   function checkWifi(){
     var xhttp = new XMLHttpRequest();
+    console.log("Check Wifi")
     xhttp.onreadystatechange = function() {
       if (this.readyState == 4 && this.status == 200) {
-        json = JSON.parse(this.responseText)
-        if(json == true){
+        wifi = JSON.parse(this.responseText)
+        if(wifi != false){
           var xhttp = new XMLHttpRequest();
+          document.getElementById('wifi-status').textContent = wifi;
+          document.getElementById('wifi-status').style.display = 'inline';
           xhttp.onreadystatechange = function() {
             if (this.readyState == 4 && this.status == 200) {
               json = JSON.parse(this.responseText)
               if(json == true){
-                document.getElementById('wifi').style.color='rgb(0, 255, 0)'; 
+                document.getElementById('wifi-error').style.display = 'none';
+                document.getElementById('wifi').style.color = 'rgb(0, 255, 0)'; 
               }
               else {
-                document.getElementById('wifi').style.color='#2196F3'; 
-                document.getElementById('no_inet').style.display='block';
+                document.getElementById('wifi-error').style.display = 'inline';
+                document.getElementById('wifi').style.color = '#2196F3'; 
               }
             }
           }
@@ -172,7 +180,17 @@ span.psw {
     xhttp.send();      
  
   }
+  var cnt = 0;
   checkWifi();
+  var refreshWifi = setInterval(function()
+         {
+            checkWifi();
+            cnt++;
+            if (cnt > 10) {
+              clearInterval(refreshWifi);
+            }
+         }, 5000);
+  
  </script>
 {% endmacro %}
 
@@ -202,13 +220,21 @@ span.psw {
 
   function wifiLogin() {
     var form  = document.getElementById('formWiFi');
+    form.action = "javascript:void(0)";
     var wifi = form.elements['network'].value;
     var password = form.elements['psw'].value;
     var xhttp = new XMLHttpRequest();
     xhttp.onreadystatechange = function() {
-      if (this.readyState == 4 && this.status == 200) {
-        // update if wifi is found
-        checkWifi();
+      document.getElementById('load-spinner-form').style.display='block';
+      if (this.readyState == 4) {
+        if (this.status == 200) {
+          // Change action to close form automatically
+          form.action = "/";
+          form.submit();
+          location.reload(); 
+        } else {
+          document.getElementById('load-spinner-form').style.display='none';
+        }
       }
     }
     xhttp.open("POST", "wifi");

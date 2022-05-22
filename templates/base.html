@@ -77,15 +77,12 @@ transform: rotate(90deg);
       <div>
         <span style="font-size: 30px; font-family: 'Courier New', Courier, monospace; font-weight: bold; color: #ffffff;">{% block header %}{% endblock%}</span>
       </div>
-      <div style="position: absolute; right: 200px; margin-top: -8px; color: rgba(255,255,255,0.45); {% if not(settings['timelaps']['value']) %} display: none; {% endif %}" >
-        <i class="fas fa-flip-horizontal fa-2x fa-history"></i>
-      </div>
-      <div style="position: absolute; right: 195px; color: rgba(255,255,255,0.45); {% if not(settings['timelaps']['value']) %} display: none; {% endif %}">
-        <i class="fas fa-s fa-camera"></i>
-      </div>
-      <div id="wifi" onclick="updateWifiList()" style="position: absolute; right: 150px; margin-top: -10px; color: rgba(255,255,255,0.45);">
-        <i class="fas fa-2x fa-wifi"></i>
-        <span id="no_inet" style="display: none;">No Internet</span>
+      <div id="wifi" onclick="updateWifiList()" style="position: absolute; right: 125px; margin-top: -0px; color: rgba(255,255,255,0.45);text-align:center;">
+        <i class="fas fa-2x fa-wifi" ></i>
+        <div>
+          <i id="wifi-error" class="fas fa fa-exclamation" style="display: none"></i>
+          <span id="wifi-status" style="display: none;">No Internet</span>
+        </div>
       </div> 
       <div class="p-2">
         <a href=".">
@@ -93,6 +90,14 @@ transform: rotate(90deg);
           <span>Home</span>
           </div>
         </a>
+      </div>
+      <div style="position: absolute; left:10%; margin-top: -10vh;">
+        <div style="position: relative; right: 25px; top: 25px; color: rgba(255,255,255,0.45); {% if not(settings['timelaps']['value']) %} display: none; {% endif %}" >
+          <i class="fas fa-flip-horizontal fa-2x fa-history"></i>
+        </div>
+        <div style="position: relative; color: rgba(255,255,255,0.45); {% if not(settings['timelaps']['value']) %} display: none; {% endif %}">
+          <i class="fas fa-s fa-camera"></i>
+        </div>
       </div>
     </div>
 </div>

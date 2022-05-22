@@ -84,7 +84,7 @@ def getActivWifi():
     wifi = cmd.read()
     wifi = re.findall(r'ESSID:"(.+)"' ,wifi)
     if wifi: 
-        return True
+        return wifi
     else:
         return False
 
@@ -103,32 +103,46 @@ def connectToWifi(essid, password):
     import re
     # see https://programmerall.com/article/8884208824/
     # use wpa_cli to add network
-    cmd = os.popen("wpa_cli -i wlan0 list_network")
-    networks = re.findall('(\d+)\s'+essid+'',cmd.read())
-    if networks:
-        # found existing network
-        network = networks[0]
-        cmd = os.popen("wpa_cli -i wlan0 remove_network {network}")
+    cmd = os.popen("sudo sudowpa_cli -i wlan0 list_network")
+    networks = cmd.read()
+    # Build list of current networks
+    # network id / ssid / bssid / flags\
+    networks = networks.split('\n') # split into rows
+    networks = networks[1:-1] #remove first and last row
+    for network in networks:
+        network_info = network.split('\t')
+        # check if network is in list
+        if network_info[1] == essid:
+            if network_info[3] != '[CURRENT]':
+                # Remove network from list if it is not active
+                cmd = os.popen(f"sudo wpa_cli -i wlan0 remove_network {network_info[0]}")
+                if cmd.read() != "OK\n":
+                    return {'status' : 'Error', 'description' : 'Netzwerk nicht gefunden', 'status_code' : 409,}
+            else:
+                return {'status' : 'Error', 'description' : 'Netzwerk ist schon aktiv', 'status_code' : 409,}
 
-    cmd = os.popen("wpa_cli -i wlan0 add_network")
-    network = int(cmd.read())
+    cmd = os.popen("sudo wpa_cli -i wlan0 add_network")
+    network_id = int(cmd.read())
     while True:
-        cmd = os.popen(f"wpa_cli -i wlan0 set_network {network} ssid '\"{essid}\"'")
+        detail_error = ""
+        cmd = os.popen(f"sudo wpa_cli -i wlan0 set_network {network_id} ssid '\"{essid}\"'")
         if cmd.read() != "OK\n":
             break
-        cmd = os.popen(f"wpa_cli -i wlan0 set_network {network} psk '\"{password}\"'")
+        cmd = os.popen(f"sudo wpa_cli -i wlan0 set_network {network_id} psk '\"{password}\"'")
+        if cmd.read() != "OK\n":
+            detail_error = " - Flasches Passwort"
+            break
+        cmd = os.popen(f"sudo wpa_cli -i wlan0 set_network {network_id} scan_ssid 1")
         if cmd.read() != "OK\n":
             break
-        cmd = os.popen(f"wpa_cli -i wlan0 set_network {network} scan_ssid 1")
+        cmd = os.popen(f"sudo wpa_cli -i wlan0 set_network {network_id} priority 1")
         if cmd.read() != "OK\n":
             break
-        cmd = os.popen(f"wpa_cli -i wlan0 set_network {network} priority 1")
+        cmd = os.popen("sudo wpa_cli -i wlan0 save_config")
         if cmd.read() != "OK\n":
             break
-        cmd = os.popen("wpa_cli -i wlan0 save_config")
+        cmd = os.popen(f"sudo wpa_cli -i wlan0 select_network {network_id}")
         if cmd.read() != "OK\n":
             break
-        cmd = os.popen(f"wpa_cli -i wlan0 select_network {network}")
-        if cmd.read() != "OK\n":
-            break
-        return True
+        return {'status': 'Okay', 'status_code' : 200,}
+    return {'status' : 'Error', 'status_code' : 409, 'description' : 'Fehler in Netzwerkeinstellungen' + detail_error}
