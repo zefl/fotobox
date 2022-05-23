@@ -17,11 +17,15 @@ def findInserts(layoutSrc):
             #search for end of x
             while imgData[loopIndex][3] == item[3]:
                 loopIndex += 1
+                if loopIndex >= len(imgData):
+                    break
             #search for end of y
             ancor['width'] = loopIndex - index
             loopIndex = index
             while imgData[loopIndex][3] == item[3]:
                 loopIndex += width
+                if loopIndex >= len(imgData):
+                    break
 
             ancor['height'] = int(loopIndex / width) - ancor['y']
             imageLines.append(ancor)
