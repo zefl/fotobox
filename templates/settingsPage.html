@@ -30,6 +30,24 @@
 {% endfor %}
 {% endmacro %}
 
+
+{% macro create_upload() %}
+{% for uploadFile in ["LayoutMulti.png", "LayoutSingle.png", "logo.png", "logo.ico", "background.png"] %}
+<div class="row" style="margin-top: 10px;">
+  <div class="col-md-8">
+    <form action="/upload" method="POST" enctype="multipart/form-data">
+      <label>{{uploadFile}}:</label>
+      <input type="file" id="myFile" name="{{uploadFile}}">
+      <input type="submit">
+    </form>
+  </div>
+  <div class="col-md-2">
+    <img src="../static/pictures/{{uploadFile}}" height="40vh" width="120vw"> 
+  </div>
+</div>
+{% endfor %}
+{% endmacro %}
+
 {% block header %}
 Einstellungen
 {% endblock %}
@@ -137,6 +155,11 @@ input:onchange{
     border-radius: 50%;
   }
 
+  <!-- .imageContainer > img:hover {
+    width: 50vw;
+    height: 30vw;
+  } -->
+
   {{ notification_css() }}
 
 {% endblock %}
@@ -185,21 +208,25 @@ function onChange(key){
 }
 
 //This scritp is used for update timelapse
-document.addEventListener("DOMContentLoaded", loadPage);
+// document.addEventListener("DOMContentLoaded", loadPage);
+loadPage();
 var timeout = setInterval(loadPage, 5000);    
 
 function loadPage(){
-  var tab = document.getElementById("Timelaps");
-  if (tab.style.display == "block") {
+  // var tab = document.getElementById("Timelaps");
+  // if (tab.style.display == "block") {
     var xhttp = new XMLHttpRequest();
     xhttp.onreadystatechange = function() {
       if (this.readyState == 4 && this.status == 200) {
-        document.getElementById("number").innerHTML = this.responseText;
+        const obj = JSON.parse(this.responseText);
+        document.getElementById("number_timelaps_1").innerHTML = obj.timelaps;
+        document.getElementById("number_timelaps_2").innerHTML = obj.timelaps;
+        document.getElementById("number_picture").innerHTML = obj.pictures;
       }
     };
     xhttp.open("GET", "status?folder={{ directory }}");
     xhttp.send();
-  }
+  // }
 }
 
 //from https://www.w3schools.com/howto/howto_css_switch.asp
@@ -246,6 +273,7 @@ function save() {
     <button class="tablinks" onclick="openTab(event, 'Timelaps')">Timelaps</button>
     <button class="tablinks" onclick="openTab(event, 'Other')">Anderes</button>
     <button class="tablinks" onclick="openTab(event, 'Data')">Daten</button>
+    <button class="tablinks" onclick="openTab(event, 'Upload')">Hochloaden</button>
     <a href=" " onclick="save()">
       <div class="button" style="margin-right: 8px; margin-top: 8px; width:100px; height:40px; float:right;">
         <span>Save</span>
@@ -278,7 +306,7 @@ function save() {
               <label style="font-size:20px;">Anzahl Bilder</label>
             </div>
             <div class="col-md-4">
-              <label style="font-size:20px;" id="number"></label>
+              <label style="font-size:20px;" id="number_timelaps_1"></label>
             </div>
           </div>
           {{ create_settings('timelaps') }}
@@ -297,6 +325,22 @@ function save() {
 
   <div id="Data" class="tabcontent">
     <div class="container">
+      <div class="row" style="min-height: 3vw;">
+        <div class="col-md-8">
+          <label style="font-size:20px;">Anzahl Timelaps</label>
+        </div>
+        <div class="col-md-4">
+          <label style="font-size:20px;" id="number_timelaps_2"></label>
+        </div>
+      </div>
+      <div class="row" style="min-height: 3vw;">
+        <div class="col-md-8">
+          <label style="font-size:20px;">Anzahl Bilder</label>
+        </div>
+        <div class="col-md-4">
+          <label style="font-size:20px;" id="number_picture"></label>
+        </div>
+      </div>
       <div class="row" style="margin-top: 10px;">
         <a href="/api/data?get">
           <div class="button">
@@ -304,6 +348,14 @@ function save() {
           </div>
         </a>
       </div>
+    </div>
+  </div>
+
+  <iframe name="hiddenFrame" style="position:absolute; top:-1px; left:-1px; width:1px; height:1px;"></iframe>
+
+  <div id="Upload" class="tabcontent">
+    <div class="container">
+      {{ create_upload() }}
     </div>
   </div>
   

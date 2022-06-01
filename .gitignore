@@ -1,19 +1,26 @@
 __pycache__/
 .vscode/
-cameras/__pycache__/
+workspace/env/
+
 data/videos/*
 data/pictures/*
 data/orginal_pictures/*
 data/timelaps/*
 data/*.csv
+
+static/pictures/background.png
+static/pictures/LayoutMulti.png
+static/pictures/LayoutSingle.png
+static/pictures/logo.ico
+static/pictures/logo.png
+
 static/user.json
+upload/login.json
 
 static/bootstrap-4.1.3-dist
 static/fontawesome-free-5.15.4-web
 static/long-press-event-2.4.4
 
-upload/login.json
-workspace/env/
 createEnv.txt
 *.pptx
 *.zip

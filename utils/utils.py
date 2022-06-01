@@ -43,7 +43,7 @@ def findInserts(layoutSrc):
     if(imageLines[0]['height'] > 10):
         imageAncors.append(imageLines[0])
     for index, item in enumerate(imageLines):
-        #get last page
+        # check if last ancor was last ancor of insert
         if lastAncor['height'] == 1:
             #only if there is a big enough space
             if(item['height'] > 10):

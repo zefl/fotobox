@@ -22,7 +22,8 @@ import qrcode
 from datetime import datetime
 from io import BytesIO
 from PIL import Image
-import requests
+from werkzeug.utils import secure_filename
+from utils.utils import findInserts 
 
 def exit():
     global g_cameras
@@ -41,6 +42,9 @@ def exit():
 app = Flask(__name__)
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 app.secret_key = "sdbngiusdngdsgbiursbng"
+app.config['UPLOAD_FOLDER'] = 'static/pictures'
+app.config['MAX_CONTENT_PATH'] = 1000000
+ALLOWED_EXTENSIONS = set(['png'])
 
 try:
     with open('static/user.json') as json_file:
@@ -50,6 +54,8 @@ except:
         data = json.load(json_file)
 
 g_settings = Settings(**data)
+
+g_files = ["LayoutMulti.png", "LayoutSingle.png", "logo.png", "logo.ico", "background.png"]
 
 g_modus = None
 g_anchorsMulti = []
@@ -139,8 +145,9 @@ def before_first_request_func():
     This function will run once before the first request to this instance of the application.
     You may want to use this function to create any databases/tables required for your app.
     """    
-    from utils.utils import findInserts 
     print("This function will run once ")
+
+    Initialize()
     
     global g_anchorsMulti
     global g_anchorSingle
@@ -160,8 +167,6 @@ def before_first_request_func():
             os.makedirs("./data/pictures")
         if not(os.path.exists("./data/videos")):
             os.makedirs("./data/videos")
-
-    checkCamera()
             
 #from https://www.youtube.com/watch?v=8qDdbcWmzCg
 #adds settings json to each page
@@ -178,16 +183,17 @@ def pageStart():
 
 @app.route('/settings')
 def pageSettings():
-    return render_template('settingsPage.html', directory="data/timelaps")
+    return render_template('settingsPage.html', directory="data")
 
 @app.route('/options')
 def pageOptions():
     #[Single Foto, 4'er Session Foto, Video]
-    return render_template('chooseOption.html', enable=[g_settings.singlePicture, g_settings.multiPicture, g_settings.videoPicture])
+    return render_template('chooseOption.html', numberOfPictures=len(g_anchorsMulti), enable=[g_settings.singlePicture, g_settings.multiPicture, g_settings.videoPicture])
 
 @app.route('/picture')
 def pagePicture():
-    return render_template('picturePage.html') 
+    global g_anchorsMulti
+    return render_template('picturePage.html', numberOfPictures=len(g_anchorsMulti)) 
 
 #from https://gist.github.com/arusahni/9434953
 @app.route('/download')
@@ -414,7 +420,10 @@ def status():
     global g_error
     if request.method == 'GET':
         if 'folder' in request.args:
-            return json.dumps(len(os.listdir(request.args['folder'])))
+            response = jsonify({'timelaps': len(os.listdir(os.path.join(request.args['folder'],'timelaps'))), 
+                                'pictures' : len(os.listdir(os.path.join(request.args['folder'],'orginal_pictures')))})
+            response.status_code = 200
+            return response
         elif 'error' in request.args:
             error = g_error.get()
             if error:
@@ -451,6 +460,9 @@ def printing():
                 if ret:
                     error = {'status': 'Error', 'description': ret}
                     g_error.put(error)
+                else:
+                    info = {'status': 'Info', 'description': 'Bild wird gedruck. Seitlich entnehmen.'}
+                    g_error.put(info)
                 response = jsonify({'return': 'done'})
                 response.status_code = 200
                 response.headers.add('Access-Control-Allow-Origin', '*')
@@ -484,9 +496,14 @@ def wifi():
     elif request.method == 'POST':
         jsonReq = json.loads(request.data)
         if 'wifi' in jsonReq and 'psw' in jsonReq:
-            ret = connectToWifi(jsonReq['wifi'],jsonReq['psw'])
-            g_error.put(ret)
-            response = Response(status=ret["status_code"])
+            try:
+                ret = connectToWifi(jsonReq['wifi'],jsonReq['psw'])
+                g_error.put(ret)
+                response = Response(status=ret["status_code"])
+            except Exception as e:
+                error = {'status': 'Error', 'description': repr(e)}
+                g_error.put(error)
+                response = Response(status=500)
             return response
         else:
             error = {'status': 'Error', 'description': 'No wifi passwort or wifi selected'}
@@ -498,6 +515,45 @@ def wifi():
         response = jsonify({'return': 'error'})
         response.status_code = 400
         return response
+
+# https://pythonbasics.org/flask-upload-file/
+# https://stackoverflow.com/questions/44926465/upload-image-in-flask
+@app.route('/upload' ,methods = ['GET','POST'])
+def upload():
+    global g_files
+    global g_anchorsMulti
+    global g_anchorSingle
+    if request.method == 'POST':
+        for file_name in g_files:
+            if file_name in request.files:
+                file = request.files[file_name]
+                if "Layout" in file_name:
+                    tempFile = os.path.join(app.config['UPLOAD_FOLDER'], "temp.png")
+                    file.save(tempFile)
+                    inserts = findInserts(tempFile)
+                    if "Multi" in file_name:
+                        if len(inserts) < 2:
+                            os.remove(tempFile)
+                            error = {'status': 'Error', 'description': 'Nicht die Richtige Anzahl transparente Flächen im Layout'}
+                            g_error.put(error) 
+                            return redirect(url_for('pageSettings'))
+                        else:
+                            g_anchorsMulti = inserts
+                    elif "Single" in file_name:
+                        if len(inserts) != 1:
+                            os.remove(tempFile)
+                            error = {'status': 'Error', 'description': 'Nicht die Richtige Anzahl transparente Flächen im Layout'}
+                            g_error.put(error) 
+                            return redirect(url_for('pageSettings'))
+                        else:
+                            g_anchorSingle = inserts
+                    shutil.move(tempFile, os.path.join(app.config['UPLOAD_FOLDER'], file_name))
+                    return redirect(url_for('pageSettings')) 
+                else:
+                    file.save(os.path.join(app.config['UPLOAD_FOLDER'], file_name))
+                    response = jsonify()
+                    response.status_code = 400
+                    return redirect(url_for('pageSettings')) 
 #-------------------------------
 # Helper functions
 #-------------------------------
@@ -518,13 +574,26 @@ def gen():
         else:
             raise RuntimeError("[picInABox] No Frametype given")
 
-def checkCamera():
+def Initialize():
     from cameras.webcam import check_webcam
     from cameras.dslrCamera import check_dslrCamera
     from cameras.piCamera import check_piCamera
     from cameras.cameraRecorder import CameraRecorder
     from cameras.timeLaps import CameraTimelapss
-    
+
+    #########################
+    #Init fotos
+    #########################
+    global g_files
+    for file in g_files:
+        src_path_file_name = os.path.join(app.config['UPLOAD_FOLDER'], 'default', file)
+        dest_path_file_name = os.path.join(app.config['UPLOAD_FOLDER'], file)
+        if not os.path.exists(dest_path_file_name):
+            shutil.copyfile(src_path_file_name, dest_path_file_name)
+
+    #########################
+    #Init printer
+    #########################
     global g_printer
     try:
         from printers.printer import Printer
@@ -533,12 +602,12 @@ def checkCamera():
         from printers.virtualPrinter import VirtualPrinter
         g_printer = VirtualPrinter()
     
-    global g_cameras  
-    global g_activeCamera
-    global g_settings
     #########################
     #Select which camera driver to use
     #########################
+    global g_cameras  
+    global g_activeCamera
+    global g_settings
     dsl_connected = check_dslrCamera()
     pi_camera_connected = check_piCamera()
     webcam_connected = check_webcam()

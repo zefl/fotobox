@@ -54,11 +54,11 @@ div.container {
 //https://stackoverflow.com/questions/7071472/javascript-timeout-when-no-actions-from-user-for-specified-time
 
 attachEvent(window,'load',function(){
-  var idleSeconds = 300; //Idle time to 5 min
+  var idleSeconds = 60; //Idle time to 5 min
   var idleTimer;
   function resetTimer(){
     clearTimeout(idleTimer);
-    idleTimer = setTimeout(whenUserIdle,idleSeconds*1000);
+    idleTimer = setTimeout(whenUserIdle, idleSeconds*1000);
   }
   attachEvent(document.body,'mousemove',resetTimer);
   attachEvent(document.body,'keydown',resetTimer);
@@ -181,11 +181,11 @@ function printing(){
  
  button.style.display = 'none';
  text.style.display = 'none';
-
+ var disablePrintTimeout = 20000; 
  setTimeout( function(){
   button.style.display = 'inline';
   text.style.display = 'inline';
- },5000)
+ },disablePrintTimeout)
 
  var xhttp = new XMLHttpRequest();
   var jsonObj = null

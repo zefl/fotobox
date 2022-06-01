@@ -65,13 +65,14 @@ class CameraTimelapss():
     def recording_save(self, folder="", file=""):
         if folder == "":
             folder = self._folder
+            folder = "C:/Users/flori/Pictures/Fotobox_Sarah&Flo/all_picutres_2022_05_24_08_20_29/timelaps"
         if file == "":
             file = "timelaps_" + datetime.now().strftime('%Y_%m_%d_%H_%M_%S')
-        frames = []
+
         print("Save Timelaps")
-        _files = glob.glob('data/timelaps/*.jpg')
+        _files = glob.glob(folder+'/*.jpg')
         minFrameSize = (0,0)
-        _files.sort(key=os.path.getctime)
+        sorted(_files)
         for _file in _files:
             try:
                 image = Image.open(_file)
@@ -81,7 +82,7 @@ class CameraTimelapss():
                     if currentPixel != 0:
                         minFrameSize = image.size
             except:
-                 print(f"Unexpected error: {sys.exc_info()[0]} in {_file}")
+                print(f"Unexpected error: {sys.exc_info()[0]} in {_file}")
         fourcc = cv2.VideoWriter_fourcc(*'mp4v')
         video_file = os.path.join(folder, file +'.avi' )
         #used 30fps if 1 picture per second => 1 sec video 30 sec real life => 1hour real life     2 min video                           
