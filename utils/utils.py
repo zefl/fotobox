@@ -107,7 +107,7 @@ def connectToWifi(essid, password):
     import re
     # see https://programmerall.com/article/8884208824/
     # use wpa_cli to add network
-    cmd = os.popen("sudo sudowpa_cli -i wlan0 list_network")
+    cmd = os.popen("sudo wpa_cli -i wlan0 list_network")
     networks = cmd.read()
     # Build list of current networks
     # network id / ssid / bssid / flags\
