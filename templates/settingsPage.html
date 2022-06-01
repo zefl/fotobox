@@ -274,6 +274,7 @@ function save() {
     <button class="tablinks" onclick="openTab(event, 'Other')">Anderes</button>
     <button class="tablinks" onclick="openTab(event, 'Data')">Daten</button>
     <button class="tablinks" onclick="openTab(event, 'Upload')">Hochloaden</button>
+    <button class="tablinks" onclick="openTab(event, 'Update')">Update</button>
     <a href=" " onclick="save()">
       <div class="button" style="margin-right: 8px; margin-top: 8px; width:100px; height:40px; float:right;">
         <span>Save</span>
@@ -345,6 +346,25 @@ function save() {
         <a href="/api/data?get">
           <div class="button">
             <span>Download ZIP File</span>
+          </div>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div id="Update" class="tabcontent">
+    <div class="container">
+      <div class="row" style="margin-top: 10px;">
+        <a href="/api/update?update">
+          <div class="button">
+            <span>Update</span>
+          </div>
+        </a>
+      </div>
+      <div class="row" style="margin-top: 10px;">
+        <a href="/api/update?reboot">
+          <div class="button">
+            <span>Reboot</span>
           </div>
         </a>
       </div>

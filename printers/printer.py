@@ -57,8 +57,8 @@ class Printer(Logger):
         status = self._conn.getPrinterAttributes(self.name)
         if(status['printer-state-reasons'][0] != 'none'):
             self._conn.cancelAllJobs(self.name) #reset all jobs
-            self._conn.enablePrinter(self.name) #reset printer -> resets error
-            return(status['printer-state-message'])
+            self._conn.enablePrinter(self.name) #reset printer -> resets error           
+            return status['printer-state-message']
 
     def printing(self, picture):
         if not self.name:
@@ -88,13 +88,25 @@ class Printer(Logger):
                 error = job_info['job-printer-state-message']
             return error
 
-    def print_picture(self, picture, copies=1):
+    def translate(self, status):
+        if status == "Printer open failure (No matching printers found!)":
+            return "Drucker ist abgeschaltet"
+        elif status == "Printer error: No Paper (03)":
+            return "Kein Papier - seitlich Einsatz Blätter einsetzen"
+        elif status == "Printer error: No Ink (07)":
+            return "Keine Tinte - hinten weißen Einsatz tauschen"
+        return status
+
+    def print_picture(self, picture):
         """Send a file to the CUPS server to the default printer.
         """
         if self.busy:
-            self.busy = False
             return "Letzter Druck Job noch nicht abgeschlossen"
         self.busy = True
-        ret = self.printing(picture, copies)
+        try:
+            status = self.printing(picture)
+            status = self.translate(status)
+        except Exception as e:
+            status = repr(e)
         self.busy = False
-        return ret
+        return status

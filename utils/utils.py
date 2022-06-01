@@ -131,6 +131,7 @@ def connectToWifi(essid, password):
         detail_error = ""
         cmd = os.popen(f"sudo wpa_cli -i wlan0 set_network {network_id} ssid '\"{essid}\"'")
         if cmd.read() != "OK\n":
+            detail_error = " - Netzwerk setzen Problem"
             break
         cmd = os.popen(f"sudo wpa_cli -i wlan0 set_network {network_id} psk '\"{password}\"'")
         if cmd.read() != "OK\n":
@@ -138,15 +139,19 @@ def connectToWifi(essid, password):
             break
         cmd = os.popen(f"sudo wpa_cli -i wlan0 set_network {network_id} scan_ssid 1")
         if cmd.read() != "OK\n":
+            detail_error = " - Neues Netzwerk suchen Problem"
             break
         cmd = os.popen(f"sudo wpa_cli -i wlan0 set_network {network_id} priority 1")
         if cmd.read() != "OK\n":
+            detail_error = " - Problem setzen Prio"
             break
         cmd = os.popen("sudo wpa_cli -i wlan0 save_config")
         if cmd.read() != "OK\n":
+            detail_error = " - Problem Speichern Einstellungen"
             break
         cmd = os.popen(f"sudo wpa_cli -i wlan0 select_network {network_id}")
         if cmd.read() != "OK\n":
+            detail_error = " - Problem Netzwerk Aktivieren"
             break
         return {'status': 'Okay', 'status_code' : 200,}
     return {'status' : 'Error', 'status_code' : 409, 'description' : 'Fehler in Netzwerkeinstellungen' + detail_error}

@@ -151,6 +151,7 @@ span.psw {
   function checkWifi(){
     var xhttp = new XMLHttpRequest();
     console.log("Check Wifi")
+    document.getElementById('wifi').style.display = 'inline';
     xhttp.onreadystatechange = function() {
       if (this.readyState == 4 && this.status == 200) {
         wifi = JSON.parse(this.responseText)
@@ -181,15 +182,14 @@ span.psw {
  
   }
   var cnt = 0;
-  checkWifi();
   var refreshWifi = setInterval(function()
-         {
-            checkWifi();
-            cnt++;
-            if (cnt > 10) {
-              clearInterval(refreshWifi);
-            }
-         }, 5000);
+  {
+    checkWifi();
+    cnt++;
+    if (cnt > 10) {
+      clearInterval(refreshWifi);
+    }
+  }, 1000);
   
  </script>
 {% endmacro %}

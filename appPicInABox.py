@@ -15,6 +15,7 @@ from upload.mega_io import MegaNz
 import time
 import cv2
 import numpy as np
+import git 
 
 import glob
 import json 
@@ -43,8 +44,8 @@ app = Flask(__name__)
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 app.secret_key = "sdbngiusdngdsgbiursbng"
 app.config['UPLOAD_FOLDER'] = 'static/pictures'
-app.config['MAX_CONTENT_PATH'] = 1000000
-ALLOWED_EXTENSIONS = set(['png'])
+app.config['MAX_CONTENT_PATH'] = 16 * 1000 * 1000
+ALLOWED_EXTENSIONS = set(['png','ico'])
 
 try:
     with open('static/user.json') as json_file:
@@ -414,6 +415,23 @@ def zipFile():
                 as_attachment = True)
     elif "remove" in request.query_string.decode("utf-8"):
         pass
+
+@app.route('/api/update', methods = ['GET'])
+def update():
+    if "update" in request.query_string.decode("utf-8") :
+        # https://stackoverflow.com/questions/15315573/how-can-i-call-git-pull-from-within-python
+        g = git.cmd.Git(os.getcwd())
+        g.pull()
+        response = jsonify()
+        response.status_code = 200
+    elif "reboot" in request.query_string.decode("utf-8"):
+        os.popen("sudo reboot")
+        response = jsonify()
+        response.status_code = 200
+    else:
+        response = jsonify()
+        response.status_code = 400
+    return redirect(url_for('pageStart')) 
 
 @app.route('/status' ,methods = ['GET'])
 def status():
