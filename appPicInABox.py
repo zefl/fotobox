@@ -479,7 +479,7 @@ def printing():
                     error = {'status': 'Error', 'description': ret}
                     g_error.put(error)
                 else:
-                    info = {'status': 'Info', 'description': 'Bild wird gedruck. Seitlich entnehmen.'}
+                    info = {'status': 'Info', 'description': 'Bild wird gedruckt. Seitlich entnehmen.'}
                     g_error.put(info)
                 response = jsonify({'return': 'done'})
                 response.status_code = 200

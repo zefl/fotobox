@@ -92,7 +92,7 @@ class Printer(Logger):
         if status == "Printer open failure (No matching printers found!)":
             return "Drucker ist abgeschaltet"
         elif status == "Printer error: No Paper (03)":
-            return "Kein Papier - seitlich Einsatz Blätter einsetzen"
+            return "Kein Papier - seitlichen Papiereinzug einsetzen"
         elif status == "Printer error: No Ink (07)":
             return "Keine Tinte - hinten weißen Einsatz tauschen"
         return status
