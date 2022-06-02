@@ -181,15 +181,15 @@ span.psw {
     xhttp.send();      
  
   }
-  var cnt = 0;
+  // var cnt = 0;
   var refreshWifi = setInterval(function()
   {
     checkWifi();
-    cnt++;
-    if (cnt > 10) {
-      clearInterval(refreshWifi);
-    }
-  }, 1000);
+    //cnt++;
+    //if (cnt > 10) {
+      //clearInterval(refreshWifi);
+    //}
+  }, 5000);
   
  </script>
 {% endmacro %}
@@ -197,6 +197,7 @@ span.psw {
 {% macro login_js() %}
 <script>
   function updateWifiList() {
+    clearInterval(refreshWifi); // Stop intervall for updating wifi
     document.getElementById('load-spinner').style.display='block';
     var xhttp = new XMLHttpRequest();
     xhttp.onreadystatechange = function() {

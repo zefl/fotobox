@@ -65,7 +65,6 @@ class CameraTimelapss():
     def recording_save(self, folder="", file=""):
         if folder == "":
             folder = self._folder
-            folder = "C:/Users/flori/Pictures/Fotobox_Sarah&Flo/all_picutres_2022_05_24_08_20_29/timelaps"
         if file == "":
             file = "timelaps_" + datetime.now().strftime('%Y_%m_%d_%H_%M_%S')
 

@@ -54,7 +54,7 @@ div.container {
 //https://stackoverflow.com/questions/7071472/javascript-timeout-when-no-actions-from-user-for-specified-time
 
 attachEvent(window,'load',function(){
-  var idleSeconds = 60; //Idle time to 5 min
+  var idleSeconds = 120; //Idle time until back to start page
   var idleTimer;
   function resetTimer(){
     clearTimeout(idleTimer);
@@ -160,10 +160,7 @@ function startUpFunction(){
         }
     };
     xhttp.open("GET", "api/modus");
-    xhttp.send(); 
-
-
-    
+    xhttp.send();   
 }
 
 function disableSpinner() {
@@ -181,7 +178,7 @@ function printing(){
  
  button.style.display = 'none';
  text.style.display = 'none';
- var disablePrintTimeout = 20000; 
+ var disablePrintTimeout = 30000; //disbale Printer timeout in ms 
  setTimeout( function(){
   button.style.display = 'inline';
   text.style.display = 'inline';

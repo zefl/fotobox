@@ -84,6 +84,8 @@ class enCamera(Enum):
 g_cameras = []
 g_frame = []
 g_init = False
+g_remove_click_time = 0
+g_remove_click_cnt = 0
 g_printer = None
 g_file_server = MegaNz()
 
@@ -358,7 +360,7 @@ def get_picture():
 
         elif g_modus == 2:
             pics = []
-            for index in range(1,5): 
+            for index in range(1,len(g_anchorsMulti)+1): 
                 id = index * -1
                 print(list_of_files[id])
                 pics.append(Image.open(list_of_files[id]))
@@ -406,6 +408,8 @@ def lastRawFrame():
 
 @app.route('/api/data', methods = ['GET'])
 def zipFile():
+    global g_remove_click_cnt
+    global g_remove_click_time
     if "get" in request.query_string.decode("utf-8") :
         file_name = "all_picutres_" + datetime.now().strftime('%Y_%m_%d_%H_%M_%S')
         shutil.make_archive(file_name, 'zip', "data/")
@@ -414,16 +418,32 @@ def zipFile():
                 attachment_filename= file_name + '.zip',
                 as_attachment = True)
     elif "remove" in request.query_string.decode("utf-8"):
-        pass
+        g_remove_click_cnt += 1
+        if (g_remove_click_cnt % 2) == 0 and (time.time() - g_remove_click_time) < 25:
+            dirs = ['data/pictures','data/orginal_pictures']
+            for dir in dirs:
+                for f in os.listdir(dir):
+                    os.remove(os.path.join(dir, f))
+            info = {'status': 'Info', 'description': 'Bilder wurden glöscht'}
+            g_error.put(info)
+        else:
+            g_remove_click_time = time.time()
+            info = {'status': 'Info', 'description': 'Drücke nochmal um alle Bilder zu drücken'}
+            g_error.put(info)
+        return redirect(url_for('pageSettings'))
+
 
 @app.route('/api/update', methods = ['GET'])
 def update():
     if "update" in request.query_string.decode("utf-8") :
         # https://stackoverflow.com/questions/15315573/how-can-i-call-git-pull-from-within-python
         g = git.cmd.Git(os.getcwd())
-        g.pull()
-        response = jsonify()
-        response.status_code = 200
+        try:
+            g.pull()
+        except Exception as e:
+            error = {'status': 'Error', 'description': repr(e)}
+            g_error.put(error)
+            response = Response(status=500)
     elif "reboot" in request.query_string.decode("utf-8"):
         os.popen("sudo reboot")
         response = jsonify()
