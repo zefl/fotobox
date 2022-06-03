@@ -94,7 +94,9 @@ class Printer(Logger):
         elif status == "Printer error: No Paper (03)":
             return "Kein Papier - seitlichen Papiereinzug einsetzen"
         elif status == "Printer error: No Ink (07)":
-            return "Keine Tinte - hinten weißen Einsatz tauschen"
+            return "Keine Tinte - hinten weißen Einsatz einsetzen"
+        elif status == "Printer error: Ink Cassette Empty (06)":
+            return "Tinte leer - hinten weißen Einsatz tauschen"
         return status
 
     def print_picture(self, picture):
