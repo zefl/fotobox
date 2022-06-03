@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 
 {% from "_notification.html" import notification_css,notification_html,notification_js %}
+{% from "_login.html" import login_css,login_html,login_js %}
 
 {% macro create_settings(group) %}
 {% for setting in settings %}
@@ -161,10 +162,15 @@ input:onchange{
   } -->
 
   {{ notification_css() }}
-
+  {{ login_css() }}
 {% endblock %}
 
 {% block script %}
+{{ check_wifi_js() }}
+
+{{ login_html() }}
+
+{{ login_js() }}
 <script>
 //This scritp is used for tab management
 function openTab(evt, tabName) {
