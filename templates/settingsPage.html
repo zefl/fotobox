@@ -235,6 +235,25 @@ function loadPage(){
   // }
 }
 
+var update = setInterval(RefreshStatus, 1000); 
+
+function RefreshStatus(){
+  // var tab = document.getElementById("Timelaps");
+  // if (tab.style.display == "block") {
+    var xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function() {
+      if (this.readyState == 4 && this.status == 200) {
+        const obj = JSON.parse(this.responseText);
+        document.getElementById("step").innerHTML = obj.step;
+        document.getElementById("percent").style.width = obj.percent +"%";
+        document.getElementById("run_time").innerHTML = obj.run_time;
+      }
+    };
+    xhttp.open("GET", "status?timelaps");
+    xhttp.send();
+  // }
+}
+
 //from https://www.w3schools.com/howto/howto_css_switch.asp
 function activateCheckbox(checkbox, key) {
   if(checkbox.checked == true){
@@ -318,6 +337,21 @@ function save() {
           </div>
           {{ create_settings('timelaps') }}
         </div>
+      </div>
+      <div class="row">
+        <div class="col-2">
+           <h1 id='step'> Schritt </h1>
+        </div>
+        <div class="col-8">
+            <div class="progress">
+              <div id='percent' class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100" style="width: 0%">
+              </div>
+            </div>
+        </div>
+        <div class="col-2">
+          <h1 id='run_time'> 0:0:0 </h1>
+        </div>
+      </div>
       </div>
     </div>
   </div>

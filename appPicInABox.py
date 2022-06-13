@@ -456,6 +456,7 @@ def update():
 @app.route('/status' ,methods = ['GET'])
 def status():
     global g_error
+    global g_activeCamera
     if request.method == 'GET':
         if 'folder' in request.args:
             response = jsonify({'timelaps': len(os.listdir(os.path.join(request.args['folder'],'timelaps'))), 
@@ -472,7 +473,10 @@ def status():
                 response = jsonify({'type': 'Okay', 'description' : 'none'})
                 response.status_code = 200
                 return response
-
+        elif 'timelaps' in request.args:
+                response = jsonify(g_activeCamera.timelapsCamera.status_save())
+                response.status_code = 200
+                return response
 
 @app.route('/print',methods = ['POST'])
 def printing():

@@ -39,8 +39,11 @@ class CameraTimelapss():
         self._mp_FrameQueue = mp.Queue(2)
         self._thread = None
         self._threadActive = False
-        self._folder = "data/timelaps"
+        self._folder = "data/timelaps/"
         self._picturePerMinute = 60
+        self._save_percent = 0
+        self._save_step = "None"
+        self._remaining_time = time.time()
         
     def recording_start(self):
         #if no capturing is active start is
@@ -63,43 +66,60 @@ class CameraTimelapss():
         self._threadActive = False
             
     def recording_save(self, folder="", file=""):
+        # TODO wait for finish 
         if folder == "":
             folder = self._folder
         if file == "":
             file = "timelaps_" + datetime.now().strftime('%Y_%m_%d_%H_%M_%S')
-
         print("Save Timelaps")
-        _files = glob.glob(folder+'/*.jpg')
+        _files = glob.glob(folder+'*.jpg')
         minFrameSize = (0,0)
         sorted(_files)
+        self._save_step = "Bildgröße ermitteln"
+        start_time = time.time()
         for _file in _files:
             try:
+                self._save_percent = (_files.index(_file) / len(_files)) * 100
                 image = Image.open(_file)
                 minPixel = minFrameSize[0] * minFrameSize[1]
                 currentPixel = image.size[0] * image.size[1]
                 if minPixel == 0 or currentPixel < minPixel:
                     if currentPixel != 0:
                         minFrameSize = image.size
+                elapsed_time = time.time() - start_time
+                estimated_time = (elapsed_time / _files.index(_file)) * len(_files)
+                self._remaining_time = estimated_time - elapsed_time
             except:
-                print(f"Unexpected error: {sys.exc_info()[0]} in {_file}")
+                 print(f"Unexpected error: {sys.exc_info()[0]} in {_file}")
         fourcc = cv2.VideoWriter_fourcc(*'mp4v')
         video_file = os.path.join(folder, file +'.avi' )
-        #used 30fps if 1 picture per second => 1 sec video 30 sec real life => 1hour real life     2 min video                           
-        videoWriter = cv2.VideoWriter(video_file, fourcc, 60, minFrameSize) 
+        # used 24fps                       
+        videoWriter = cv2.VideoWriter(video_file, fourcc, 24, minFrameSize) 
+        self._save_step = "Rendern der Timelaps"
+        start_time = time.time()
         for _file in _files:
             try:
-                self.process = (_files.index(_file)/len(_files))*100
-                print(f"Processe {self.process} %")
+                self._save_percent = (_files.index(_file)/len(_files))*100
                 frame = Image.open(_file)
                 frame = frame.resize(minFrameSize, Image.ANTIALIAS)
                 open_cv_image = np.array(frame) 
                 # Convert RGB to BGR 
                 open_cv_image = open_cv_image[:, :, ::-1].copy() 
                 videoWriter.write(open_cv_image)
+                elapsed_time = time.time() - start_time
+                estimated_time = (elapsed_time / _files.index(_file)) * len(_files)
+                self._remaining_time = estimated_time - elapsed_time
             except:
                 print("Error in Pricture skiped")
         videoWriter.release()
+        self._save_step = "Rendern Fertig"
+        self._save_percent = 0
+        self._save_percent = 0
+
         print("End Timelaps")
+        
+    def status_save(self):
+        return {"step" : self._save_step, "percent" : self._save_percent, "run_time" : self._remaining_time}
 
     def _thread_recording(self):
         self._camera.connect()
