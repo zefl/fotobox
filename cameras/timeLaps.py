@@ -18,9 +18,9 @@ import threading
 import multiprocessing as mp
 import cv2
 import copy
+import csv
 import os
 import numpy as np
-import requests
 from datetime import datetime
 from PIL import Image
 import glob
@@ -39,11 +39,11 @@ class CameraTimelapss():
         self._mp_FrameQueue = mp.Queue(2)
         self._thread = None
         self._threadActive = False
-        self._folder = "data/timelaps/"
+        self._folder_data = "data/"
         self._picturePerMinute = 60
         self._save_percent = 0
-        self._save_step = "None"
-        self._remaining_time = time.time()
+        self._save_step = ""
+        self._remaining_time = ""
         
     def recording_start(self):
         #if no capturing is active start is
@@ -64,59 +64,127 @@ class CameraTimelapss():
             self._process.join()
             self._process = None
         self._threadActive = False
-            
-    def recording_save(self, folder="", file=""):
-        # TODO wait for finish 
-        if folder == "":
-            folder = self._folder
-        if file == "":
-            file = "timelaps_" + datetime.now().strftime('%Y_%m_%d_%H_%M_%S')
-        print("Save Timelaps")
-        _files = glob.glob(folder+'*.jpg')
-        minFrameSize = (0,0)
-        sorted(_files)
+
+    def image_gray(self, file):
+        frame = cv2.imread(file)
+        # https://pyimagesearch.com/2015/05/25/basic-motion-detection-and-tracking-with-python-and-opencv/
+        image = cv2.resize(frame, (500,500), interpolation = cv2.INTER_AREA)
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        gray = cv2.GaussianBlur(gray, (21, 21), 0)
+        return gray
+
+    def detect_movement(self, image_1, image_2):
+        # compute the absolute difference between the current frame and
+        # first frame
+        frameDelta = cv2.absdiff(image_1, image_2)
+        thresh = cv2.threshold(frameDelta, 25, 255, cv2.THRESH_BINARY)[1]
+        # dilate the thresholded image to fill in holes, then find contours
+        # on thresholded image
+        thresh = cv2.dilate(thresh, None, iterations=2)
+        contours, hierarchy = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)  # https://www.programcreek.com/python/example/86843/cv2.contourArea
+
+        movement_detected = False
+        # loop over the contours
+        for c in contours:
+            # if the contour is too small, ignore it
+            if cv2.contourArea(c) < 50:
+                continue
+            else:
+                movement_detected = True
+                break
+        return movement_detected
+
+    def recording_save(self, folder="", file_name=""):
+        if not(self._save_step == "" or self._save_step == "Rendern Fertig"):
+            return
+
         self._save_step = "Bildgröße ermitteln"
-        start_time = time.time()
-        for _file in _files:
+        start_time = datetime.now()
+
+        #Handle Inputs
+        if folder == "":
+            picture_folder = os.path.join(self._folder_data, "timelaps/")
+            video_folder = os.path.join(self._folder_data, "videos/")
+        else:
+            picture_folder = os.path.join(self.folder, "timelaps/")
+            video_folder = os.path.join(self.folder, "videos/")
+
+        if file_name == "":
+            file_name = "timelaps_" + datetime.now().strftime('%Y_%m_%d_%H_%M_%S')
+
+        # Load files
+        files = glob.glob(picture_folder+'*.jpg')
+        minFrameSize = (0,0)
+        sorted(files)
+
+        # Get min size of files
+        for index, file in enumerate(files):
             try:
-                self._save_percent = (_files.index(_file) / len(_files)) * 100
-                image = Image.open(_file)
+                self._save_percent = ( (index + 1) / len(files)) * 100
+                image = Image.open(file)
                 minPixel = minFrameSize[0] * minFrameSize[1]
                 currentPixel = image.size[0] * image.size[1]
                 if minPixel == 0 or currentPixel < minPixel:
                     if currentPixel != 0:
                         minFrameSize = image.size
-                elapsed_time = time.time() - start_time
-                estimated_time = (elapsed_time / _files.index(_file)) * len(_files)
-                self._remaining_time = estimated_time - elapsed_time
+                elapsed_time = datetime.now() - start_time
+                estimated_time = (elapsed_time / (index + 1)) * len(files)
+                self._remaining_time = str(estimated_time - elapsed_time).split(".")[0]
             except:
-                 print(f"Unexpected error: {sys.exc_info()[0]} in {_file}")
-        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-        video_file = os.path.join(folder, file +'.avi' )
-        # used 24fps                       
-        videoWriter = cv2.VideoWriter(video_file, fourcc, 24, minFrameSize) 
-        self._save_step = "Rendern der Timelaps"
-        start_time = time.time()
-        for _file in _files:
+                 print(f"Unexpected error: {sys.exc_info()[0]} in {file}")
+        
+        self._save_step = "Erkennen Bewegung"
+        start_time = datetime.now()
+
+        # search for movement in picture
+        movement_list = []
+        for index, file in enumerate(files):
             try:
-                self._save_percent = (_files.index(_file)/len(_files))*100
-                frame = Image.open(_file)
+                self._save_percent = ( (index + 1) / len(files)) * 100
+                image = self.image_gray(file)
+                image_next =  self.image_gray(files[index + 1])
+                motion_detected = self.detect_movement(image, image_next)
+                if motion_detected:
+                    movement_list.append(file)
+                    movement_list.append(files[index + 1])
+                elapsed_time = datetime.now() - start_time
+                estimated_time = (elapsed_time / (index + 1)) * len(files)
+                self._remaining_time = str(estimated_time - elapsed_time).split(".")[0]
+            except:
+                 print(f"Unexpected error: {sys.exc_info()[0]} in {file}")
+        
+        self._save_step = "Rendern der Timelaps"
+        start_time = datetime.now()
+
+        # Prepare video format
+        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+        video_file = os.path.join(video_folder, file_name +'.avi' )
+        fps = 20                       
+        videoWriter = cv2.VideoWriter(video_file, fourcc, fps, minFrameSize) 
+        # only use movement list (removed duplicates)
+        files = list(dict.fromkeys(movement_list))
+        # Save list in csv 
+        with open(os.path.join(video_folder, file_name+'.csv'), 'a+', newline='\n') as csv_file:
+            wr = csv.writer(csv_file, quoting=csv.QUOTE_ALL)
+            wr.writerow(files)
+
+        for index, file in enumerate(files):
+            try:
+                self._save_percent = ((index + 1) / len(files))*100
+                frame = Image.open(file)
                 frame = frame.resize(minFrameSize, Image.ANTIALIAS)
-                open_cv_image = np.array(frame) 
+                image = np.array(frame) 
                 # Convert RGB to BGR 
-                open_cv_image = open_cv_image[:, :, ::-1].copy() 
-                videoWriter.write(open_cv_image)
-                elapsed_time = time.time() - start_time
-                estimated_time = (elapsed_time / _files.index(_file)) * len(_files)
-                self._remaining_time = estimated_time - elapsed_time
+                image = image[:, :, ::-1].copy() 
+                videoWriter.write(image)
+                elapsed_time = datetime.now() - start_time
+                estimated_time = (elapsed_time / (index + 1)) * len(files)
+                self._remaining_time = str(estimated_time - elapsed_time).split(".")[0]
             except:
                 print("Error in Pricture skiped")
         videoWriter.release()
+        self._save_percent = 0
         self._save_step = "Rendern Fertig"
-        self._save_percent = 0
-        self._save_percent = 0
-
-        print("End Timelaps")
         
     def status_save(self):
         return {"step" : self._save_step, "percent" : self._save_percent, "run_time" : self._remaining_time}
