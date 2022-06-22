@@ -40,6 +40,7 @@ def check_dslrCamera():
      
     if not gp:
         return False  # gPhoto2 is not installed
+
     if hasattr(gp, 'gp_camera_autodetect'):
         # gPhoto2 version 2.5+
         cameras = gp.check_result(gp.gp_camera_autodetect())
@@ -49,6 +50,7 @@ def check_dslrCamera():
         abilities_list = gp.CameraAbilitiesList()
         abilities_list.load()
         cameras = abilities_list.detect(port_info_list)
+
     if cameras:
         return True
 
@@ -68,9 +70,10 @@ class Camera(CameraBase):
             
             # camera setup
             self._camera.init()
-            text = self._camera.get_summary()
+            # Camera does not support info
+            # text = self._camera.get_summary()
+            # print(f"[picInABox] Connect to dslr {text}")
             self._connected = True
-            print(f"[picInABox] Connect to dslr {text}")
         
     def disconnect(self):
         print("[picInABox] Disconnect dslr camera")
