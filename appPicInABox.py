@@ -624,7 +624,16 @@ def Initialize():
     from cameras.timeLaps import CameraTimelapss
 
     #########################
-    #Init fotos
+    #Remove old zip files
+    #########################
+    dir_list = os.listdir()
+
+    for item in dir_list:
+        if item.endswith(".zip"):
+            os.remove(item)
+
+    #########################
+    #Init pictures for webpage if none present use default
     #########################
     global g_files
     for file in g_files:
@@ -655,44 +664,62 @@ def Initialize():
     webcam_connected = check_webcam()
 
     if dsl_connected:
-        print('[picInABox] Found DSLR camera')
-        from cameras.dslrCamera import Camera
-        dslrCameraContainer = cameraContainer()
-        dslrCamera = Camera()
-        dslrCamera.connect(30)
-        dslrCameraContainer.fotoCamera = dslrCamera
-        dslrCameraContainer.previewCamera = dslrCamera
-        dslrCameraContainer.videoCamera = CameraRecorder(dslrCamera)
-        dslrCameraContainer.timelapsCamera = CameraTimelapss(dslrCamera)
-        g_cameras.append(dslrCameraContainer)
+        try:
+            print('[picInABox] Found DSLR camera')
+            from cameras.dslrCamera import Camera
+            dslrCameraContainer = cameraContainer()
+            dslrCamera = Camera()
+            dslrCamera.connect(30)
+            dslrCameraContainer.fotoCamera = dslrCamera
+            dslrCameraContainer.previewCamera = dslrCamera
+            dslrCameraContainer.videoCamera = CameraRecorder(dslrCamera)
+            dslrCameraContainer.timelapsCamera = CameraTimelapss(dslrCamera)
+            g_cameras.append(dslrCameraContainer)
+        except Exception as e:
+            error = {'status': 'Error', 'description': 'Kein Signal zur Spiegelreflex'}
+            g_error.put(error)
+            error = {'status': 'Error', 'description': repr(e)}
+            g_error.put(error)
     else:
         g_cameras.append(None)
         
     if pi_camera_connected:
-        print('[picInABox] Found pi camera')
-        from cameras.piCamera import Camera
-        piCameraContainer = cameraContainer()
-        piCamera = Camera()
-        piCamera.connect(30)
-        piCameraContainer.fotoCamera = piCamera
-        piCameraContainer.previewCamera = piCamera
-        piCameraContainer.videoCamera = CameraRecorder(piCamera)
-        piCameraContainer.timelapsCamera = CameraTimelapss(piCamera)
-        g_cameras.append(piCameraContainer)
+        try:
+            print('[picInABox] Found pi camera')
+            from cameras.piCamera import Camera
+            piCameraContainer = cameraContainer()
+            piCamera = Camera()
+            piCamera.connect(30)
+            piCameraContainer.fotoCamera = piCamera
+            piCameraContainer.previewCamera = piCamera
+            piCameraContainer.videoCamera = CameraRecorder(piCamera)
+            piCameraContainer.timelapsCamera = CameraTimelapss(piCamera)
+            g_cameras.append(piCameraContainer)
+        except Exception as e:
+            error = {'status': 'Error', 'description': 'Kein Signal zur RaspberryPi Camera'}
+            g_error.put(error)
+            error = {'status': 'Error', 'description': repr(e)}
+            g_error.put(error)
     else:
         g_cameras.append(None)
         
     if webcam_connected:
-        print('[picInABox] Found webcam camera')
-        from cameras.webcam import Camera
-        cvCameraContainer = cameraContainer()
-        cvCamera = Camera()
-        cvCamera.connect(30)
-        cvCameraContainer.fotoCamera = cvCamera
-        cvCameraContainer.previewCamera = cvCamera
-        cvCameraContainer.videoCamera = CameraRecorder(cvCamera)
-        cvCameraContainer.timelapsCamera = CameraTimelapss(cvCamera)
-        g_cameras.append(cvCameraContainer)
+        try:
+            print('[picInABox] Found webcam camera')
+            from cameras.webcam import Camera
+            cvCameraContainer = cameraContainer()
+            cvCamera = Camera()
+            cvCamera.connect(30)
+            cvCameraContainer.fotoCamera = cvCamera
+            cvCameraContainer.previewCamera = cvCamera
+            cvCameraContainer.videoCamera = CameraRecorder(cvCamera)
+            cvCameraContainer.timelapsCamera = CameraTimelapss(cvCamera)
+            g_cameras.append(cvCameraContainer)
+        except Exception as e:
+            error = {'status': 'Error', 'description': 'Kein Signal zur Webcam'}
+            g_error.put(error)
+            error = {'status': 'Error', 'description': repr(e)}
+            g_error.put(error)
     else:
         g_cameras.append(None)
        
