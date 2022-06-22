@@ -161,8 +161,14 @@ def before_first_request_func():
     if g_init == False:
         g_init = True
         g_modus = 1
-        g_anchorsMulti = findInserts("static/pictures/LayoutMulti.png")
-        g_anchorSingle = findInserts("static/pictures/LayoutSingle.png")  
+        try:
+            g_anchorsMulti = findInserts("static/pictures/LayoutMulti.png")
+            g_anchorSingle = findInserts("static/pictures/LayoutSingle.png")  
+        except Exception as e:
+            error = {'status': 'Error', 'description': 'Layouts können nicht geladen werden'}
+            g_error.put(error)
+            error = {'status': 'Error', 'description': repr(e)}
+            g_error.put(error)    
 
         if not(os.path.exists("./data/orginal_pictures")):
             os.makedirs("./data/orginal_pictures")
