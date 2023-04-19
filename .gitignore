@@ -8,12 +8,6 @@ data/orginal_pictures/*
 data/timelaps/*
 data/*.csv
 
-static/pictures/background.png
-static/pictures/LayoutMulti.png
-static/pictures/LayoutSingle.png
-static/pictures/logo.ico
-static/pictures/logo.png
-
 static/user.json
 upload/login.json
 
