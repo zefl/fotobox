@@ -1,0 +1,9 @@
+opencv-python
+numpy
+Pillow
+psutil
+mega.py
+ffmpeg-python
+flask
+GitPython
+qrcode
