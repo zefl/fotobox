@@ -170,12 +170,10 @@ def before_first_request_func():
             error = {'status': 'Error', 'description': repr(e)}
             g_error.put(error)    
 
-        if not(os.path.exists("./data/orginal_pictures")):
-            os.makedirs("./data/orginal_pictures")
-        if not(os.path.exists("./data/pictures")):
-            os.makedirs("./data/pictures")
-        if not(os.path.exists("./data/videos")):
-            os.makedirs("./data/videos")
+        for folder in ["orginal_pictures", "pictures", "videos", "timelaps"]:
+            path = os.path.join("./data", folder)
+            if not(os.path.exists(path)):
+                os.makedirs(path)
             
 #from https://www.youtube.com/watch?v=8qDdbcWmzCg
 #adds settings json to each page
