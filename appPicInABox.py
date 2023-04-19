@@ -56,7 +56,7 @@ except:
 
 g_settings = Settings(**data)
 
-g_files = ["LayoutMulti.png", "LayoutSingle.png", "logo.png", "logo.ico", "background.png"]
+g_files = []
 
 g_modus = None
 g_anchorsMulti = []
@@ -642,8 +642,10 @@ def Initialize():
     #Init pictures for webpage if none present use default
     #########################
     global g_files
-    for file in g_files:
-        src_path_file_name = os.path.join('static/pictures/default_style', file)
+    default_location = "static/pictures/default_style"
+    for file in os.listdir(default_location):
+        g_files.append(file)
+        src_path_file_name = os.path.join(default_location, file)
         dest_path_file_name = os.path.join(app.config['UPLOAD_FOLDER'], file)
         if not os.path.exists(dest_path_file_name):
             shutil.copyfile(src_path_file_name, dest_path_file_name)
