@@ -43,7 +43,7 @@ def exit():
 app = Flask(__name__)
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 app.secret_key = "sdbngiusdngdsgbiursbng"
-app.config['UPLOAD_FOLDER'] = 'static/pictures'
+app.config['UPLOAD_FOLDER'] = 'static/pictures/custom_style'
 app.config['MAX_CONTENT_PATH'] = 16 * 1000 * 1000
 ALLOWED_EXTENSIONS = set(['png','ico'])
 
@@ -162,8 +162,8 @@ def before_first_request_func():
         g_init = True
         g_modus = 1
         try:
-            g_anchorsMulti = findInserts("static/pictures/LayoutMulti.png")
-            g_anchorSingle = findInserts("static/pictures/LayoutSingle.png")  
+            g_anchorsMulti = findInserts(os.path.join(app.config['UPLOAD_FOLDER'], "LayoutMulti.png"))
+            g_anchorSingle = findInserts(os.path.join(app.config['UPLOAD_FOLDER'], "LayoutSingle.png"))  
         except Exception as e:
             error = {'status': 'Error', 'description': 'Layouts können nicht geladen werden'}
             g_error.put(error)
@@ -361,7 +361,7 @@ def get_picture():
         if g_modus == 1:
             #append last taken image
             pics.append(Image.open(list_of_files[-1]))
-            layoutSrc = "static/pictures/LayoutSingle.png"
+            layoutSrc = os.path.join(app.config['UPLOAD_FOLDER'], "LayoutSingle.png")
             anchors = g_anchorSingle
 
         elif g_modus == 2:
@@ -370,7 +370,7 @@ def get_picture():
                 id = index * -1
                 print(list_of_files[id])
                 pics.append(Image.open(list_of_files[id]))
-            layoutSrc = "static/pictures/LayoutMulti.png"
+            layoutSrc = os.path.join(app.config['UPLOAD_FOLDER'], "LayoutMulti.png")
             anchors = g_anchorsMulti
         
         compositeImg =  Image.new('RGBA', (Image.open(layoutSrc).size), (255, 0, 0, 0))
@@ -643,7 +643,7 @@ def Initialize():
     #########################
     global g_files
     for file in g_files:
-        src_path_file_name = os.path.join(app.config['UPLOAD_FOLDER'], 'default', file)
+        src_path_file_name = os.path.join('static/pictures/default_style', file)
         dest_path_file_name = os.path.join(app.config['UPLOAD_FOLDER'], file)
         if not os.path.exists(dest_path_file_name):
             shutil.copyfile(src_path_file_name, dest_path_file_name)
