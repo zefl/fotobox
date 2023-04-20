@@ -565,6 +565,21 @@ def status():
             response = jsonify(g_activeCamera.timelapsCamera.status_save())
             response.status_code = 200
             return response
+        elif "git" in request.args:
+            repo = git.Repo(search_parent_directories=True)
+            sha = repo.head.object.hexsha
+            date = repo.head.object.committed_date
+            summary = repo.head.object.summary
+            date = str(datetime.fromtimestamp(date))
+            tag = next(
+                (tag for tag in repo.tags if tag.commit == repo.head.commit),
+                "no tag found",
+            )
+            response = jsonify(
+                {"version": sha, "date": date, "tag": tag, "summary": summary}
+            )
+            response.status_code = 200
+            return response
 
 
 @app.route("/print", methods=["POST"])

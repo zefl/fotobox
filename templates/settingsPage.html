@@ -213,46 +213,51 @@ function onChange(key){
   xhttp.send(JSON.stringify({'key':key, 'value':value}));
 }
 
-//This scritp is used for update timelapse
-// document.addEventListener("DOMContentLoaded", loadPage);
-loadPage();
-var timeout = setInterval(loadPage, 10000);    
-
-function loadPage(){
-  // var tab = document.getElementById("Timelaps");
-  // if (tab.style.display == "block") {
-    var xhttp = new XMLHttpRequest();
-    xhttp.onreadystatechange = function() {
-      if (this.readyState == 4 && this.status == 200) {
-        const obj = JSON.parse(this.responseText);
-        document.getElementById("number_timelaps_1").innerHTML = obj.timelaps;
-        document.getElementById("number_timelaps_2").innerHTML = obj.timelaps;
-        document.getElementById("number_picture").innerHTML = obj.pictures;
-      }
-    };
-    xhttp.open("GET", "status?folder={{ directory }}");
-    xhttp.send();
-  // }
+function RefreshFolderStatus(){
+  var xhttp = new XMLHttpRequest();
+  xhttp.onreadystatechange = function() {
+    if (this.readyState == 4 && this.status == 200) {
+      const obj = JSON.parse(this.responseText);
+      document.getElementById("number_timelaps_1").innerHTML = obj.timelaps;
+      document.getElementById("number_timelaps_2").innerHTML = obj.timelaps;
+      document.getElementById("number_picture").innerHTML = obj.pictures;
+    }
+  };
+  xhttp.open("GET", "status?folder={{ directory }}");
+  xhttp.send();
 }
-
-var update = setInterval(RefreshStatus, 5000); 
+RefreshFolderStatus();
+var timeout = setInterval(RefreshFolderStatus, 10000);    
 
 function RefreshStatus(){
-  // var tab = document.getElementById("Timelaps");
-  // if (tab.style.display == "block") {
-    var xhttp = new XMLHttpRequest();
-    xhttp.onreadystatechange = function() {
-      if (this.readyState == 4 && this.status == 200) {
-        const obj = JSON.parse(this.responseText);
-        document.getElementById("step").innerHTML = obj.step;
-        document.getElementById("percent").style.width = obj.percent +"%";
-        document.getElementById("run_time").innerHTML = obj.run_time;
-      }
-    };
-    xhttp.open("GET", "status?timelaps");
-    xhttp.send();
-  // }
+  var xhttp = new XMLHttpRequest();
+  xhttp.onreadystatechange = function() {
+    if (this.readyState == 4 && this.status == 200) {
+      const obj = JSON.parse(this.responseText);
+      document.getElementById("step").innerHTML = obj.step;
+      document.getElementById("percent").style.width = obj.percent +"%";
+      document.getElementById("run_time").innerHTML = obj.run_time;
+    }
+  };
+  xhttp.open("GET", "status?timelaps");
+  xhttp.send();
 }
+var update = setInterval(RefreshStatus, 5000); 
+
+function RefreshGitStatus(){
+  var xhttp = new XMLHttpRequest();
+  xhttp.onreadystatechange = function() {
+    if (this.readyState == 4 && this.status == 200) {
+      const obj = JSON.parse(this.responseText);
+      document.getElementById("version_number").innerHTML = obj.version;
+      document.getElementById("version_date").innerHTML = obj.date;
+      document.getElementById("version_summary").innerHTML = obj.summary;
+    }
+  };
+  xhttp.open("GET", "status?git");
+  xhttp.send();
+}
+RefreshGitStatus();
 
 //from https://www.w3schools.com/howto/howto_css_switch.asp
 function activateCheckbox(checkbox, key) {
@@ -416,6 +421,30 @@ function save() {
             <span>Reboot</span>
           </div>
         </a>
+      </div>
+      <div class="row" style="margin-top: 10px;">      
+        <div class="col-md-2">
+          <label style="font-size:20px;">Version</label>
+        </div>
+        <div class="col-md-4">
+          <p class="text-left" style="font-size:20px;" id="version_number"></label>
+        </div>
+      </div>
+      <div class="row" style="margin-top: 10px;">      
+        <div class="col-md-2">
+          <label style="font-size:20px;">Date</label>
+        </div>
+        <div class="col-md-8">
+          <p class="text-left" style="font-size:20px;" id="version_date"></label>
+        </div>
+      </div>
+      <div class="row" style="margin-top: 10px;">      
+        <div class="col-md-2">
+          <label style="font-size:20px;">Summary</label>
+        </div>
+        <div class="col-md-8">
+          <p class="text-left" style="font-size:20px;" id="version_summary"></label>
+        </div>
       </div>
     </div>
   </div>
