@@ -141,7 +141,7 @@ function startUpFunction(){
                           <span style="white-space: nowrap ;">Noch einmal</span>
                         </a>
                         <a href="#">
-                          <img id="printing" data-loading="lazy" role="presentation" class="image image_button" src="../static/pictures/print.png" onclick="printing()"/> 
+                          <img id="printing"  {% if not(settings['print_enable']['value']) %} style="display: none;" {% endif %} data-loading="lazy" role="presentation" class="image image_button" src="../static/pictures/print.png" onclick="printing()"/> 
                           <span id="text" style="white-space: nowrap ;">Druck mich</span>
                         </a>
                     </div>

@@ -12,6 +12,23 @@ Galerie
 <link rel="stylesheet" href="{{url_for('static', filename='lightbox2-2.11.3/dist/css/lightbox.min.css')}}">   
 
 <!-- load scripts-->
+<script>
+    var print_enable = 0
+    function getPrintEnableStatus() {
+        fetch("api/setting?key=print_enable").then(function(response) {
+            return response.json();
+        }).then(function(data) {
+            print_enable = data.value;
+        }).catch(function(err) {
+            console.log('Fetch Error :-S', err);
+        });
+    }
+    getPrintEnableStatus();
+
+    function getPrinterStatus() {
+        return print_enable;
+    }
+</script>
 <script type="text/javascript" src="{{url_for('static', filename='lightbox2-2.11.3/dist/js/lightbox-plus-jquery.min.js')}}"></script> 
 {% endblock%}
 

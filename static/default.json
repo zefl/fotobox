@@ -73,6 +73,15 @@
         "min" : 0,
         "max" : 1
     },
+    "print_enable":
+    {
+        "group" : "other",
+        "type" : "bool",
+        "value" : 0,
+        "nameDE" : "Drucken aktivieren",
+        "min" : 0,
+        "max" : 1
+    },
     "singlePicture":
     {
         "group" : "camera",
