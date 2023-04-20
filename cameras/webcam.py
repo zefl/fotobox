@@ -10,7 +10,7 @@ from cameras.cameraBase import CameraBase
 from cameras.cameraBase import stream_run
 
 
-#from https://github.com/pibooth/pibooth/blob/master/pibooth/camera/opencv.py
+# from https://github.com/pibooth/pibooth/blob/master/pibooth/camera/opencv.py
 def check_webcam():
     """Checks if the camera can be connected on the current system
 
@@ -19,20 +19,21 @@ def check_webcam():
     if not cv2:
         return False  # OpenCV is not installed
 
-    camera = cv2.VideoCapture(0) #todo make it usable with raspi
+    camera = cv2.VideoCapture(0)  # todo make it usable with raspi
     if camera.isOpened():
         camera.release()
         return True
 
-    return False        
+    return False
+
 
 class Camera(CameraBase):
     def __init__(self):
         super().__init__()
 
-    def connect(self,  fps: int = 0):
+    def connect(self, fps: int = 0):
         if self._camera == None:
-            self._camera =  cv2.VideoCapture(0)
+            self._camera = cv2.VideoCapture(0)
             self._frameRate = fps
             self._frameSize = 0
             self._connected = True
@@ -51,11 +52,11 @@ class Camera(CameraBase):
 
     def _take_picture(self):
         check, frame = self._camera.read()
-        return frame     
-        
+        return frame
+
     def _capture_stream(self):
         """This function takes a frame as fast as possible
-        
+
         :returns: The current frame picture
         """
         check, frame = self._camera.read()
@@ -68,7 +69,15 @@ class Camera(CameraBase):
         return frame
 
     def _create_process(self):
-        return mp.Process(target=_stream_runWebcam, args=(self._mp_FrameQueues, self._mp_StopEvent, self._frameRate,))
+        return mp.Process(
+            target=_stream_runWebcam,
+            args=(
+                self._mp_FrameQueues,
+                self._mp_StopEvent,
+                self._frameRate,
+            ),
+        )
+
 
 """Global Function which is called by subprocess
 
@@ -76,6 +85,8 @@ class Camera(CameraBase):
 :param stopEvent : Eventflag which causes the process to stop
 :param frameRate : static framerate on which the camera should work
 """
-def _stream_runWebcam(queue : mp.Queue, stopEvent: mp.Value, frameRate):
+
+
+def _stream_runWebcam(queue: mp.Queue, stopEvent: mp.Value, frameRate):
     camera = Camera()
     stream_run(camera, queue, stopEvent, frameRate)

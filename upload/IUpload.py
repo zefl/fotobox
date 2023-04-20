@@ -1,14 +1,15 @@
 from abc import ABC, abstractmethod
 
+
 class IUpload(ABC):
-    @abstractmethod    
+    @abstractmethod
     def Connect(self):
         raise NotImplementedError
 
-    @abstractmethod    
+    @abstractmethod
     def UploadPicture(self, picture):
         raise NotImplementedError
 
-    @abstractmethod    
+    @abstractmethod
     def GetLastUploadLink(self):
         raise NotImplementedError

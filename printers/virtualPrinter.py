@@ -3,7 +3,7 @@ from printers.logger import Logger
 
 
 class VirtualPrinter(Logger):
-    def __init__(self, name='default', max_pages=-1, counters=None):
+    def __init__(self, name="default", max_pages=-1, counters=None):
         super().__init__()
         self.name = name
         self.max_pages = max_pages
@@ -11,4 +11,4 @@ class VirtualPrinter(Logger):
 
     def print_picture(self, picture, copies=1):
         super().print_picture(picture)
-        print(f"File '{picture}' sent to the printer" )
+        print(f"File '{picture}' sent to the printer")
