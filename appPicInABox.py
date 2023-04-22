@@ -187,12 +187,8 @@ def before_first_request_func():
         g_init = True
         g_modus = 1
         try:
-            g_anchorsMulti = findInserts(
-                os.path.join(app.config["UPLOAD_FOLDER"], "LayoutMulti.png")
-            )
-            g_anchorSingle = findInserts(
-                os.path.join(app.config["UPLOAD_FOLDER"], "LayoutSingle.png")
-            )
+            g_anchorsMulti = findInserts(os.path.join(app.config["UPLOAD_FOLDER"], "LayoutMulti.png"))
+            g_anchorSingle = findInserts(os.path.join(app.config["UPLOAD_FOLDER"], "LayoutSingle.png"))
         except Exception as e:
             error = {
                 "status": "Error",
@@ -253,9 +249,7 @@ def pagePicture():
 @app.route("/download")
 def pageDownload():
     response = make_response(render_template("downloadPage.html"))
-    response.headers.set(
-        "Cache-Control", "no-store, no-cache, must-revalidate, private, max-age=1"
-    )
+    response.headers.set("Cache-Control", "no-store, no-cache, must-revalidate, private, max-age=1")
     return response
 
 
@@ -352,9 +346,7 @@ def action():
         if "takePciture" in jsonReq["option"]:
             g_activeCamera.fotoCamera.picture_take()
             number_of_files = len(glob.glob("data/orginal_pictures/*"))
-            g_activeCamera.fotoCamera.picture_save(
-                "data/orginal_pictures", f"foto_{(number_of_files + 1):08}"
-            )
+            g_activeCamera.fotoCamera.picture_save("data/orginal_pictures", f"foto_{(number_of_files + 1):08}")
         elif "startVideo" in jsonReq["option"]:
             g_activeCamera.videoCamera.recording_start()
         elif "stopVideo" in jsonReq["option"]:
@@ -434,9 +426,7 @@ def get_picture():
         for ancor in anchors:
             print(anchors.index(ancor))
             compositeImg.paste(
-                pics[anchors.index(ancor)].resize(
-                    (ancor["width"], ancor["height"]), Image.LANCZOS
-                ),
+                pics[anchors.index(ancor)].resize((ancor["width"], ancor["height"]), Image.LANCZOS),
                 (ancor["x"], ancor["y"]),
             )  # from https://www.geeksforgeeks.org/python-pil-image-resize-method/
         layoutImg = Image.open(layoutSrc)
@@ -494,17 +484,19 @@ def zipFile():
     elif "remove" in request.query_string.decode("utf-8"):
         g_remove_click_cnt += 1
         if (g_remove_click_cnt % 2) == 0 and (time.time() - g_remove_click_time) < 25:
-            dirs = ["data/pictures", "data/orginal_pictures"]
+            dirs = ["data", "data/pictures", "data/timelaps", "data/videos", "data/orginal_pictures"]
             for dir in dirs:
                 for f in os.listdir(dir):
-                    os.remove(os.path.join(dir, f))
-            info = {"status": "Info", "description": "Bilder wurden glöscht"}
+                    to_delete = os.path.join(dir, f)
+                    if os.path.isfile(to_delete):
+                        os.remove(to_delete)
+            info = {"status": "Info", "description": "Alle Bilder/Videos wurden glöscht"}
             g_error.put(info)
         else:
             g_remove_click_time = time.time()
             info = {
                 "status": "Info",
-                "description": "Drücke nochmal um alle Bilder zu drücken",
+                "description": "Nochmal 'Löschen' drücken um alle Bilder/Videos zu löschen",
             }
             g_error.put(info)
         return redirect(url_for("pageSettings"))
@@ -539,14 +531,8 @@ def status():
         if "folder" in request.args:
             response = jsonify(
                 {
-                    "timelaps": len(
-                        os.listdir(os.path.join(request.args["folder"], "timelaps"))
-                    ),
-                    "pictures": len(
-                        os.listdir(
-                            os.path.join(request.args["folder"], "orginal_pictures")
-                        )
-                    ),
+                    "timelaps": len(os.listdir(os.path.join(request.args["folder"], "timelaps"))),
+                    "pictures": len(os.listdir(os.path.join(request.args["folder"], "orginal_pictures"))),
                 }
             )
             response.status_code = 200
@@ -575,9 +561,7 @@ def status():
                 (tag for tag in repo.tags if tag.commit == repo.head.commit),
                 "no tag found",
             )
-            response = jsonify(
-                {"version": sha, "date": date, "tag": tag, "summary": summary}
-            )
+            response = jsonify({"version": sha, "date": date, "tag": tag, "summary": summary})
             response.status_code = 200
             return response
 
@@ -713,9 +697,7 @@ def upload():
                             return redirect(url_for("pageSettings"))
                         else:
                             g_anchorSingle = inserts
-                    shutil.move(
-                        tempFile, os.path.join(app.config["UPLOAD_FOLDER"], file_name)
-                    )
+                    shutil.move(tempFile, os.path.join(app.config["UPLOAD_FOLDER"], file_name))
                     return redirect(url_for("pageSettings"))
                 else:
                     file.save(os.path.join(app.config["UPLOAD_FOLDER"], file_name))
@@ -737,10 +719,7 @@ def gen():
             if len(frame) != 0:  # g_activeCamera.previewCamera.frameSize():
                 ret, frameJPG = cv2.imencode(".jpg", frame)
                 frameShow = frameJPG.tobytes()
-                yield (
-                    b"--frame\r\n"
-                    b"Content-Type: image/jpeg\r\n\r\n" + frameShow + b"\r\n"
-                )
+                yield (b"--frame\r\n" b"Content-Type: image/jpeg\r\n\r\n" + frameShow + b"\r\n")
             else:
                 print(
                     f"[picInABox] Corrupt Image in Video stream frame should be {len(frame)} but is {g_activeCamera.previewCamera.frameSize()}"

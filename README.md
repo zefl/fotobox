@@ -10,6 +10,7 @@ This repo contains a repo for a fotobox build with a raspberry pi
 - [ ] Download neu machen
 - [ ] Anzeige freier speicher
 - [ ] Wenn kein Drucker angeschlossen ist und ausgewählt dann info
+- [ ] Bild mit "Overlay"
 - [x] Automatischer Druck
 - [x] Anzeige Version
 - [x] Drucken Optional
@@ -18,7 +19,6 @@ This repo contains a repo for a fotobox build with a raspberry pi
 cat /var/log/syslog
 
 - Return if frame okay, second var
-- fully support manual print
 - add printer json file
   -  counter value
 - new format for settings
