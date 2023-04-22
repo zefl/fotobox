@@ -82,6 +82,15 @@
         "min" : 0,
         "max" : 1
     },
+    "print_auto":
+    {
+        "group" : "other",
+        "type" : "bool",
+        "value" : 0,
+        "nameDE" : "Automatisch jedes Bild drucken",
+        "min" : 0,
+        "max" : 1
+    },
     "singlePicture":
     {
         "group" : "camera",

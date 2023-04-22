@@ -126,24 +126,26 @@ function startUpFunction(){
                     <div id="loader" style="float:left;">
                         <div class="loader"></div>
                     </div>
-                    <div style="width:80%; margin-left:5%; margin-top: 1%;">
-                        <img id="picure" onload="picload()" src="api/renderPicture" style="width:100%;height: 78vh; "/> 
-                    </div>
-                    <div class="text" style="width:15%; margin-left:85%; float:left; margin-top:-70vh;text-align: center;";>
-                        <div id="load-spinner" style="position:relative; {% if not(settings['qrCode']['value']) %} display: none; {% endif %}">
-                          <i class="fas fa-spinner fa-pulse fa-5x"></i>
-                          <div style="height: 5vh;"></div>
-                        </div>
-                        <img id="qr-code" class="image" style="display: none;" onload="disableSpinner()"> 
-                        <span id="qr-dwonload" style="display: none;">Download</span>
-                        <a href="/picture">
-                          <img class="image image_button" data-loading="lazy" role="presentation" data-scalestrategy="fit"  src="../static/pictures/kameraRetake.png"/> 
-                          <span style="white-space: nowrap ;">Noch einmal</span>
-                        </a>
-                        <a href="#">
-                          <img id="printing"  {% if not(settings['print_enable']['value']) %} style="display: none;" {% endif %} data-loading="lazy" role="presentation" class="image image_button" src="../static/pictures/print.png" onclick="printing()"/> 
-                          <span id="text" style="white-space: nowrap ;">Druck mich</span>
-                        </a>
+                    <div id="picture-frame" style="visibility: hidden;">
+                      <div  style="width:80%; margin-left:5%; margin-top: 1%;">
+                          <img id="picture" onload="picload()" src="api/renderPicture" style="width:100%;height: 78vh; "/> 
+                      </div>
+                      <div class="text" style="width:15%; margin-left:85%; float:left; margin-top:-70vh;text-align: center;";>
+                          <div id="load-spinner" style="position:relative; {% if not(settings['qrCode']['value']) %} display: none; {% endif %}">
+                            <i class="fas fa-spinner fa-pulse fa-5x"></i>
+                            <div style="height: 5vh;"></div>
+                          </div>
+                          <img id="qr-code" class="image" style="display: none;" onload="disableSpinner()"> 
+                          <span id="qr-dwonload" style="display: none;">Download</span>
+                          <a href="/picture">
+                            <img class="image image_button" data-loading="lazy" role="presentation" data-scalestrategy="fit"  src="../static/pictures/kameraRetake.png"/> 
+                            <span style="white-space: nowrap ;">Noch einmal</span>
+                          </a>
+                          <a href="#">
+                            <img id="printing"  {% if not(settings['print_enable']['value']) %} style="display: none;" {% endif %} data-loading="lazy" role="presentation" class="image image_button" src="../static/pictures/print.png" onclick="printing()"/> 
+                            <span id="print_text" style="white-space: nowrap ; {% if not(settings['print_enable']['value']) %} display: none;" {% endif %}">Druck mich</span>
+                          </a>
+                      </div>
                     </div>
               `;
             }
@@ -174,16 +176,18 @@ function disableSpinner() {
 function printing(){
  console.log("printing Picture");
  var button = document.getElementById('printing')
- var text = document.getElementById('text')
+ var text = document.getElementById('print_text')
  
  button.style.display = 'none';
  text.style.display = 'none';
- var disablePrintTimeout = 30000; //disbale Printer timeout in ms 
- setTimeout( function(){
-  button.style.display = 'inline';
-  text.style.display = 'inline';
- },disablePrintTimeout)
-
+ if({{settings['print_enable']['value']}}) {
+    var disablePrintTimeout = 30000; 
+    //reenable printer after timeout in ms 
+    setTimeout( function(){
+      button.style.display = 'inline';
+      text.style.display = 'inline';
+    },disablePrintTimeout)
+ }
  var xhttp = new XMLHttpRequest();
   var jsonObj = null
   xhttp.onreadystatechange = function() {
@@ -198,8 +202,12 @@ function printing(){
 }
 
 function picload(){
+    document.getElementById("picture-frame").style.visibility = 'visible';
     document.getElementById("loader").style.display = 'none';
     document.getElementById("qr-code").src="api/getQRCode";
+    if({{settings['print_auto']['value']}}) {
+      printing();
+    }
 }
 </script>
 
