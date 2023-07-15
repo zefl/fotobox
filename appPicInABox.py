@@ -61,6 +61,7 @@ app.config["UPLOAD_FOLDER"] = "static/pictures/custom_style"
 app.config["MAX_CONTENT_PATH"] = 16 * 1000 * 1000
 ALLOWED_EXTENSIONS = set(["png", "ico"])
 
+# TODO if update in default json we need to merge user json
 try:
     with open("static/user.json") as json_file:
         data = json.load(json_file)
@@ -494,7 +495,7 @@ def zipFile():
     elif "remove" in request.query_string.decode("utf-8"):
         g_remove_click_cnt += 1
         if (g_remove_click_cnt % 2) == 0 and (time.time() - g_remove_click_time) < 25:
-            dirs = ["data/pictures", "data/orginal_pictures"]
+            dirs = ["data/pictures", "data/orginal_pictures", "data/timelaps"]
             for dir in dirs:
                 for f in os.listdir(dir):
                     os.remove(os.path.join(dir, f))
@@ -504,7 +505,7 @@ def zipFile():
             g_remove_click_time = time.time()
             info = {
                 "status": "Info",
-                "description": "Drücke nochmal um alle Bilder zu drücken",
+                "description": "Drücke nochmal um alle Bilder zu löschen",
             }
             g_error.put(info)
         return redirect(url_for("pageSettings"))
@@ -770,6 +771,7 @@ def Initialize():
     #########################
     global g_files
     default_location = "static/pictures/default_style"
+    # TODO check if custom location is already there if not creat folder
     for file in os.listdir(default_location):
         g_files.append(file)
         src_path_file_name = os.path.join(default_location, file)
