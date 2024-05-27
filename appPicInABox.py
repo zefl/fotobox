@@ -61,6 +61,7 @@ app.config["UPLOAD_FOLDER"] = "static/pictures/custom_style"
 app.config["MAX_CONTENT_PATH"] = 16 * 1000 * 1000
 ALLOWED_EXTENSIONS = set(["png", "ico"])
 
+# TODO if update in default json we need to merge user json
 try:
     with open("static/user.json") as json_file:
         data = json.load(json_file)
@@ -749,6 +750,7 @@ def Initialize():
     #########################
     global g_files
     default_location = "static/pictures/default_style"
+    # TODO check if custom location is already there if not creat folder
     for file in os.listdir(default_location):
         g_files.append(file)
         src_path_file_name = os.path.join(default_location, file)
