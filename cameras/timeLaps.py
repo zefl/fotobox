@@ -49,9 +49,7 @@ class CameraTimelapss:
         # if no capturing is active start is
         if self._process == None:
             """create process will be implemented by child on virtual in this context"""
-            self._process = mp.Process(
-                target=_stream_recording, args=(self._mp_StopEvent, self._mp_FrameQueue)
-            )
+            self._process = mp.Process(target=_stream_recording, args=(self._mp_StopEvent, self._mp_FrameQueue))
             self._mp_StopEvent.value = False
             self._process.start()
         if self._threadActive == False:
@@ -104,14 +102,16 @@ class CameraTimelapss:
 
         self._save_step = "Bildgröße ermitteln"
         start_time = datetime.now()
-
+        folder = "C:/Workspace/fotobox/fotos/timelaps_fasching/"
         # Handle Inputs
         if folder == "":
             picture_folder = os.path.join(self._folder_data, "timelaps/")
             video_folder = os.path.join(self._folder_data, "videos/")
         else:
-            picture_folder = os.path.join(self.folder, "timelaps/")
-            video_folder = os.path.join(self.folder, "videos/")
+            picture_folder = os.path.join(folder, "timelaps/")
+            video_folder = os.path.join(folder, "videos/")
+
+        # TODO check if videos exist
 
         if file_name == "":
             file_name = "timelaps_" + datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
@@ -168,9 +168,7 @@ class CameraTimelapss:
         # only use movement list (removed duplicates)
         files = list(dict.fromkeys(movement_list))
         # Save list in csv
-        with open(
-            os.path.join(video_folder, file_name + ".csv"), "a+", newline="\n"
-        ) as csv_file:
+        with open(os.path.join(video_folder, file_name + ".csv"), "a+", newline="\n") as csv_file:
             wr = csv.writer(csv_file, quoting=csv.QUOTE_ALL)
             wr.writerow(files)
 
@@ -218,9 +216,7 @@ def _stream_recording(stopEvent: mp.Value, queue: mp.Queue):
         # req = requests.get('http://127.0.0.1:5000/lastRawFrame')
         if not (queue.empty()):
             number_of_files = len(glob.glob("data/timelaps/*"))
-            picName = os.path.join(
-                "data/timelaps", f"foto_{(number_of_files + 1):08}" + ".jpg"
-            )
+            picName = os.path.join("data/timelaps", f"foto_{(number_of_files + 1):08}" + ".jpg")
             cv2.imwrite(picName, queue.get())
         if stopEvent.value:
             break
