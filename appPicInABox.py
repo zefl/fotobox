@@ -33,8 +33,13 @@ import qrcode
 from datetime import datetime
 from io import BytesIO
 from PIL import Image
-from werkzeug.utils import secure_filename
-from utils.utils import findInserts
+from utils.utils import (
+    findInserts,
+    getWifiList,
+    getActivWifi,
+    checkInternetConnection,
+    connectToWifi,
+)
 
 
 def exit():
@@ -365,7 +370,7 @@ def get_qrCode():
         )
         img_buf = BytesIO()
 
-        if g_settings["qrCode"]:
+        if g_settings["qrCode"] and checkInternetConnection(3):
             if g_modus == 1 or g_modus == 2:
                 list_of_files = glob.glob("data/pictures/*")
                 list_of_files.sort()
@@ -385,7 +390,7 @@ def get_qrCode():
                     img.save(img_buf)
                     img_buf.seek(0)
                     return send_file(img_buf, mimetype="image/jpg")
-        # defaul return
+        # default return transparent image
         data = np.zeros((512, 512, 4))
         img = Image.fromarray(data, "RGBA")
         img_buf = BytesIO()
@@ -607,14 +612,8 @@ def printing():
 
 @app.route("/wifi", methods=["POST", "GET"])
 def wifi():
-    from utils.utils import (
-        getWifiList,
-        getActivWifi,
-        checkInternetConnection,
-        connectToWifi,
-    )
-
     global g_error
+    global g_internet_active
     if request.method == "GET":
         if "all" in request.args:
             wifi = getWifiList()

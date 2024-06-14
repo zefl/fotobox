@@ -109,11 +109,10 @@ def getActivWifi():
     return False
 
 
-def checkInternetConnection():
+def checkInternetConnection(timeout: 5):
     import requests
 
     url = "http://www.google.com"
-    timeout = 5
     try:
         request = requests.get(url, timeout=timeout)
         return True
