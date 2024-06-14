@@ -3,6 +3,8 @@ numpy
 Pillow
 psutil
 mega.py
+# needs to be installed manualley
+# tenacity==8.3.0 
 ffmpeg-python
 flask
 GitPython

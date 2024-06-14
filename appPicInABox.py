@@ -6,8 +6,6 @@
 import os
 import shutil
 
-print("Current working directory is: " + (os.getcwd()))
-
 from flask import (
     Flask,
     render_template,
@@ -168,7 +166,6 @@ def create_timelaps(value):
 # from https://flask-session.readthedocs.io/en/latest/
 # from https://pythonise.com/series/learning-flask/python-before-after-request
 # -------------------------------
-@app.before_first_request
 def before_first_request_func():
     """
     This function will run once before the first request to this instance of the application.
@@ -880,4 +877,5 @@ def Initialize():
 
 if __name__ == "__main__":
     print("Start application")
-    app.run(host="0.0.0.0", port=5000, debug=True, threaded=True)
+    before_first_request_func()
+    app.run(host="0.0.0.0", port=5000, debug=True, threaded=True, use_reloader=False)
