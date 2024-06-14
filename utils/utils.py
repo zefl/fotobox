@@ -1,4 +1,5 @@
 from PIL import Image
+from sys import platform
 
 
 def findInserts(layoutSrc):
@@ -97,13 +98,15 @@ def getActivWifi():
     import os
     import re
 
-    cmd = os.popen("iwgetid")
-    wifi = cmd.read()
-    wifi = re.findall(r'ESSID:"(.+)"', wifi)
-    if wifi:
-        return wifi
-    else:
-        return False
+    if platform != "win32":
+        cmd = os.popen("iwgetid")
+        wifi = cmd.read()
+        wifi = re.findall(r'ESSID:"(.+)"', wifi)
+        if wifi:
+            return wifi
+        else:
+            return False
+    return False
 
 
 def checkInternetConnection():
@@ -136,9 +139,7 @@ def connectToWifi(essid, password):
         if network_info[1] == essid:
             if network_info[3] != "[CURRENT]":
                 # Remove network from list if it is not active
-                cmd = os.popen(
-                    f"sudo wpa_cli -i wlan0 remove_network {network_info[0]}"
-                )
+                cmd = os.popen(f"sudo wpa_cli -i wlan0 remove_network {network_info[0]}")
                 if cmd.read() != "OK\n":
                     return {
                         "status": "Error",
@@ -156,15 +157,11 @@ def connectToWifi(essid, password):
     network_id = int(cmd.read())
     while True:
         detail_error = ""
-        cmd = os.popen(
-            f"sudo wpa_cli -i wlan0 set_network {network_id} ssid '\"{essid}\"'"
-        )
+        cmd = os.popen(f"sudo wpa_cli -i wlan0 set_network {network_id} ssid '\"{essid}\"'")
         if cmd.read() != "OK\n":
             detail_error = " - Netzwerk setzen Problem"
             break
-        cmd = os.popen(
-            f"sudo wpa_cli -i wlan0 set_network {network_id} psk '\"{password}\"'"
-        )
+        cmd = os.popen(f"sudo wpa_cli -i wlan0 set_network {network_id} psk '\"{password}\"'")
         if cmd.read() != "OK\n":
             detail_error = " - Flasches Passwort"
             break

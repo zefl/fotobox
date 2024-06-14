@@ -865,9 +865,11 @@ def Initialize():
     if g_activeCamera.previewCamera != None:
         # start preview camera right away
         g_activeCamera.previewCamera.stream_start()
-        while g_activeCamera.previewCamera.stream_show() == []:
+        frameRaw = g_activeCamera.previewCamera.stream_show()
+        while type(frameRaw) != "NoneType" and len(frameRaw) > 0:
             print("[picInABox] Wait for first capture")
             time.sleep(1)
+            frameRaw = g_activeCamera.previewCamera.stream_show()
         print("[picInABox] Cameras init done")
         if g_settings["timelaps"] == 1:
             g_activeCamera.timelapsCamera.recording_start()

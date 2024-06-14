@@ -76,9 +76,7 @@ class CameraBase(IFotocamera):
             print("Stream process already up in running")
         else:
             if self._thread == None:
-                self._thread = threading.Thread(
-                    name="CameraStreamThread", target=self._thread_run
-                )
+                self._thread = threading.Thread(name="CameraStreamThread", target=self._thread_run)
                 self._mp_StopEvent.value = False
                 self._thread.start()
 
@@ -144,9 +142,7 @@ class CameraBase(IFotocamera):
         raise NotImplementedError
 
     def _thread_run(self):
-        desiredCyleTime = (
-            1 / self._frameRate
-        )  # run this thread only as fast as nessecarry
+        desiredCyleTime = 1 / self._frameRate  # run this thread only as fast as nessecarry
         nextFrameTime = 0
         while True:
             currentTime = time.time()
