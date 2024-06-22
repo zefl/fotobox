@@ -1,9 +1,20 @@
+import cv2
 from PIL import Image
 from sys import platform
 
 
+def openImage(layoutSrc):
+    try:
+        img = Image.open(layoutSrc)
+    except:
+        img = cv2.imread(layoutSrc, cv2.IMREAD_UNCHANGED)
+        img = cv2.cvtColor(img, cv2.COLOR_BGRA2RGBA)
+        img = Image.fromarray(img)
+    return img
+
+
 def findInserts(layoutSrc):
-    img = Image.open(layoutSrc)
+    img = openImage(layoutSrc)
     width, height = img.size
     img = img.convert("RGBA")
     imgData = list(img.getdata())
@@ -38,6 +49,8 @@ def findInserts(layoutSrc):
 
     # sort by x values to get the lines via the same x value
     imageLines.sort(key=takeX)
+    if len(imageLines) == 0:
+        raise ImportError("Fehler in den leer Feldern für die Bilder")
     lastAncor = imageLines[0]
 
     imageAncors = []

@@ -34,6 +34,7 @@ from datetime import datetime
 from io import BytesIO
 from PIL import Image
 from utils.utils import (
+    openImage,
     findInserts,
     getWifiList,
     getActivWifi,
@@ -176,7 +177,6 @@ def before_first_request_func():
     This function will run once before the first request to this instance of the application.
     You may want to use this function to create any databases/tables required for your app.
     """
-    print("This function will run once ")
 
     Initialize()
 
@@ -333,7 +333,6 @@ def setg_modus():
     if request.method == "POST":
         if "option" in request.args:
             g_modus = int(request.args["option"])
-            print("Set g_modus: " + str(g_modus))
             # redirect the webpage to the picture Page
             return redirect(url_for("pagePicture"))
     elif request.method == "GET":
@@ -343,7 +342,6 @@ def setg_modus():
 @app.route("/api/controlCamera", methods=["POST", "GET"])
 def action():
     global g_activeCamera
-    print(request.data)
     jsonReq = json.loads(request.data)
     if request.method == "POST":
         if "takePciture" in jsonReq["option"]:
@@ -411,7 +409,7 @@ def get_picture():
         pics = []
         if g_modus == 1:
             # append last taken image
-            pics.append(Image.open(list_of_files[-1]))
+            pics.append(openImage(list_of_files[-1]))
             layoutSrc = os.path.join(app.config["UPLOAD_FOLDER"], "LayoutSingle.png")
             anchors = g_anchorSingle
 
@@ -419,20 +417,19 @@ def get_picture():
             pics = []
             for index in range(1, len(g_anchorsMulti) + 1):
                 id = index * -1
-                print(list_of_files[id])
-                pics.append(Image.open(list_of_files[id]))
+                pics.append(openImage(list_of_files[id]))
             layoutSrc = os.path.join(app.config["UPLOAD_FOLDER"], "LayoutMulti.png")
             anchors = g_anchorsMulti
 
-        compositeImg = Image.new("RGBA", (Image.open(layoutSrc).size), (255, 0, 0, 0))
+        compositeImg = Image.new("RGBA", (openImage(layoutSrc).size), (255, 0, 0, 0))
         # from https://www.tutorialspoint.com/python_pillow/Python_pillow_merging_images.htm
         for ancor in anchors:
-            print(anchors.index(ancor))
             compositeImg.paste(
                 pics[anchors.index(ancor)].resize((ancor["width"], ancor["height"]), Image.LANCZOS),
                 (ancor["x"], ancor["y"]),
             )  # from https://www.geeksforgeeks.org/python-pil-image-resize-method/
-        layoutImg = Image.open(layoutSrc)
+
+        layoutImg = openImage(layoutSrc)
         # from https://pythontic.com/image-processing/pillow/alpha-composite
         finalImg = Image.alpha_composite(compositeImg, layoutImg)
         # imgSrc = "data/pictures/"+ datetime.now().strftime('%Y_%m_%d_%H_%M_%S') +"_4Pics.jpg"
@@ -581,7 +578,6 @@ def printing():
             jsonReq = json.loads(request.data)
         # check for picture tag
         if jsonReq["key"] == "picture":
-            print(jsonReq["value"])
             if jsonReq["value"] == "last":
                 # If last is given use the last taken picture
                 list_of_files = glob.glob("data/pictures/*")
@@ -671,7 +667,21 @@ def upload():
                 if "Layout" in file_name:
                     tempFile = os.path.join(app.config["UPLOAD_FOLDER"], "temp.png")
                     file.save(tempFile)
-                    inserts = findInserts(tempFile)
+                    try:
+                        inserts = findInserts(tempFile)
+                    except Exception as ex:
+                        if ex.msg is not None:
+                            error = {
+                                "status": "Error",
+                                "description": ex.msg,
+                            }
+                        else:
+                            error = {
+                                "status": "Error",
+                                "description": "Fehler im hochgelanden Layout.",
+                            }
+                        g_error.put(error)
+                        return redirect(url_for("pageSettings"))
                     if "Multi" in file_name:
                         if len(inserts) < 2:
                             os.remove(tempFile)
@@ -877,6 +887,6 @@ def Initialize():
 
 
 if __name__ == "__main__":
-    print("Start application")
+    print("[picInABox] Start PicInABox Application")
     before_first_request_func()
     app.run(host="0.0.0.0", port=5000, debug=True, threaded=True, use_reloader=False)

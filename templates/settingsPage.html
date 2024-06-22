@@ -38,14 +38,24 @@
   <div class="col-md-8">
     <form action="/upload" method="POST" enctype="multipart/form-data">
       <label>{{uploadFile}}:</label>
-      <input type="file" id="myFile" name="{{uploadFile}}">
-      <input type="submit">
+      <input type="file" id="{{uploadFile}}" name="{{uploadFile}}">
+      <input type="submit" style="display: none" id="sub_{{uploadFile}}">
     </form>
   </div>
   <div class="col-md-2">
     <img src="../static/pictures/custom_style/{{uploadFile}}" height="40vh" width="120vw"> 
   </div>
 </div>
+<script>
+    document.getElementById('{{uploadFile}}').addEventListener('change', function() {
+      var submitBtn = document.getElementById('sub_{{uploadFile}}');
+      if (this.value) {
+        submitBtn.style.display = 'inline';
+      } else {
+        submitBtn.style.display = 'none';
+      }
+    });
+</script>
 {% endfor %}
 {% endmacro %}
 
