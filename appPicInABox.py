@@ -225,7 +225,11 @@ def pageStart():
 
 @app.route("/settings")
 def pageSettings():
-    return render_template("settingsPage.html", directory="data")
+    active = request.args.get("active")
+    if active is not None:
+        return render_template("settingsPage.html", directory="data", active=active)
+    else:
+        return render_template("settingsPage.html", directory="data", active="Camera")
 
 
 @app.route("/options")
@@ -275,25 +279,6 @@ def pageVideoFeed():
 @app.route("/upload/<filename>")
 def pageImage(filename):
     return send_from_directory("data/pictures", filename)
-
-
-# @app.route('/mirror-url/<url>')
-# def mirror(url):
-#     global g_url
-#     g_url = url
-#     r = requests.get('http://' + g_url)
-#     return r.content
-
-# @app.route('/<path:path>')
-# def generic(path):
-#     global g_url
-#     if request.method == 'POST':
-#         print(path)
-#     elif request.method == 'HEAD':
-#         print(path)
-#     elif request.method == 'GET':
-#         r = requests.get('http://' + g_url + "/" + path)
-#         return r.content
 
 
 # -------------------------------
@@ -473,13 +458,13 @@ def zipFile():
     global g_remove_click_cnt
     global g_remove_click_time
     if "get" in request.query_string.decode("utf-8"):
-        file_name = "all_picutres_" + datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
+        file_name = "data/all_picutres_" + datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
         shutil.make_archive(file_name, "zip", "data/")
         return send_file(
             file_name + ".zip",
             mimetype="zip",
-            attachment_filename=file_name + ".zip",
             as_attachment=True,
+            download_name=file_name + ".zip",
         )
     elif "remove" in request.query_string.decode("utf-8"):
         g_remove_click_cnt += 1
@@ -499,7 +484,7 @@ def zipFile():
                 "description": "Nochmal 'Löschen' drücken um alle Bilder/Videos zu löschen",
             }
             g_error.put(info)
-        return redirect(url_for("pageSettings"))
+        return redirect(url_for("pageSettings", active="Data"))
 
 
 @app.route("/api/update", methods=["GET"])
@@ -889,4 +874,4 @@ def Initialize():
 if __name__ == "__main__":
     print("[picInABox] Start PicInABox Application")
     before_first_request_func()
-    app.run(host="0.0.0.0", port=5000, debug=True, threaded=True, use_reloader=False)
+    app.run(host="0.0.0.0", port=5000, debug=False, threaded=True, use_reloader=False)

@@ -193,8 +193,11 @@ function openTab(evt, tabName) {
   for (i = 0; i < tablinks.length; i++) {
     tablinks[i].className = tablinks[i].className.replace(" active", "");
   }
+  console.log(tabName);
   document.getElementById(tabName).style.display = "block";
-  evt.currentTarget.className += " active";
+  if(!!evt) {
+    evt.currentTarget.className += " active";
+  }
 }
 
 
@@ -303,6 +306,11 @@ function save() {
   xhttp.send(JSON.stringify('save'));
 }
 </script>
+<script defer>
+  window.addEventListener("load", function(){
+    openTab(null, "{{ active }}");
+  });
+</script>
 {{ notification_js() }}
 {% endblock%}
 
@@ -384,19 +392,19 @@ function save() {
   <div id="Data" class="tabcontent">
     <div class="container">
       <div class="row" style="min-height: 3vw;">
-        <div class="col-md-8">
-          <label style="font-size:20px;">Anzahl Timelaps</label>
+        <div class="col-md-2">
+          <label style="font-size:20px;">Anzahl Bilder</label>
         </div>
-        <div class="col-md-4">
-          <label style="font-size:20px;" id="number_timelaps_2"></label>
+        <div class="col-md-2">
+          <label style="font-size:20px;font-weight:bold;" id="number_picture"></label>
         </div>
       </div>
       <div class="row" style="min-height: 3vw;">
-        <div class="col-md-8">
-          <label style="font-size:20px;">Anzahl Bilder</label>
+        <div class="col-md-2">
+          <label style="font-size:20px;">Anzahl Timelaps</label>
         </div>
-        <div class="col-md-4">
-          <label style="font-size:20px;" id="number_picture"></label>
+        <div class="col-md-2">
+          <label style="font-size:20px;font-weight:bold;" id="number_timelaps_2"></label>
         </div>
       </div>
       <div class="row" style="margin-top: 10px;">
