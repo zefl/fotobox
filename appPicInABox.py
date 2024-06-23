@@ -225,10 +225,13 @@ def pageStart():
 
 @app.route("/settings")
 def pageSettings():
+    global g_remove_click_cnt
     active = request.args.get("active")
     if active is not None:
         return render_template("settingsPage.html", directory="data", active=active)
     else:
+        # Resetting delete count if page gets open without any active tab
+        g_remove_click_cnt = 0
         return render_template("settingsPage.html", directory="data", active="Camera")
 
 
