@@ -669,7 +669,7 @@ def upload():
                                 "description": "Fehler im hochgelanden Layout.",
                             }
                         g_error.put(error)
-                        return redirect(url_for("pageSettings"))
+                        return redirect(url_for("pageSettings", active="Upload"))
                     if "Multi" in file_name:
                         if len(inserts) < 2:
                             os.remove(tempFile)
@@ -678,7 +678,7 @@ def upload():
                                 "description": "Nicht die Richtige Anzahl transparente Flächen im Layout",
                             }
                             g_error.put(error)
-                            return redirect(url_for("pageSettings"))
+                            return redirect(url_for("pageSettings", active="Upload"))
                         else:
                             g_anchorsMulti = inserts
                     elif "Single" in file_name:
@@ -689,16 +689,16 @@ def upload():
                                 "description": "Nicht die Richtige Anzahl transparente Flächen im Layout",
                             }
                             g_error.put(error)
-                            return redirect(url_for("pageSettings"))
+                            return redirect(url_for("pageSettings", active="Upload"))
                         else:
                             g_anchorSingle = inserts
                     shutil.move(tempFile, os.path.join(app.config["UPLOAD_FOLDER"], file_name))
-                    return redirect(url_for("pageSettings"))
+                    return redirect(url_for("pageSettings", active="Upload"))
                 else:
                     file.save(os.path.join(app.config["UPLOAD_FOLDER"], file_name))
                     response = jsonify()
                     response.status_code = 400
-                    return redirect(url_for("pageSettings"))
+                    return redirect(url_for("pageSettings", active="Upload"))
 
 
 # -------------------------------

@@ -171,6 +171,20 @@ input:onchange{
     height: 30vw;
   } -->
 
+  .popup {
+    position: relative;
+    display: inline-block;
+    cursor: pointer;
+  }
+  .popuptext {
+      visibility: hidden;
+      /* Other styling properties */
+  }
+  .show {
+      visibility: visible;
+      /* Add animation if desired */
+  }
+
   {{ notification_css() }}
   {{ login_css() }}
 {% endblock %}
@@ -309,7 +323,16 @@ function save() {
 <script defer>
   window.addEventListener("load", function(){
     openTab(null, "{{ active }}");
+    document.getElementById("back_to_home").style.display = "none";
   });
+</script>
+
+<script>
+  function backToHomePopup() {
+    if (confirm("Zurück auf Startseite?\nWenn du nicht speichers hast, sind die Einstellungen beim nächsten Neustart weg.")) {
+      window.open(".");
+    }
+  }
 </script>
 {{ notification_js() }}
 {% endblock%}
@@ -323,13 +346,14 @@ function save() {
     <button class="tablinks" onclick="openTab(event, 'Data')">Daten</button>
     <button class="tablinks" onclick="openTab(event, 'Upload')">Hochloaden</button>
     <button class="tablinks" onclick="openTab(event, 'Update')">Update</button>
-    <a href=" " onclick="save()">
-      <div class="button" style="margin-right: 8px; margin-top: 8px; width:100px; height:40px; float:right;">
-        <span>Save</span>
-      </div>
-    </a>
+    <button onclick="backToHomePopup()" class="button" style="border: 2px solid #000000; display:flex; justify-content: center; align-items: center; margin-right: 8px; margin-top: 8px;width:100px; height:40px; float:right;">
+      <span>Zurück</span>
+    </button>
+    <button onclick="save()" class="button" style="border: 2px solid #000000; display:flex; display:flex; justify-content: center; align-items: center; margin-right: 8px; margin-top: 8px; width:120px; height:40px; float:right;">
+      <span>Speichern</span>
+    </button>
   </div>
-  
+
   <div id="Camera" class="tabcontent">
     <div class="container">
       <div class="row">
