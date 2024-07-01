@@ -744,7 +744,9 @@ def Initialize():
     #########################
     global g_files
     default_location = "static/pictures/default_style"
-    # TODO check if custom location is already there if not creat folder
+    if not os.path.isdir(app.config["UPLOAD_FOLDER"]):
+        os.makedirs(app.config["UPLOAD_FOLDER"])
+
     for file in os.listdir(default_location):
         g_files.append(file)
         src_path_file_name = os.path.join(default_location, file)
