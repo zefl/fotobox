@@ -20,3 +20,13 @@ class Logger(object):
                     "time": datetime.now().strftime("%Y_%m_%d_%H_%M_%S"),
                 }
             )
+
+    def log_error(self, error):
+        with open(os.path.join(self._path, self._logFile), "a+", newline="") as file:
+            writer = csv.DictWriter(file, fieldnames=self._fieldnames, delimiter=";")
+            writer.writerow(
+                {
+                    "picutre_name": f"Error occured - { datetime.now() }",
+                    "time": error,
+                }
+            )

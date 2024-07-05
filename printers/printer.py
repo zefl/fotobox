@@ -56,11 +56,14 @@ class Printer(Logger):
             self._conn.enablePrinter(self.name)
             print("Connected to printer '%s'", self.name)
 
+    def reset_jobs(self):
+        self._conn.cancelAllJobs(self.name)  # reset all jobs
+        self._conn.enablePrinter(self.name)  # reset printer -> resets error
+    
     def check_status(self):
         status = self._conn.getPrinterAttributes(self.name)
         if status["printer-state-reasons"][0] != "none":
-            self._conn.cancelAllJobs(self.name)  # reset all jobs
-            self._conn.enablePrinter(self.name)  # reset printer -> resets error
+            self.reset_jobs()
             return status["printer-state-message"]
 
     def printing(self, picture):
@@ -77,19 +80,55 @@ class Printer(Logger):
         job_id = self._conn.printFile(self.name, picture, osp.basename(picture), {})
         job_info = self._conn.getJobAttributes(job_id)
         start_print_time = time.time()
+        start_waiting_time = None
         while job_info["job-state"] == 5:  # job_info['job-state-reasons']==job-printing
             time.sleep(1)
             job_info = self._conn.getJobAttributes(job_id)
+
+            for reason in job_info["job-printer-state-reasons"]:
+                match reason:
+                    case "cups-missing-filter-warning":
+                        # Do nothing here
+                        pass
+
+                    case "cups-waiting-for-job-completed":
+                        if start_waiting_time == None:
+                            start_waiting_time = time.time()
+                        if time.time() - start_waiting_time > 30:
+                            self.reset_jobs()
+                            return "Drucker zu langsam - bitte nachschauen ob alles ok ist"
+                    
+                    case "marker-supply-empty-error":
+                        self.reset_jobs()
+                        return "Keine Druckerpatrone im Drucker bitte hinten einsetzten oder tauschen"
+                
+                    case "toner-empty":
+                        self.reset_jobs()
+                        return "Druckerpatrone bitte hinten tauschen" 
+
+                    case "media-empty-error" | "media-needed":
+                        self.reset_jobs()
+                        return "Kein Papier mehr im Drucker. Bitte seitlich nachfüllen"
+                    
+                    case _:
+                        super().log_error(reason)
+                        self.reset_jobs()
+                        return f"Problem beim Drucker - {reason} - "
+                    
+
+            # Long timeout nothing is working
             if time.time() - start_print_time > 60:
                 error = self.check_status()
                 if error:
                     return error
                 return "Timeout Error - Error in Printer"
+
         job_info = self._conn.getJobAttributes(job_id)
         if job_info["job-state"] == 3 or job_info["job-state"] == 4:
             # job_info['job-state-reasons'] => printer-stopped
             error = self.check_status()
             if not (error):
+                self.reset_jobs()
                 error = job_info["job-printer-state-message"]
             return error
 
