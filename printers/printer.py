@@ -40,8 +40,9 @@ class Printer(Logger):
             self.name = self._conn.getDefault()
             if not self.name and self._conn.getPrinters():
                 for printer in self._conn.getPrinters():
-                    if "SELPHY" in printer:
+                    if "SELPHY" in printer and "fotobox" in printer:
                         self.name = printer  # Take first one
+                        break
         elif name in self._conn.getPrinters():
             self.name = name
 

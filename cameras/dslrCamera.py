@@ -30,14 +30,15 @@ def check_dslrCamera():
     if "gphoto2" not in sys.modules:
         return False
 
-    try:
-        from utils.utils import resetUsbViaName
+    # not sure if we need this anymore
+    # try:
+    #     from utils.utils import resetUsbViaName
 
-        resetOkay = resetUsbViaName("Canon, Inc. EOS 700D")
-        if not (resetOkay):
-            return False
-    except:
-        print("Not on linux system")
+    #     resetOkay = resetUsbViaName("Canon, Inc. EOS 700D")
+    #     if not (resetOkay):
+    #         return False
+    # except:
+    #     print("Not on linux system")
 
     if not gp:
         return False  # gPhoto2 is not installed

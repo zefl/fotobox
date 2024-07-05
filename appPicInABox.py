@@ -717,7 +717,7 @@ def gen():
                 yield (b"--frame\r\n" b"Content-Type: image/jpeg\r\n\r\n" + frameShow + b"\r\n")
             else:
                 print(
-                    f"[picInABox] Corrupt Image in Video stream frame should be {len(frame)} but is {g_activeCamera.previewCamera.frameSize()}"
+                    f"[picInABox] Corrupt Image in Video stream frame should be {g_activeCamera.previewCamera.frameSize()} but is {len(frame)}"
                 )
         else:
             raise RuntimeError("[picInABox] No Frametype given")

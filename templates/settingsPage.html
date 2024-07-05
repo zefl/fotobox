@@ -321,7 +321,7 @@ function save() {
 }
 </script>
 <script defer>
-  window.addEventListener("load", function(){
+  window.addEventListener("DOMContentLoaded", function() {
     openTab(null, "{{ active }}");
     document.getElementById("back_to_home").style.display = "none";
   });
@@ -330,7 +330,7 @@ function save() {
 <script>
   function backToHomePopup() {
     if (confirm("Zurück auf Startseite?\nWenn du nicht speichers hast, sind die Einstellungen beim nächsten Neustart weg.")) {
-      window.open(".");
+      window.open(".","_self");
     }
   }
 </script>

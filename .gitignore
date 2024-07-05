@@ -14,3 +14,4 @@ static/pictures/custom_style/
 setup.cmd
 *.pptx
 *.zip
+*.service

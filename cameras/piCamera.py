@@ -6,8 +6,8 @@
 #
 #
 try:
-    import picamera
-    from picamera.array import PiRGBArray
+    import libcamera
+    from picamera2 import Picamera2
 except ImportError:
     pass  # gphoto2 is not supported if run on windows
 
@@ -24,21 +24,14 @@ from cameras.cameraBase import stream_run
 # from https://github.com/pibooth/pibooth/blob/master/pibooth/camera/rpi.py
 def check_piCamera():
     """Return True if a RPi camera is found."""
-    if "picamera" not in sys.modules:
+    if "picamera2" not in sys.modules:
         return False
 
-    if not picamera:
+    if not Picamera2:
         return False  # picamera is not installed
-    try:
-        process = subprocess.Popen(
-            ["vcgencmd", "get_camera"], stdout=subprocess.PIPE, stderr=subprocess.PIPE
-        )
-        stdout, _stderr = process.communicate()
-        if stdout and "detected=1" in stdout.decode("utf-8"):
-            return True
-    except OSError:
-        pass
-    return False
+
+    # TODO check if camera is detected
+    return True
 
 
 class Camera(CameraBase):
@@ -53,24 +46,25 @@ class Camera(CameraBase):
     def connect(self, _fps: int = 0):
         print("[picInABox] Connect to pi camera")
         if self._camera == None:
-            self._camera = picamera.PiCamera()
+            self._camera = Picamera2()
             self._framerate = _fps
 
             # camera setup
-            self._camera.resolution = (640, 480)
-            self._frameSize = 640 * 480 * 3
             self._camera.framerate = _fps
-            self._camera.hflip = False
-            self._camera.vflip = True
-            self._camera.video_stabilization = True
-            self._camera.iso = 400
+            config = self._camera.create_preview_configuration({"format":"RGB888"})
+            config["transform"] = libcamera.Transform(hflip=0, vflip=1)
+            config["controls"]["NoiseReductionMode"] = libcamera.controls.draft.NoiseReductionModeEnum.Fast
+            self._camera.configure(config)
+            self._camera.set_controls({"ExposureTime": 10000, "AnalogueGain": 2.0})
+            # Old settting, but for now it seems fine with the settings above
+            # self._camera.video_stabilization = True
+            # self._camera.iso = 400
 
-            # let camera warm up
-            self._camera.start_preview()
+            # Default is (640,480)
+            self._frameSize = config["main"]["size"][0] * config["main"]["size"][1] * 3
+            self._camera.start()
             time.sleep(2)
-            self._camera.stop_preview()
             self._stream = io.BytesIO()
-            self._rawCapture = PiRGBArray(self._camera)
             self._connected = True
             print("[picInABox] Connect done")
 
@@ -79,10 +73,9 @@ class Camera(CameraBase):
             print("[picInABox] Disconnect pi camera")
             self._connected = False
             # from https://www.raspberrypi.org/forums/viewtopic.php?t=227394
-            self._camera.stop_preview()
+            self._camera.stop()
             time.sleep(3)
             self._camera.close()
-            self._rawCapture.close()
             self._stream.close()
             self._camera = None
 
@@ -94,14 +87,9 @@ class Camera(CameraBase):
 
     def _capture_stream(self):
         try:
-            # wait for next caputre
-            for data in self._camera.capture_continuous(
-                self._rawCapture, format="bgr", use_video_port=True
-            ):
-                # get data via rawCaputre
-                frame = data.array
-                self._rawCapture.truncate(0)  # reset stream for next frame
-                return frame
+            # get data via rawCaputre
+            frame = self._camera.capture_array("main")
+            return frame
         except:
             print("[picInABox] Error in reading Pi Camera")
             raise RuntimeError("[picInABox] Error in reading Pi Camera")

@@ -122,7 +122,7 @@ def getActivWifi():
     return False
 
 
-def checkInternetConnection(timeout: 5):
+def checkInternetConnection(timeout= 5):
     import requests
 
     url = "http://www.google.com"
