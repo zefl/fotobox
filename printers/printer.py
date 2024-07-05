@@ -94,7 +94,7 @@ class Printer(Logger):
                     case "cups-waiting-for-job-completed":
                         if start_waiting_time == None:
                             start_waiting_time = time.time()
-                        if time.time() - start_waiting_time > 30:
+                        if time.time() - start_waiting_time > 60:
                             self.reset_jobs()
                             return "Drucker zu langsam - bitte nachschauen ob alles ok ist"
                     
@@ -117,7 +117,7 @@ class Printer(Logger):
                     
 
             # Long timeout nothing is working
-            if time.time() - start_print_time > 60:
+            if time.time() - start_print_time > 120:
                 error = self.check_status()
                 if error:
                     return error
