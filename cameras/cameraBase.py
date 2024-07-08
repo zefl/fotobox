@@ -145,17 +145,17 @@ class CameraBase(IFotocamera):
         desiredCyleTime = 1 / self._frameRate  # run this thread only as fast as nessecarry
         nextFrameTime = 0
         while True:
-            currentTime = time.time()
-            if currentTime > nextFrameTime:
-                nextFrameTime = currentTime + desiredCyleTime
-                # call camera to take picutre
-                if self._connected:
-                    try:
-                        self._frame = self._capture_stream()
-                    except:
-                        print("[picInABox] Error in camera reading")
-                        self.disconnect()
-                        self.connect(self._frameRate)
+            if (nextFrameTime > 0)  and (time.time() < nextFrameTime):
+                time.sleep(nextFrameTime - time.time())
+            nextFrameTime = time.time() + desiredCyleTime
+            # call camera to take picutre
+            if self._connected:
+                try:
+                    self._frame = self._capture_stream()
+                except:
+                    print("[picInABox] Error in camera reading")
+                    self.disconnect()
+                    self.connect(self._frameRate)
             if self._mp_StopEvent.value:
                 break
         self._mp_StopEvent.value = False
