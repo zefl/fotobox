@@ -573,16 +573,21 @@ def printing():
                 file = list_of_files[-1]
             else:
                 file = os.path.join("data/pictures/", jsonReq["value"])
-            ret = g_printer.print_picture(file)
-            if ret:
-                error = {"status": "Error", "description": ret}
-                g_error.put(error)
-            else:
+            try:
                 info = {
                     "status": "Info",
-                    "description": "Bild wird gedruckt. Seitlich entnehmen.",
+                    "description": "Bild wird gedruckt",
                 }
                 g_error.put(info)
+                g_printer.print_picture(file)
+                info = {
+                    "status": "Info",
+                    "description": "Bild fertig. Seitlich entnehmen.",
+                }
+                g_error.put(info)
+            except Exception as e:
+                error = {"status": "Error", "description": e.args}
+                g_error.put(error)
             response = jsonify({"return": "done"})
             response.status_code = 200
             response.headers.add("Access-Control-Allow-Origin", "*")
