@@ -145,8 +145,9 @@ class CameraBase(IFotocamera):
         desiredCyleTime = 1 / self._frameRate  # run this thread only as fast as nessecarry
         nextFrameTime = 0
         while True:
-            if (nextFrameTime > 0)  and (time.time() < nextFrameTime):
-                time.sleep(nextFrameTime - time.time())
+            current_time = time.time()
+            if (nextFrameTime > 0) and (current_time < nextFrameTime):
+                time.sleep(nextFrameTime - current_time)
             nextFrameTime = time.time() + desiredCyleTime
             # call camera to take picutre
             if self._connected:
