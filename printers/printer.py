@@ -91,7 +91,7 @@ class Printer(Logger):
                                 
             # Long timeout nothing is working
             if (time.time() - start_print_time) > 150:
-                raise RuntimeError("Timeout Error - Error in Printer")
+                raise RuntimeError("Zeitüberschreitung - Drucker bitte einschalten")
 
             # ------ Log section ----------- 
             # job_info = self._conn.getJobAttributes(job_id)
@@ -145,6 +145,7 @@ class Printer(Logger):
         self.busy = True
         try:
             self.printing(picture)
+            self.busy = False
         except Exception as e:
             self.reset_jobs()
             self.busy = False
