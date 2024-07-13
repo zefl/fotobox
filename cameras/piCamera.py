@@ -55,7 +55,7 @@ class Camera(CameraBase):
             config["transform"] = libcamera.Transform(hflip=0, vflip=1)
             config["controls"]["NoiseReductionMode"] = libcamera.controls.draft.NoiseReductionModeEnum.Fast
             self._camera.configure(config)
-            self._camera.set_controls({"ExposureTime": 10000, "AnalogueGain": 2.0})
+            self._camera.set_controls({"ExposureTime": 10000, "AnalogueGain": 8.0})
             # Old settting, but for now it seems fine with the settings above
             # self._camera.video_stabilization = True
             # self._camera.iso = 400
