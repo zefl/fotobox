@@ -5,23 +5,26 @@
 
 {% macro create_settings(group) %}
 {% for setting in settings %}
-{% if settings[setting]['group'] ==  group %}
+{% if settings[setting]['group'] == group %}
 <div class="row" style="min-height: 4vw;">
   <div class="col-md-8">
     <label style="font-size:20px;" for="{{ setting }}">{{ settings[setting]['nameDE'] }}</label>
   </div>
   <div class="col-md-4">
     {% if settings[setting]['type'] == "input" %}
-    <input style="font-size:20px;" size="4" id="{{ setting}}" placeholder="{{ settings[setting]['value'] }}" onchange="onChange('{{ setting }}')" ></input>
+    <input style="font-size:20px;" size="4" id="{{ setting}}" placeholder="{{ settings[setting]['value'] }}"
+      onchange="onChange('{{ setting }}')"></input>
     {% elif settings[setting]['type'] == "bool" %}
     <label class="switch">
-      <input type="checkbox" {% if settings[setting]['value'] == 1%} checked {% endif %} onchange="activateCheckbox(this, '{{ setting}}')">
+      <input type="checkbox" {% if settings[setting]['value']==1%} checked {% endif %}
+        onchange="activateCheckbox(this, '{{ setting}}')">
       <span class="slider round"></span>
     </label>
     {% elif settings[setting]['type'] == "array" %}
     <select name="plan" id="{{ setting }}" onchange="onChange('{{ setting }}')" ready="initElement('{{ setting }}', 2)">
       {% for value in settings[setting]['values'] %}
-      <option value="{{ loop.index0 }}" {% if settings[setting]['value'] == loop.index0%} selected {% endif %}>{{ value }}</option>
+      <option value="{{ loop.index0 }}" {% if settings[setting]['value']==loop.index0%} selected {% endif %}>{{ value }}
+      </option>
       {% endfor %}
     </select>
     {% endif %}
@@ -43,18 +46,18 @@
     </form>
   </div>
   <div class="col-md-2">
-    <img src="../static/pictures/custom_style/{{uploadFile}}" height="40vh" width="120vw"> 
+    <img src="../static/pictures/custom_style/{{uploadFile}}" height="40vh" width="120vw">
   </div>
 </div>
 <script>
-    document.getElementById('{{uploadFile}}').addEventListener('change', function() {
-      var submitBtn = document.getElementById('sub_{{uploadFile}}');
-      if (this.value) {
-        submitBtn.style.display = 'inline';
-      } else {
-        submitBtn.style.display = 'none';
-      }
-    });
+  document.getElementById('{{uploadFile}}').addEventListener('change', function () {
+    var submitBtn = document.getElementById('sub_{{uploadFile}}');
+    if (this.value) {
+      submitBtn.style.display = 'inline';
+    } else {
+      submitBtn.style.display = 'none';
+    }
+  });
 </script>
 {% endfor %}
 {% endmacro %}
@@ -67,126 +70,130 @@ Einstellungen
 input:onchange{
 background-color: lightred;
 }
-  
+
 /* Style the tab */
 .tab {
-  overflow: hidden;
-  background-color: #f1f1f1;
+overflow: hidden;
+background-color: #f1f1f1;
 }
 
 /* Style the buttons inside the tab */
 .tab button {
-  background-color: inherit;
-  float: left;
-  border: none;
-  outline: none;
-  cursor: pointer;
-  padding: 14px 16px;
-  transition: 0.3s;
-  font-size: 17px;
+background-color: inherit;
+float: left;
+border: none;
+outline: none;
+cursor: pointer;
+padding: 14px 16px;
+transition: 0.3s;
+font-size: 17px;
 }
 
 /* Change background color of buttons on hover */
 .tab button:hover {
-  background-color: #ddd;
+background-color: #ddd;
 }
 
 /* Create an active/current tablink class */
 .tab button.active {
-  background-color: #ccc;
+background-color: #ccc;
+}
+
+button:disabled {
+color: gray;
 }
 
 /* Style the tab content */
 .tabcontent {
-  display: none;
-  border-top: none;
+display: none;
+border-top: none;
 }
 
 input:onchange{
-  background-color: lightred;
-  }
-  
-  .switch {
-    position: relative;
-    display: inline-block;
-    width: 60px;
-    height: 34px;
-  }
-  
-  .switch input { 
-    opacity: 0;
-    width: 0;
-    height: 0;
-  }
-  
-  .slider {
-    position: absolute;
-    cursor: pointer;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: #ccc;
-    -webkit-transition: .4s;
-    transition: .4s;
-  }
-  
-  .slider:before {
-    position: absolute;
-    content: "";
-    height: 26px;
-    width: 26px;
-    left: 4px;
-    bottom: 4px;
-    background-color: white;
-    -webkit-transition: .4s;
-    transition: .4s;
-  }
-  
-  input:checked + .slider {
-    background-color: #2196F3;
-  }
-  
-  input:focus + .slider {
-    box-shadow: 0 0 1px #2196F3;
-  }
-  
-  input:checked + .slider:before {
-    -webkit-transform: translateX(26px);
-    -ms-transform: translateX(26px);
-    transform: translateX(26px);
-  }
-  
-  /* Rounded sliders */
-  .slider.round {
-    border-radius: 34px;
-  }
-  
-  .slider.round:before {
-    border-radius: 50%;
-  }
+background-color: lightred;
+}
 
-  <!-- .imageContainer > img:hover {
+.switch {
+position: relative;
+display: inline-block;
+width: 60px;
+height: 34px;
+}
+
+.switch input {
+opacity: 0;
+width: 0;
+height: 0;
+}
+
+.slider {
+position: absolute;
+cursor: pointer;
+top: 0;
+left: 0;
+right: 0;
+bottom: 0;
+background-color: #ccc;
+-webkit-transition: .4s;
+transition: .4s;
+}
+
+.slider:before {
+position: absolute;
+content: "";
+height: 26px;
+width: 26px;
+left: 4px;
+bottom: 4px;
+background-color: white;
+-webkit-transition: .4s;
+transition: .4s;
+}
+
+input:checked + .slider {
+background-color: #2196F3;
+}
+
+input:focus + .slider {
+box-shadow: 0 0 1px #2196F3;
+}
+
+input:checked + .slider:before {
+-webkit-transform: translateX(26px);
+-ms-transform: translateX(26px);
+transform: translateX(26px);
+}
+
+/* Rounded sliders */
+.slider.round {
+border-radius: 34px;
+}
+
+.slider.round:before {
+border-radius: 50%;
+}
+
+<!-- .imageContainer > img:hover {
     width: 50vw;
     height: 30vw;
   } -->
 
-  .popup {
-    position: relative;
-    display: inline-block;
-    cursor: pointer;
-  }
-  .popuptext {
-      visibility: hidden;
-      /* Other styling properties */
-  }
-  .show {
-      visibility: visible;
-      /* Add animation if desired */
-  }
+.popup {
+position: relative;
+display: inline-block;
+cursor: pointer;
+}
+.popuptext {
+visibility: hidden;
+/* Other styling properties */
+}
+.show {
+visibility: visible;
+/* Add animation if desired */
+}
 
-  {{ notification_css() }}
-  {{ login_css() }}
+{{ notification_css() }}
+{{ login_css() }}
 {% endblock %}
 
 {% block script %}
@@ -196,132 +203,150 @@ input:onchange{
 
 {{ login_js() }}
 <script>
-//This scritp is used for tab management
-function openTab(evt, tabName) {
-  var i, tabcontent, tablinks;
-  tabcontent = document.getElementsByClassName("tabcontent");
-  for (i = 0; i < tabcontent.length; i++) {
-    tabcontent[i].style.display = "none";
+  //This scritp is used for tab management
+  function openTab(evt, tabName) {
+    var i, tabcontent, tablinks;
+    tabcontent = document.getElementsByClassName("tabcontent");
+    for (i = 0; i < tabcontent.length; i++) {
+      tabcontent[i].style.display = "none";
+    }
+    tablinks = document.getElementsByClassName("tablinks");
+    for (i = 0; i < tablinks.length; i++) {
+      tablinks[i].className = tablinks[i].className.replace(" active", "");
+    }
+    console.log(tabName);
+    document.getElementById(tabName).style.display = "block";
+    if (!!evt) {
+      evt.currentTarget.className += " active";
+    }
   }
-  tablinks = document.getElementsByClassName("tablinks");
-  for (i = 0; i < tablinks.length; i++) {
-    tablinks[i].className = tablinks[i].className.replace(" active", "");
-  }
-  console.log(tabName);
-  document.getElementById(tabName).style.display = "block";
-  if(!!evt) {
-    evt.currentTarget.className += " active";
-  }
-}
 
 
-//This scritp is used for settings page
-function onChange(key){
-  element = document.getElementById(key); 
-  value = element.value; 
-  var xhttp = new XMLHttpRequest();
-  xhttp.onreadystatechange = function() {
-    if (this.readyState == 4 && this.status == 200) {
-      jsonObj = JSON.parse(this.responseText)
-      ret = jsonObj.return
-      var xhttpReq = new XMLHttpRequest();
-      xhttpReq.onreadystatechange = function() {
-        if (this.readyState == 4 && this.status == 200) {
-          jsonObj = JSON.parse(this.responseText)
-          document.getElementById(key).value = jsonObj.value; 
+  //This scritp is used for settings page
+  function onChange(key) {
+    element = document.getElementById(key);
+    value = element.value;
+    var xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function () {
+      if (this.readyState == 4 && this.status == 200) {
+        jsonObj = JSON.parse(this.responseText)
+        ret = jsonObj.return
+        var xhttpReq = new XMLHttpRequest();
+        xhttpReq.onreadystatechange = function () {
+          if (this.readyState == 4 && this.status == 200) {
+            jsonObj = JSON.parse(this.responseText)
+            document.getElementById(key).value = jsonObj.value;
+          }
         }
+        xhttpReq.open("GET", "api/setting?key=" + key, true);
+        xhttpReq.send();
       }
-      xhttpReq.open("GET", "api/setting?key="+key, true);
-      xhttpReq.send();
-    }
-  };
-  xhttp.open("POST", "api/setting");
-  xhttp.setRequestHeader("Content-Type", "application/json;charset=UTF-");
-  xhttp.send(JSON.stringify({'key':key, 'value':value}));
-}
-
-function RefreshFolderStatus(){
-  var xhttp = new XMLHttpRequest();
-  xhttp.onreadystatechange = function() {
-    if (this.readyState == 4 && this.status == 200) {
-      const obj = JSON.parse(this.responseText);
-      document.getElementById("number_timelaps_1").innerHTML = obj.timelaps;
-      document.getElementById("number_timelaps_2").innerHTML = obj.timelaps;
-      document.getElementById("number_picture").innerHTML = obj.pictures;
-    }
-  };
-  xhttp.open("GET", "status?folder={{ directory }}");
-  xhttp.send();
-}
-RefreshFolderStatus();
-var timeout = setInterval(RefreshFolderStatus, 10000);    
-
-function RefreshStatus(){
-  var xhttp = new XMLHttpRequest();
-  xhttp.onreadystatechange = function() {
-    if (this.readyState == 4 && this.status == 200) {
-      const obj = JSON.parse(this.responseText);
-      document.getElementById("step").innerHTML = obj.step;
-      document.getElementById("percent").style.width = obj.percent +"%";
-      document.getElementById("run_time").innerHTML = obj.run_time;
-    }
-  };
-  xhttp.open("GET", "status?timelaps");
-  xhttp.send();
-}
-var update = setInterval(RefreshStatus, 5000); 
-
-function RefreshGitStatus(){
-  var xhttp = new XMLHttpRequest();
-  xhttp.onreadystatechange = function() {
-    if (this.readyState == 4 && this.status == 200) {
-      const obj = JSON.parse(this.responseText);
-      document.getElementById("version_number").innerHTML = obj.version;
-      document.getElementById("version_date").innerHTML = obj.date;
-      document.getElementById("version_summary").innerHTML = obj.summary;
-    }
-  };
-  xhttp.open("GET", "status?git");
-  xhttp.send();
-}
-RefreshGitStatus();
-
-//from https://www.w3schools.com/howto/howto_css_switch.asp
-function activateCheckbox(checkbox, key) {
-  if(checkbox.checked == true){
-    value=1;
-    console.log("checked");
-  }
-  else{
-    value=0;
-    console.log("unchecked");
+    };
+    xhttp.open("POST", "api/setting");
+    xhttp.setRequestHeader("Content-Type", "application/json;charset=UTF-");
+    xhttp.send(JSON.stringify({ 'key': key, 'value': value }));
   }
 
-  var xhttp = new XMLHttpRequest();
-  xhttp.onreadystatechange = function() {
-    if (this.readyState == 4 && this.status == 200) {
-      console.log("Done");
-    }
-  };
-  xhttp.open("POST", "api/setting");
-  xhttp.setRequestHeader("Content-Type", "application/json;charset=UTF-");
-  xhttp.send(JSON.stringify({'key':key, 'value':value}));
-}
+  function RefreshFolderStatus() {
+    var xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function () {
+      if (this.readyState == 4 && this.status == 200) {
+        const obj = JSON.parse(this.responseText);
+        document.getElementById("number_timelaps_1").innerHTML = obj.timelaps;
+        document.getElementById("number_timelaps_2").innerHTML = obj.timelaps;
+        document.getElementById("number_picture").innerHTML = obj.pictures;
+      }
+    };
+    xhttp.open("GET", "status?folder={{ directory }}");
+    xhttp.send();
+  }
+  RefreshFolderStatus();
+  var timeout = setInterval(RefreshFolderStatus, 10000);
 
-function save() {
-  var xhttp = new XMLHttpRequest();
-  xhttp.onreadystatechange = function() {
-    if (this.readyState == 4 && this.status == 200) {
-      console.log("Done");
+  function RefreshStatus() {
+    var xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function () {
+      if (this.readyState == 4 && this.status == 200) {
+        const obj = JSON.parse(this.responseText);
+        document.getElementById("step").innerHTML = obj.step;
+        document.getElementById("percent").style.width = obj.percent + "%";
+        document.getElementById("run_time").innerHTML = obj.run_time;
+      }
+    };
+    xhttp.open("GET", "status?timelaps");
+    xhttp.send();
+  }
+  var update = setInterval(RefreshStatus, 5000);
+
+  function RefreshGitStatus() {
+    var xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function () {
+      if (this.readyState == 4 && this.status == 200) {
+        const obj = JSON.parse(this.responseText);
+        document.getElementById("version_number").innerHTML = obj.version;
+        document.getElementById("version_date").innerHTML = obj.date;
+        document.getElementById("version_summary").innerHTML = obj.summary;
+      }
+    };
+    xhttp.open("GET", "status?git");
+    xhttp.send();
+  }
+  RefreshGitStatus();
+
+  //from https://www.w3schools.com/howto/howto_css_switch.asp
+  function activateCheckbox(checkbox, key) {
+    if (checkbox.checked == true) {
+      value = 1;
+      console.log("checked");
     }
-  };
-  xhttp.open("POST", "api/setting");
-  xhttp.setRequestHeader("Content-Type", "application/json;charset=UTF-");
-  xhttp.send(JSON.stringify('save'));
-}
+    else {
+      value = 0;
+      console.log("unchecked");
+    }
+
+    var xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function () {
+      if (this.readyState == 4 && this.status == 200) {
+        console.log("Done");
+      }
+    };
+    xhttp.open("POST", "api/setting");
+    xhttp.setRequestHeader("Content-Type", "application/json;charset=UTF-");
+    xhttp.send(JSON.stringify({ 'key': key, 'value': value }));
+  }
+
+  function save() {
+    var xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function () {
+      if (this.readyState == 4 && this.status == 200) {
+        console.log("Done");
+      }
+    };
+    xhttp.open("POST", "api/setting");
+    xhttp.setRequestHeader("Content-Type", "application/json;charset=UTF-");
+    xhttp.send(JSON.stringify('save'));
+  }
+
+  let zip_file_name = null;
+
+  async function create_zip(button) {
+    let button_inner = button.firstElementChild;
+    let download = document.getElementById('download');
+    download.style.display = 'none';
+    button_inner.style.display = 'inline-block';
+    button.disabled = true;
+    const response = await fetch('/api/data?zip', { method: "GET", });
+    button_inner.style.display = 'none';
+    let data = await response.json();
+    zip_file_name = data.file;
+    button.disabled = false;
+    download.onclick = function () { window.location.href = '/api/data?get=' + zip_file_name; };
+    download.style.display = 'inline-block';
+  }
 </script>
+
 <script defer>
-  window.addEventListener("DOMContentLoaded", function() {
+  window.addEventListener("DOMContentLoaded", function () {
     openTab(null, "{{ active }}");
     document.getElementById("back_to_home").style.display = "none";
   });
@@ -330,7 +355,7 @@ function save() {
 <script>
   function backToHomePopup() {
     if (confirm("Zurück auf Startseite?\nWenn du nicht speichers hast, sind die Einstellungen beim nächsten Neustart weg.")) {
-      window.open(".","_self");
+      window.open(".", "_self");
     }
   }
 </script>
@@ -338,165 +363,169 @@ function save() {
 {% endblock%}
 
 {% block content %}
-  <!-- from https://www.w3schools.com/howto/tryit.asp?filename=tryhow_js_tabs-->
-  <div class="tab">
-    <button class="tablinks" onclick="openTab(event, 'Camera')">Kamera Einstellungen</button>
-    <button class="tablinks" onclick="openTab(event, 'Timelaps')">Timelaps</button>
-    <button class="tablinks" onclick="openTab(event, 'Other')">Weitere Funktionen</button>
-    <button class="tablinks" onclick="openTab(event, 'Data')">Daten</button>
-    <button class="tablinks" onclick="openTab(event, 'Upload')">Hochloaden</button>
-    <button class="tablinks" onclick="openTab(event, 'Update')">Update</button>
-    <button onclick="backToHomePopup()" class="button" style="border: 2px solid #000000; display:flex; justify-content: center; align-items: center; margin-right: 8px; margin-top: 8px;width:100px; height:40px; float:right;">
-      <span>Zurück</span>
-    </button>
-    <button onclick="save()" class="button" style="border: 2px solid #000000; display:flex; display:flex; justify-content: center; align-items: center; margin-right: 8px; margin-top: 8px; width:120px; height:40px; float:right;">
-      <span>Speichern</span>
-    </button>
-  </div>
+<!-- from https://www.w3schools.com/howto/tryit.asp?filename=tryhow_js_tabs-->
+<div class="tab">
+  <button class="tablinks" onclick="openTab(event, 'Camera')">Kamera Einstellungen</button>
+  <button class="tablinks" onclick="openTab(event, 'Timelaps')">Timelaps</button>
+  <button class="tablinks" onclick="openTab(event, 'Other')">Weitere Funktionen</button>
+  <button class="tablinks" onclick="openTab(event, 'Data')">Daten</button>
+  <button class="tablinks" onclick="openTab(event, 'Upload')">Hochloaden</button>
+  <button class="tablinks" onclick="openTab(event, 'Update')">Update</button>
+  <button onclick="backToHomePopup()" class="button"
+    style="border: 2px solid #000000; display:flex; justify-content: center; align-items: center; margin-right: 8px; margin-top: 8px;width:100px; height:40px; float:right;">
+    <span>Zurück</span>
+  </button>
+  <button onclick="save()" class="button"
+    style="border: 2px solid #000000; display:flex; display:flex; justify-content: center; align-items: center; margin-right: 8px; margin-top: 8px; width:120px; height:40px; float:right;">
+    <span>Speichern</span>
+  </button>
+</div>
 
-  <div id="Camera" class="tabcontent">
-    <div class="container">
-      <div class="row">
-        <div class="col-md-4">
-          {{ create_settings('camera') }}
-        </div>
-        <div class="col-md-2">
-          <!-- divder-->
-        </div>
-        <div class="col-md-6">
-          <img src="{{ url_for('pageVideoFeed') }}" style="width:100%; height: 78vh;"> 
-        </div>
+<div id="Camera" class="tabcontent">
+  <div class="container">
+    <div class="row">
+      <div class="col-md-4">
+        {{ create_settings('camera') }}
+      </div>
+      <div class="col-md-2">
+        <!-- divder-->
+      </div>
+      <div class="col-md-6">
+        <img src="{{ url_for('pageVideoFeed') }}" style="width:100%; height: 78vh;">
       </div>
     </div>
   </div>
-  
-  <div id="Timelaps" class="tabcontent">
-    <div class="container">
-      <div class="row">
-        <div class="col-md-4">
-          <div class="row" style="min-height: 3vw;">
-            <div class="col-md-8">
-              <label style="font-size:20px;">Anzahl Bilder</label>
-            </div>
-            <div class="col-md-4">
-              <label style="font-size:20px;" id="number_timelaps_1"></label>
-            </div>
+</div>
+
+<div id="Timelaps" class="tabcontent">
+  <div class="container">
+    <div class="row">
+      <div class="col-md-4">
+        <div class="row" style="min-height: 3vw;">
+          <div class="col-md-8">
+            <label style="font-size:20px;">Anzahl Bilder</label>
           </div>
-          {{ create_settings('timelaps') }}
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-2">
-           <h1 id='step'> Schritt </h1>
-        </div>
-        <div class="col-8">
-            <div class="progress">
-              <div id='percent' class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100" style="width: 0%">
-              </div>
-            </div>
-        </div>
-        <div class="col-2">
-          <h1 id='run_time'> 0:0:0 </h1>
-        </div>
-      </div>
-      </div>
-    </div>
-  </div>
-
-  <div id="Other" class="tabcontent">
-    <div class="container">
-      <div class="row">
-        <div class="col-4">
-          {{ create_settings('other') }}
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div id="Data" class="tabcontent">
-    <div class="container">
-      <div class="row" style="min-height: 3vw;">
-        <div class="col-md-2">
-          <label style="font-size:20px;">Anzahl Bilder</label>
-        </div>
-        <div class="col-md-2">
-          <label style="font-size:20px;font-weight:bold;" id="number_picture"></label>
-        </div>
-      </div>
-      <div class="row" style="min-height: 3vw;">
-        <div class="col-md-2">
-          <label style="font-size:20px;">Anzahl Timelaps</label>
-        </div>
-        <div class="col-md-2">
-          <label style="font-size:20px;font-weight:bold;" id="number_timelaps_2"></label>
-        </div>
-      </div>
-      <div class="row" style="margin-top: 10px;">
-        <a href="/api/data?get">
-          <div class="button">
-            <span>Download ZIP File</span>
+          <div class="col-md-4">
+            <label style="font-size:20px;" id="number_timelaps_1"></label>
           </div>
-        </a>
+        </div>
+        {{ create_settings('timelaps') }}
       </div>
-      <div class="row" style="margin-top: 10px;">
-        <a href="/api/data?remove">
-          <div class="button">
-            <span>Remove all pictures</span>
+    </div>
+    <div class="row">
+      <div class="col-2">
+        <h1 id='step'> Schritt </h1>
+      </div>
+      <div class="col-8">
+        <div class="progress">
+          <div id='percent' class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar"
+            aria-valuenow="75" aria-valuemin="0" aria-valuemax="100" style="width: 0%">
           </div>
-        </a>
+        </div>
+      </div>
+      <div class="col-2">
+        <h1 id='run_time'> 0:0:0 </h1>
       </div>
     </div>
   </div>
+</div>
+</div>
 
-  <div id="Update" class="tabcontent">
-    <div class="container">
-      <div class="row" style="margin-top: 10px;">
-        <a href="/api/update?update">
-          <div class="button">
-            <span>Update</span>
-          </div>
-        </a>
-      </div>
-      <div class="row" style="margin-top: 10px;">
-        <a href="/api/update?reboot">
-          <div class="button">
-            <span>Reboot</span>
-          </div>
-        </a>
-      </div>
-      <div class="row" style="margin-top: 10px;">      
-        <div class="col-md-2">
-          <label style="font-size:20px;">Version</label>
-        </div>
-        <div class="col-md-4">
-          <p class="text-left" style="font-size:20px;" id="version_number"></label>
-        </div>
-      </div>
-      <div class="row" style="margin-top: 10px;">      
-        <div class="col-md-2">
-          <label style="font-size:20px;">Date</label>
-        </div>
-        <div class="col-md-8">
-          <p class="text-left" style="font-size:20px;" id="version_date"></label>
-        </div>
-      </div>
-      <div class="row" style="margin-top: 10px;">      
-        <div class="col-md-2">
-          <label style="font-size:20px;">Summary</label>
-        </div>
-        <div class="col-md-8">
-          <p class="text-left" style="font-size:20px;" id="version_summary"></label>
-        </div>
+<div id="Other" class="tabcontent">
+  <div class="container">
+    <div class="row">
+      <div class="col-4">
+        {{ create_settings('other') }}
       </div>
     </div>
   </div>
+</div>
 
-  <iframe name="hiddenFrame" style="position:absolute; top:-1px; left:-1px; width:1px; height:1px;"></iframe>
-
-  <div id="Upload" class="tabcontent">
-    <div class="container">
-      {{ create_upload() }}
+<div id="Data" class="tabcontent">
+  <div class="container">
+    <div class="row" style="min-height: 3vw;">
+      <div class="col-md-2">
+        <label style="font-size:20px;">Anzahl Bilder</label>
+      </div>
+      <div class="col-md-2">
+        <label style="font-size:20px;font-weight:bold;" id="number_picture"></label>
+      </div>
+    </div>
+    <div class="row" style="min-height: 3vw;">
+      <div class="col-md-2">
+        <label style="font-size:20px;">Anzahl Timelaps</label>
+      </div>
+      <div class="col-md-2">
+        <label style="font-size:20px;font-weight:bold;" id="number_timelaps_2"></label>
+      </div>
+    </div>
+    <div class="row" style="margin-top: 10px;">
+      <button class="button" onclick="create_zip(this)">
+        <i style="display: none;" class="fa fa-spinner fa-spin"></i>Create ZIP File
+      </button>
+      <button style='display: none;' id='download' class="button">
+        <i class="fa fa-download"></i> Download ZIP File
+      </button>
+    </div>
+    <div class="row" style="margin-top: 10px;">
+      <a href="/api/data?remove">
+        <div class="button">
+          <span>Remove all pictures</span>
+        </div>
+      </a>
     </div>
   </div>
-  
+</div>
+
+<div id="Update" class="tabcontent">
+  <div class="container">
+    <div class="row" style="margin-top: 10px;">
+      <a href="/api/update?update">
+        <div class="button">
+          <span>Update</span>
+        </div>
+      </a>
+    </div>
+    <div class="row" style="margin-top: 10px;">
+      <a href="/api/update?reboot">
+        <div class="button">
+          <span>Reboot</span>
+        </div>
+      </a>
+    </div>
+    <div class="row" style="margin-top: 10px;">
+      <div class="col-md-2">
+        <label style="font-size:20px;">Version</label>
+      </div>
+      <div class="col-md-4">
+        <p class="text-left" style="font-size:20px;" id="version_number"></label>
+      </div>
+    </div>
+    <div class="row" style="margin-top: 10px;">
+      <div class="col-md-2">
+        <label style="font-size:20px;">Date</label>
+      </div>
+      <div class="col-md-8">
+        <p class="text-left" style="font-size:20px;" id="version_date"></label>
+      </div>
+    </div>
+    <div class="row" style="margin-top: 10px;">
+      <div class="col-md-2">
+        <label style="font-size:20px;">Summary</label>
+      </div>
+      <div class="col-md-8">
+        <p class="text-left" style="font-size:20px;" id="version_summary"></label>
+      </div>
+    </div>
+  </div>
+</div>
+
+<iframe name="hiddenFrame" style="position:absolute; top:-1px; left:-1px; width:1px; height:1px;"></iframe>
+
+<div id="Upload" class="tabcontent">
+  <div class="container">
+    {{ create_upload() }}
+  </div>
+</div>
+
 {% endblock %}

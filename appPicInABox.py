@@ -460,16 +460,27 @@ def lastRawFrame():
 def zipFile():
     global g_remove_click_cnt
     global g_remove_click_time
-    if "get" in request.query_string.decode("utf-8"):
+    if "zip" in request.query_string.decode("utf-8").split("=")[0]:
+        # If there is already a zip file delete the old one, zip a zip file makes problems
+        for file in os.listdir("data/"):
+            file_path = os.path.join("data/", file)
+            if os.path.isfile(file_path):
+                file_extension = os.path.splitext(file_path)[1]
+                if "zip" in file_extension:
+                    os.remove(file_path)
         file_name = "data/all_picutres_" + datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
         shutil.make_archive(file_name, "zip", "data/")
+        response = jsonify({"file": file_name + ".zip"})
+        return response  # return okay if no error before
+    elif "get" in request.query_string.decode("utf-8").split("=")[0]:
+        file_name = request.query_string.decode("utf-8").split("=")[1]
         return send_file(
-            file_name + ".zip",
+            file_name,
             mimetype="zip",
             as_attachment=True,
-            download_name=file_name + ".zip",
+            download_name=file_name,
         )
-    elif "remove" in request.query_string.decode("utf-8"):
+    elif "remove" in request.query_string.decode("utf-8").split("=")[0]:
         g_remove_click_cnt += 1
         if (g_remove_click_cnt % 2) == 0 and (time.time() - g_remove_click_time) < 25:
             dirs = ["data", "data/pictures", "data/timelaps", "data/videos", "data/orginal_pictures"]
