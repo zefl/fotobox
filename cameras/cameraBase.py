@@ -28,6 +28,9 @@ class CameraBase(IFotocamera):
         self._process = None
         self._thread = None
         self._mp_StopEvent = mp.Value("i", lock=False)
+        # TODO make var thread proof
+        self.block_stream = False
+        self.condition = threading.Condition()
         """Two queues one for preview and one if during preview picture is taken"""
         self._mp_FrameQueues = [mp.Queue(2), mp.Queue(2)]
         self._frame = []
@@ -44,8 +47,16 @@ class CameraBase(IFotocamera):
                 self._frameAvalible = True
         elif self._thread:
             if self._thread.is_alive():
+                try:
+                    self.block_stream = True
+                    with self.condition:
+                        self.condition.wait()
+                        self._take_picture()
+                        self._frameAvalible = False
+                except:
                 # self._frame = self._mp_FrameQueues[1].get()
-                self._frameAvalible = True
+                # If it fails we could 
+                    self._frameAvalible = True
         else:
             """Check if camera is still connect"""
             if self._camera == None:
@@ -70,6 +81,10 @@ class CameraBase(IFotocamera):
             cv2.imwrite(picName, picFrame)
         else:
             self._save_picture(picName)
+            with self.condition:
+                if self.block_stream:
+                    self.condition.notify()
+                    self.block_stream = False
 
     def thread_start(self):
         if self._process:
@@ -152,6 +167,10 @@ class CameraBase(IFotocamera):
             # call camera to take picutre
             if self._connected:
                 try:
+                    if self.block_stream:
+                        with self.condition:
+                            self.condition.notify()
+                            self.condition.wait()
                     self._frame = self._capture_stream()
                 except:
                     print("[picInABox] Error in camera reading")
