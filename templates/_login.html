@@ -3,116 +3,116 @@
 {% macro login_css() %}
 /* Full-width input fields */
 input[type=text], input[type=password] {
-  width: 100%;
-  padding: 12px 20px;
-  margin: 8px 0;
-  display: inline-block;
-  border: 1px solid #ccc;
-  box-sizing: border-box;
+width: 100%;
+padding: 12px 20px;
+margin: 8px 0;
+display: inline-block;
+border: 1px solid #ccc;
+box-sizing: border-box;
 }
 
 /* Set a style for all buttons */
 .loginbtn{
-  background-color: #04AA6D;
-  width: 100%;
-  margin: 8px 0;
-  border: none;
-  cursor: pointer;
-  width: 100%;
+background-color: #04AA6D;
+width: 100%;
+margin: 8px 0;
+border: none;
+cursor: pointer;
+width: 100%;
 }
 
 .loginbtn, .cancelbtn{
-  padding: 14px 20px;
-  margin: 8px 0;
-  border: none;
-  cursor: pointer;
-  color: white;
+padding: 14px 20px;
+margin: 8px 0;
+border: none;
+cursor: pointer;
+color: white;
 }
 
 .loginbtn:hover, .cancelbtn:hover {
-  opacity: 0.8;
-} 
+opacity: 0.8;
+}
 
 /* Extra styles for the cancel button */
 .cancelbtn {
-  width: auto;
-  padding: 10px 18px;
-  background-color: #f44336;
+width: auto;
+padding: 10px 18px;
+background-color: #f44336;
 }
 
 .container {
-  padding: 16px;
+padding: 16px;
 }
 
 span.psw {
-  float: right;
-  padding-top: 16px;
+float: right;
+padding-top: 16px;
 }
 
 /* The Modal (background) */
 .modal {
-  display: none; /* Hidden by default */
-  position: fixed; /* Stay in place */
-  z-index: 1; /* Sit on top */
-  left: 0;
-  top: 0;
-  width: 100%; /* Full width */
-  height: 100%; /* Full height */
-  overflow: auto; /* Enable scroll if needed */
-  background-color: rgb(0,0,0); /* Fallback color */
-  background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
-  padding-top: 60px;
+display: none; /* Hidden by default */
+position: fixed; /* Stay in place */
+z-index: 1; /* Sit on top */
+left: 0;
+top: 0;
+width: 100%; /* Full width */
+height: 100%; /* Full height */
+overflow: auto; /* Enable scroll if needed */
+background-color: rgb(0,0,0); /* Fallback color */
+background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+padding-top: 60px;
 }
 
 /* Modal Content/Box */
 .modal-content-box {
-  background-color: #fefefe;
-  margin: 5% auto 15% auto; /* 5% from the top, 15% from the bottom and centered */
-  border: 1px solid #888;
-  width: 50%; /* Could be more or less, depending on screen size */
+background-color: #fefefe;
+margin: 5% auto 15% auto; /* 5% from the top, 15% from the bottom and centered */
+border: 1px solid #888;
+width: 50%; /* Could be more or less, depending on screen size */
 }
 
 /* The Close Button (x) */
 .close {
-  position: absolute;
-  right: 25px;
-  top: 0;
-  color: #000;
-  font-size: 35px;
-  font-weight: bold;
+position: absolute;
+right: 25px;
+top: 0;
+color: #000;
+font-size: 35px;
+font-weight: bold;
 }
 
 .close:hover,
 .close:focus {
-  color: red;
-  cursor: pointer;
+color: red;
+cursor: pointer;
 }
 
 /* Add Zoom Animation */
 .animate {
-  -webkit-animation: animatezoom 0.6s;
-  animation: animatezoom 0.6s
+-webkit-animation: animatezoom 0.6s;
+animation: animatezoom 0.6s
 }
 
 @-webkit-keyframes animatezoom {
-  from {-webkit-transform: scale(0)} 
-  to {-webkit-transform: scale(1)}
+from {-webkit-transform: scale(0)}
+to {-webkit-transform: scale(1)}
 }
-  
+
 @keyframes animatezoom {
-  from {transform: scale(0)} 
-  to {transform: scale(1)}
+from {transform: scale(0)}
+to {transform: scale(1)}
 }
 
 /* Change styles for span and cancel button on extra small screens */
 @media screen and (max-width: 300px) {
-  span.psw {
-     display: block;
-     float: none;
-  }
-  .cancelbtn {
-     width: 100%;
-  }
+span.psw {
+display: block;
+float: none;
+}
+.cancelbtn {
+width: 100%;
+}
 }
 {% endmacro %}
 
@@ -141,106 +141,92 @@ span.psw {
   </form>
 </div>
 
-<div id="load-spinner" style="font-size: 24px;position:absolute;top:20%;right:40%;display:none;">
+<div id="load-spinner" style="font-size: 24px;position:absolute;top:20%;right:40%;display:none;z-index:1;">
   <i class="fas fa-spinner fa-pulse fa-10x"></i>
 </div>
 {% endmacro %}
 
 {% macro check_wifi_js() %}
 <script type="text/javascript">
-  function checkWifi(){
-    var xhttp = new XMLHttpRequest();
-    console.log("Check Wifi")
+  async function checkWifi() {
     document.getElementById('wifi').style.display = 'inline';
-    xhttp.onreadystatechange = function() {
-      if (this.readyState == 4 && this.status == 200) {
-        wifi = JSON.parse(this.responseText)
-        if(wifi != false){
-          var xhttp = new XMLHttpRequest();
-          document.getElementById('wifi-status').textContent = wifi;
-          document.getElementById('wifi-status').style.display = 'inline';
-          xhttp.onreadystatechange = function() {
-            if (this.readyState == 4 && this.status == 200) {
-              json = JSON.parse(this.responseText)
-              if(json == true){
-                document.getElementById('wifi-error').style.display = 'none';
-                document.getElementById('wifi').style.color = 'rgb(0, 255, 0)'; 
-              }
-              else {
-                document.getElementById('wifi-error').style.display = 'inline';
-                document.getElementById('wifi').style.color = '#2196F3'; 
-              }
-            }
+    const response = await fetch("wifi?active");
+    if (response.ok) {
+      const data = await response.json();
+      if (data != false) {
+        const response = await fetch("wifi?internet");
+        document.getElementById('wifi-status').textContent = data;
+        document.getElementById('wifi-status').style.display = 'inline';
+        if (response.ok) {
+          const data = await response.json();
+          if (data == true) {
+            document.getElementById('wifi-error').style.display = 'none';
+            document.getElementById('wifi').style.color = 'rgb(0, 255, 0)';
+          } else {
+            document.getElementById('wifi-error').style.display = 'inline';
+            document.getElementById('wifi').style.color = '#2196F3';
           }
-          xhttp.open("GET", "wifi?internet");
-          xhttp.send();  
         }
       }
     }
-    xhttp.open("GET", "wifi?active");
-    xhttp.send();      
- 
   }
-  // var cnt = 0;
-  var refreshWifi = setInterval(function()
-  {
+
+  var refreshWifi = setInterval(function () {
     checkWifi();
-    //cnt++;
-    //if (cnt > 10) {
-      //clearInterval(refreshWifi);
-    //}
   }, 5000);
-  
- </script>
+
+</script>
 {% endmacro %}
 
 {% macro login_js() %}
 <script>
-  function updateWifiList() {
-    clearInterval(refreshWifi); // Stop intervall for updating wifi
-    document.getElementById('load-spinner').style.display='block';
-    var xhttp = new XMLHttpRequest();
-    xhttp.onreadystatechange = function() {
-      if (this.readyState == 4 && this.status == 200) {
-        json = JSON.parse(this.responseText);
-        select = document.getElementById('network');
-        for(var i = 0; i < json.length; i++) {
-          var obj = json[i];
-          var opt = document.createElement('option');
-          opt.value = obj;
-          opt.innerHTML = obj;
-          select.appendChild(opt);
-        }
-        document.getElementById('load-spinner').style.display='none';
-        document.getElementById('id01').style.display='block';
+  async function updateWifiList() {
+    // Stop intervall for updating wifi
+    clearInterval(refreshWifi);
+    // Start waiting spinner
+    document.getElementById('load-spinner').style.display = 'block';
+    const response = await fetch("wifi?all");
+    if (response.ok) {
+      json = await response.json();
+      select = document.getElementById('network');
+      while (select.options.length > 0) {
+        select.remove(0);
       }
+      for (var i = 0; i < json.length; i++) {
+        var obj = json[i];
+        var opt = document.createElement('option');
+        opt.value = obj;
+        opt.innerHTML = obj;
+        select.appendChild(opt);
+      }
+      document.getElementById('id01').style.display = 'block';
     }
-    xhttp.open("GET", "wifi?all");
-    xhttp.send();
+    // Stop spinner
+    document.getElementById('load-spinner').style.display = 'none';
   }
 
   function wifiLogin() {
-    var form  = document.getElementById('formWiFi');
+    var form = document.getElementById('formWiFi');
     form.action = "javascript:void(0)";
     var wifi = form.elements['network'].value;
     var password = form.elements['psw'].value;
     var xhttp = new XMLHttpRequest();
-    xhttp.onreadystatechange = function() {
-      document.getElementById('load-spinner-form').style.display='block';
+    xhttp.onreadystatechange = function () {
+      document.getElementById('load-spinner-form').style.display = 'block';
       if (this.readyState == 4) {
         if (this.status == 200) {
           // Change action to close form automatically
           form.action = "/";
           form.submit();
-          location.reload(); 
+          location.reload();
         } else {
-          document.getElementById('load-spinner-form').style.display='none';
+          document.getElementById('load-spinner-form').style.display = 'none';
         }
       }
     }
     xhttp.open("POST", "wifi");
     xhttp.setRequestHeader("Content-Type", "application/json;charset=UTF-");
-    xhttp.send(JSON.stringify({'wifi':wifi, 'psw':password}));
+    xhttp.send(JSON.stringify({ 'wifi': wifi, 'psw': password }));
   }
 
 </script>

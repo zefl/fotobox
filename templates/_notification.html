@@ -111,40 +111,36 @@ https://github.com/codingmarket07/Notification-Alert-Messages-
 		div.remove()
 	}
 
-	function pollNotification() {
-		var xhttp = new XMLHttpRequest();
-  		xhttp.onreadystatechange = function() {
-			//Handle only error
-			if (this.readyState == 4 && this.status == 400) {
-				jsonObj = JSON.parse(this.responseText)
-				var div = createElementFromHTML({{ notification_html() }});
-				div.setAttribute('id',jsonObj.uuid);
-				var text = div.getElementsByClassName('sub')
-				text[0].innerText = jsonObj.description 
-				document.body.appendChild(div);
-				var fas = div.getElementsByClassName("fas");
-				var alert_item = div.getElementsByClassName("alert_item");
-				var title = div.getElementsByClassName("title");
-				switch (jsonObj.status) {
-					case 'Info':
-						fas[0].classList.add("fa-info-circle")
-						alert_item[0].classList.add("alert_info")
-						title[0].innerHTML  = "<span>Info</span>"
-						break
-					case 'Error':
-					default:
-						fas[0].classList.add("fa-bomb")
-						alert_item[0].classList.add("alert_error")
-						title[0].innerHTML = "<span>Fehler</span>"
-						break
-				}
-				// from https://stackoverflow.com/a/23024673
-				alert_item[0].addEventListener('click', remove.bind(null, event, jsonObj.uuid));
-				alert_item[0].style.top = "50%";
+	async function pollNotification() {
+		const response = await fetch("status?error");
+		//Only handle only error
+		if (!response.ok && 400 == response.status) {
+			const jsonObj = await response.json();
+			var div = createElementFromHTML({{ notification_html() }});
+			div.setAttribute('id',jsonObj.uuid);
+			var text = div.getElementsByClassName('sub')
+			text[0].innerText = jsonObj.description 
+			document.body.appendChild(div);
+			var fas = div.getElementsByClassName("fas");
+			var alert_item = div.getElementsByClassName("alert_item");
+			var title = div.getElementsByClassName("title");
+			switch (jsonObj.status) {
+				case 'Info':
+					fas[0].classList.add("fa-info-circle")
+					alert_item[0].classList.add("alert_info")
+					title[0].innerHTML  = "<span>Info</span>"
+					break
+				case 'Error':
+				default:
+					fas[0].classList.add("fa-bomb")
+					alert_item[0].classList.add("alert_error")
+					title[0].innerHTML = "<span>Fehler</span>"
+					break
 			}
+			// from https://stackoverflow.com/a/23024673
+			alert_item[0].addEventListener('click', remove.bind(null, event, jsonObj.uuid));
+			alert_item[0].style.top = "50%";
 		}
-		xhttp.open("GET", "status?error");
-  		xhttp.send();
 	}
 
 </script>
