@@ -192,6 +192,30 @@ visibility: visible;
 /* Add animation if desired */
 }
 
+.img-container {
+  width: 1005;
+  height: 78vh;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+}
+.cropped_img {
+    position: absolute;
+    width: 140%;
+    height: 150%;
+    transform: translate(-4%, -10%);
+    margin-top: 1%;
+}
+.full_img {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  transform: translate(0%, 0%);
+  margin-top: 1%;
+}
+
 {{ notification_css() }}
 {{ login_css() }}
 {% endblock %}
@@ -223,19 +247,21 @@ visibility: visible;
 
 
   //This scritp is used for settings page
-  function onChange(key) {
+  async function onChange(key) {
     element = document.getElementById(key);
     value = element.value;
     var xhttp = new XMLHttpRequest();
     xhttp.onreadystatechange = function () {
       if (this.readyState == 4 && this.status == 200) {
         jsonObj = JSON.parse(this.responseText)
-        ret = jsonObj.return
         var xhttpReq = new XMLHttpRequest();
         xhttpReq.onreadystatechange = function () {
           if (this.readyState == 4 && this.status == 200) {
             jsonObj = JSON.parse(this.responseText)
             document.getElementById(key).value = jsonObj.value;
+            if (key == "previewCamera") {
+              scaleStreamImg()
+            } 
           }
         }
         xhttpReq.open("GET", "api/setting?key=" + key, true);
@@ -247,51 +273,69 @@ visibility: visible;
     xhttp.send(JSON.stringify({ 'key': key, 'value': value }));
   }
 
-  function RefreshFolderStatus() {
-    var xhttp = new XMLHttpRequest();
-    xhttp.onreadystatechange = function () {
-      if (this.readyState == 4 && this.status == 200) {
-        const obj = JSON.parse(this.responseText);
-        document.getElementById("number_timelaps_1").innerHTML = obj.timelaps;
-        document.getElementById("number_timelaps_2").innerHTML = obj.timelaps;
-        document.getElementById("number_picture").innerHTML = obj.pictures;
-      }
-    };
-    xhttp.open("GET", "status?folder={{ directory }}");
-    xhttp.send();
+  async function RefreshFolderStatus() {
+    const response = await fetch("status?folder={{ directory }}");
+    if (response.ok && 200 == response.status) {
+      const obj = await response.json();
+      document.getElementById("number_timelaps_1").innerHTML = obj.timelaps;
+      document.getElementById("number_timelaps_2").innerHTML = obj.timelaps;
+      document.getElementById("number_picture").innerHTML = obj.pictures;
+    }
   }
   RefreshFolderStatus();
   var timeout = setInterval(RefreshFolderStatus, 10000);
 
-  function RefreshStatus() {
-    var xhttp = new XMLHttpRequest();
-    xhttp.onreadystatechange = function () {
-      if (this.readyState == 4 && this.status == 200) {
-        const obj = JSON.parse(this.responseText);
-        document.getElementById("step").innerHTML = obj.step;
-        document.getElementById("percent").style.width = obj.percent + "%";
-        document.getElementById("run_time").innerHTML = obj.run_time;
+  async function scaleStreamImg() {
+    const response = await fetch("api/setting?key=previewCamera");
+    if (response.ok && 200 == response.status) {
+      const obj = await response.json();
+      var element = document.getElementById("stream");
+      console.log(obj.value)
+      if (obj.value == 0) {
+        if (element.classList.contains("cropped_img")) {
+          element.classList.remove("cropped_img");
+        }
+        element.classList.add("full_img");
+      } else {
+        if (element.classList.contains("full_img")) {
+          element.classList.remove("full_img");
+        }
+        element.classList.add("cropped_img");
       }
-    };
-    xhttp.open("GET", "status?timelaps");
-    xhttp.send();
+    }
+  }
+  scaleStreamImg();
+
+  async function RefreshStatus() {
+    const response = await fetch("status?timelaps");
+    if (response.ok && 200 == response.status) {
+      const obj = await response.json();
+      document.getElementById("step").innerHTML = obj.step;
+      document.getElementById("percent").style.width = obj.percent + "%";
+      document.getElementById("run_time").innerHTML = obj.run_time;
+    }
   }
   var update = setInterval(RefreshStatus, 5000);
 
-  function RefreshGitStatus() {
-    var xhttp = new XMLHttpRequest();
-    xhttp.onreadystatechange = function () {
-      if (this.readyState == 4 && this.status == 200) {
-        const obj = JSON.parse(this.responseText);
-        document.getElementById("version_number").innerHTML = obj.version;
-        document.getElementById("version_date").innerHTML = obj.date;
-        document.getElementById("version_summary").innerHTML = obj.summary;
-      }
-    };
-    xhttp.open("GET", "status?git");
-    xhttp.send();
+  async function RefreshGitStatus() {
+    const response = await fetch("status?git");
+    if (response.ok && 200 == response.status) {
+      const obj = await response.json();
+      document.getElementById("version_number").innerHTML = obj.version;
+      document.getElementById("version_date").innerHTML = obj.date;
+      document.getElementById("version_summary").innerHTML = obj.summary;
+    }
   }
   RefreshGitStatus();
+
+  async function GetIpAddress() {
+    const response = await fetch("wifi?ip");
+    if (response.ok && 200 == response.status) {
+      const obj = await response.json();
+      document.getElementById("ip_address").innerHTML = obj.ip;
+    }
+  }
+  GetIpAddress();
 
   //from https://www.w3schools.com/howto/howto_css_switch.asp
   function activateCheckbox(checkbox, key) {
@@ -391,7 +435,9 @@ visibility: visible;
         <!-- divder-->
       </div>
       <div class="col-md-6">
-        <img src="{{ url_for('pageVideoFeed') }}" style="width:100%; height: 78vh;">
+        <div class="img-container">
+          <img id="stream" class="cropped_img" src="{{ url_for('pageVideoFeed') }}">
+        </div>
       </div>
     </div>
   </div>
@@ -515,6 +561,14 @@ visibility: visible;
       </div>
       <div class="col-md-8">
         <p class="text-left" style="font-size:20px;" id="version_summary"></label>
+      </div>
+    </div>
+    <div class="row" style="margin-top: 10px;">
+      <div class="col-md-2">
+        <label style="font-size:20px;">Ip Address</label>
+      </div>
+      <div class="col-md-8">
+        <p class="text-left" style="font-size:20px;" id="ip_address"></label>
       </div>
     </div>
   </div>

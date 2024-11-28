@@ -34,6 +34,7 @@ from datetime import datetime
 from io import BytesIO
 from PIL import Image
 from utils.utils import (
+    get_ip_address,
     openImage,
     findInserts,
     getWifiList,
@@ -628,6 +629,11 @@ def wifi():
         elif "internet" in request.args:
             wifi = checkInternetConnection()
             response = jsonify(wifi)
+            response.status_code = 200
+            return response
+        elif "ip" in request.args:
+            ip = get_ip_address("wlan0")
+            response = jsonify({"ip": ip})
             response.status_code = 200
             return response
     elif request.method == "POST":

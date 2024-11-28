@@ -10,6 +10,7 @@ import threading
 import multiprocessing as mp
 import time
 import os
+import queue
 
 from cameras.IFotocamera import IFotocamera
 
@@ -28,8 +29,8 @@ class CameraBase(IFotocamera):
         self._process = None
         self._thread = None
         self._mp_StopEvent = mp.Value("i", lock=False)
-        # TODO make var thread proof
         self.block_stream = False
+        self.block_stream_send = mp.Queue()
         self.condition = threading.Condition()
         """Two queues one for preview and one if during preview picture is taken"""
         self._mp_FrameQueues = [mp.Queue(2), mp.Queue(2)]
@@ -49,6 +50,7 @@ class CameraBase(IFotocamera):
             if self._thread.is_alive():
                 try:
                     self.block_stream = True
+                    self.block_stream_send.put(self.block_stream)
                     with self.condition:
                         self.condition.wait()
                         self._take_picture()
@@ -166,16 +168,20 @@ class CameraBase(IFotocamera):
             nextFrameTime = time.time() + desiredCyleTime
             # call camera to take picutre
             if self._connected:
-                try:
-                    if self.block_stream:
-                        with self.condition:
-                            self.condition.notify()
-                            self.condition.wait()
-                    self._frame = self._capture_stream()
-                except:
-                    print("[picInABox] Error in camera reading")
-                    self.disconnect()
-                    self.connect(self._frameRate)
+                    try:
+                        blocked = self.block_stream_send.get(timeout=0.001)
+                        if blocked:
+                            with self.condition:
+                                self.condition.notify()
+                                self.condition.wait()
+                    except queue.Empty:
+                        pass
+                    try:
+                        self._frame = self._capture_stream()
+                    except:
+                        print("[picInABox] Error in camera reading")
+                        self.disconnect()
+                        self.connect(self._frameRate)
             if self._mp_StopEvent.value:
                 break
         self._mp_StopEvent.value = False

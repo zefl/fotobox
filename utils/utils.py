@@ -1,4 +1,8 @@
 import cv2
+import os
+import requests
+import re
+
 from PIL import Image
 from sys import platform
 
@@ -97,9 +101,6 @@ def resetUsbViaName(name):
 
 
 def getWifiList():
-    import os
-    import re
-
     cmd = os.popen("sudo iw dev wlan0 scan | grep SSID")
     wifi = cmd.read()
     wifi = re.findall(r"SSID: (.+)\n", wifi)
@@ -108,9 +109,6 @@ def getWifiList():
 
 
 def getActivWifi():
-    import os
-    import re
-
     if platform != "win32":
         cmd = os.popen("iwgetid")
         wifi = cmd.read()
@@ -123,8 +121,6 @@ def getActivWifi():
 
 
 def checkInternetConnection(timeout= 5):
-    import requests
-
     url = "http://www.google.com"
     try:
         request = requests.get(url, timeout=timeout)
@@ -134,9 +130,6 @@ def checkInternetConnection(timeout= 5):
 
 
 def connectToWifi(essid, password):
-    import os
-    import re
-
     # see https://programmerall.com/article/8884208824/
     # use wpa_cli to add network
     cmd = os.popen("sudo wpa_cli -i wlan0 list_network")
@@ -202,3 +195,12 @@ def connectToWifi(essid, password):
         "status_code": 409,
         "description": "Fehler in Netzwerkeinstellungen" + detail_error,
     }
+
+
+def get_ip_address(interface):
+    try:
+        # Extract the IP address using the 'ip' command
+        ip_address = os.popen(f'ip -4 addr show {interface} | grep -oP "(?<=inet\\s)\d+(\\.\\d+){{3}}"').read().strip()
+        return f"{ip_address}"
+    except Exception as e:
+        return f"No Ip address found"

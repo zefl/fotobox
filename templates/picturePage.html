@@ -21,6 +21,32 @@ div.container {
   text-align: center;
   padding: 5px 10px;
 }
+
+.img-container {
+    width: 100%;
+    height: 78vh;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+}
+.cropped_img {
+    position: absolute;
+    width: 140%;
+    height: 150%;
+    transform: translate(-4%, -10%);
+    margin-top: 1%;
+}
+.full_img {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  transform: translate(0%, 0%);
+  margin-top: 1%;
+}
+
+
 {% endblock %}
 
 {% block script %}
@@ -255,12 +281,13 @@ function setCircleDasharray() {
     .getElementById("base-timer-path-remaining")
     .setAttribute("stroke-dasharray", circleDasharray);
 }
+
 </script>
 {% endblock%}
 
 {% block content %}
 <div onclick="startCapturing()" class="polaroid"> 
-	<div id="countdown" style="float:left; position:absolute; margin-left:33%; margin-top:5%;font-family: sans-serif;">
+	<div id="countdown" style="float:left; position:absolute; margin-left:33%; margin-top:5%;font-family: sans-serif;z-index:1;">
         <div id="base-timer" class="base-timer">
           <svg class="base-timer__svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
             <g class="base-timer__circle">
@@ -279,7 +306,9 @@ function setCircleDasharray() {
         </div>
     </div>
     <!--<div id="countdown" style="float:left; position:absolute; margin-left:85%;margin-top:1%;font-family: sans-serif;"></div>-->
-    <img src="{{ url_for('pageVideoFeed') }}" style="width:100%; height: 78vh; margin-top: 1%;"> 
+    <div class="img-container">
+      <img {% if settings['previewCamera']['value'] == 0 %} class="full_img" {% else %} class="cropped_img" {% endif %}  src="{{ url_for('pageVideoFeed') }}" > 
+    </div>
     <div class="container">
     </div>
 <div>

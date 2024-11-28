@@ -148,7 +148,8 @@ class Camera(CameraBase):
             camFile = self._camera.capture_preview()
             file_data = camFile.get_data_and_size()
             image = Image.open(io.BytesIO(file_data))
-            frame = np.array(image)[:, :, ::-1]
+            flipped_img = image.transpose(Image.FLIP_LEFT_RIGHT)
+            frame = np.array(flipped_img)[:, :, ::-1]
             return frame
         except:
             print("[picInABox] Error in reading DSLR Camera")
