@@ -1,112 +1,114 @@
 https://github.com/codingmarket07/Notification-Alert-Messages-
 {% macro notification_css() %}
 .alert_item.alert_info{
-	background: #cde8f5;
-	color: #4480ae;
+background: #cde8f5;
+color: #4480ae;
 }
 
 .alert_item.alert_warning{
-	background: #f8f3d6;
-	color: #967132;
+background: #f8f3d6;
+color: #967132;
 }
 
 .alert_item.alert_error{
-	background: #ecc8c5;
-	color: #b32f2d;
+background: #ecc8c5;
+color: #b32f2d;
 }
 
 .alert_item.alert_success{
-	background: #def2d6;
-	color: #5a7052;
+background: #def2d6;
+color: #5a7052;
 }
 
 .alert_wrapper{
-	position: relative;
-	width: 100%;
-	height: 100%;
-	z-index: 99999999999;
-	visibility: visible;
+position: relative;
+width: 100%;
+height: 100%;
+z-index: 99999999999;
+visibility: visible;
 }
 
 .alert_wrapper .alert_item{
-	z-index: 3;	
-	position: fixed;
-	top: -100%;
-	left: 50%;
-	transform: translate(-50%,-50%);
-	display: flex;
-	align-items: center;
-	padding: 25px 50px;
-	border-radius: 3px;
-	transition: all 0.2s ease;
+z-index: 3;
+position: fixed;
+top: -100%;
+left: 50%;
+transform: translate(-50%,-50%);
+display: flex;
+align-items: center;
+padding: 25px 50px;
+border-radius: 3px;
+transition: all 0.2s ease;
 }
 
 .alert_wrapper .alert_item .data{
-	margin: 0 50px;
+margin: 0 50px;
 }
 .alert_wrapper .alert_item .data .title{
-	font-size: 35px;
-	margin-bottom: 5px;
+font-size: 35px;
+margin-bottom: 5px;
 }
 .alert_wrapper .alert_item .data span{
-	font-weight: 700;
+font-weight: 700;
 }
 .alert_wrapper .alert_item .data .sub{
-	font-size: 30px;
-	font-weight: 100;
+font-size: 30px;
+font-weight: 100;
 }
 .alert_wrapper .alert_item .icon{
-	font-size: 32px;
+font-size: 32px;
 }
 .alert_wrapper .alert_item .close{
-	cursor: pointer;
+cursor: pointer;
 }
 
 .alert_item.alert_info .close:hover{
-	color: #a5c7d8;
+color: #a5c7d8;
 }
 
 .alert_item.alert_warning .close:hover{
-	color: #dcd4a2;
+color: #dcd4a2;
 }
 
 .alert_item.alert_error .close:hover{
-	color: #c79995;
+color: #c79995;
 }
 
 .alert_item.alert_success .close:hover{
-	color: #adc5a5;
+color: #adc5a5;
 }
 
 .alert_item{
-	top: 50%;
+top: 50%;
 }
 {% endmacro %}
 
 {% macro notification_html() %}
-'<div class="alert_wrapper"><div class="alert_inner"><div class="alert_item"><div class="icon data_icon"><i class="fas"></i></div><div class="data"><p class="title"><span>type:</span>User action pending</p><p class="sub">Lorem ipsum dolor sit amet.</p></div><div class="icon close" onclick="close(this)"><i class="fas fa-times"></i></div></div></div></div>'
+'<div class="alert_wrapper">
+	<div class="alert_inner">
+		<div class="alert_item">
+			<div class="icon data_icon"><i class="fas"></i></div>
+			<div class="data">
+				<p class="title"><span>type:</span>User action pending</p>
+				<p class="sub">Lorem ipsum dolor sit amet.</p>
+			</div>
+			<div class="icon close"><i class="fas fa-times"></i></div>
+		</div>
+	</div>
+</div>'
 {% endmacro %}
 
 {% macro notification_js() %}
 <script>
-	var timeout = setInterval(pollNotification, 1000);   
-
-	function close(element){
-		var div = document.getElementById('test');
-		console.log(div);
-		div.remove();
-	}
-
 	//https://stackoverflow.com/questions/494143/creating-a-new-dom-element-from-an-html-string-using-built-in-dom-methods-or-pro
 	function createElementFromHTML(htmlString) {
 		var div = document.createElement('div');
 		div.innerHTML = htmlString.trim();
 		// Change this to div.childNodes to support multiple top-level nodes
-		return div.firstChild; 
+		return div.firstChild;
 	}
 
 	function remove(event, uuid) {
-		console.log(uuid)
 		var div = document.getElementById(uuid);
 		div.remove()
 	}
@@ -117,31 +119,34 @@ https://github.com/codingmarket07/Notification-Alert-Messages-
 		if (!response.ok && 400 == response.status) {
 			const jsonObj = await response.json();
 			var div = createElementFromHTML({{ notification_html() }});
-			div.setAttribute('id',jsonObj.uuid);
-			var text = div.getElementsByClassName('sub')
-			text[0].innerText = jsonObj.description 
-			document.body.appendChild(div);
-			var fas = div.getElementsByClassName("fas");
-			var alert_item = div.getElementsByClassName("alert_item");
-			var title = div.getElementsByClassName("title");
-			switch (jsonObj.status) {
-				case 'Info':
-					fas[0].classList.add("fa-info-circle")
-					alert_item[0].classList.add("alert_info")
-					title[0].innerHTML  = "<span>Info</span>"
-					break
-				case 'Error':
-				default:
-					fas[0].classList.add("fa-bomb")
-					alert_item[0].classList.add("alert_error")
-					title[0].innerHTML = "<span>Fehler</span>"
-					break
-			}
-			// from https://stackoverflow.com/a/23024673
-			alert_item[0].addEventListener('click', remove.bind(null, event, jsonObj.uuid));
-			alert_item[0].style.top = "50%";
+		div.setAttribute('id', jsonObj.uuid);
+		var text = div.getElementsByClassName('sub')
+		text[0].innerText = jsonObj.description
+		document.body.appendChild(div);
+		var fas = div.getElementsByClassName("fas");
+		var alert_item = div.getElementsByClassName("alert_item");
+		var title = div.getElementsByClassName("title");
+		switch (jsonObj.status) {
+			case 'Info':
+				fas[0].classList.add("fa-info-circle")
+				alert_item[0].classList.add("alert_info")
+				title[0].innerHTML = "<span>Info</span>"
+				break
+			case 'Error':
+			default:
+				fas[0].classList.add("fa-bomb")
+				alert_item[0].classList.add("alert_error")
+				title[0].innerHTML = "<span>Fehler</span>"
+				break
 		}
+		// from https://stackoverflow.com/a/23024673
+		alert_item[0].addEventListener('click', remove.bind(null, event, jsonObj.uuid));
+		alert_item[0].style.top = "50%";
 	}
+	// Start a timer to poll the notification again after 1 second 
+	setTimeout(pollNotification, 1000);
+	}
+	pollNotification();
 
 </script>
 

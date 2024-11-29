@@ -118,7 +118,7 @@ width: 100%;
 
 {% macro login_html() %}
 <div id="id01" class="modal">
-  <form id="formWiFi" action="javascript:void(0)" class="modal-content-box animate" >
+  <form id="formWiFi" action="javascript:void(0)" class="modal-content-box animate">
 
     <div class="container">
       <label for="uname"><b>Verfügbar Netzwerke</b></label>
@@ -127,7 +127,7 @@ width: 100%;
       </select>
 
       <input type="password" placeholder="Enter Password" name="psw" required>
-        
+
       <button class="loginbtn" onclick="wifiLogin()" type="submit">Login</button>
 
       <div id="load-spinner-form" style="font-size: 24px;position:absolute;top:20%;right:40%;display:none;">
@@ -136,7 +136,8 @@ width: 100%;
     </div>
 
     <div class="container" style="background-color:#f1f1f1">
-      <button type="cancelbtn" onclick="document.getElementById('id01').style.display='none';" class="cancelbtn">Cancel</button>
+      <button type="cancelbtn" onclick="document.getElementById('id01').style.display='none';"
+        class="cancelbtn">Cancel</button>
     </div>
   </form>
 </div>
@@ -149,32 +150,33 @@ width: 100%;
 {% macro check_wifi_js() %}
 <script type="text/javascript">
   async function checkWifi() {
-    document.getElementById('wifi').style.display = 'inline';
-    const response = await fetch("wifi?active");
-    if (response.ok) {
-      const data = await response.json();
-      if (data != false) {
-        const response = await fetch("wifi?internet");
-        document.getElementById('wifi-status').textContent = data;
-        document.getElementById('wifi-status').style.display = 'inline';
-        if (response.ok) {
-          const data = await response.json();
-          if (data == true) {
-            document.getElementById('wifi-error').style.display = 'none';
-            document.getElementById('wifi').style.color = 'rgb(0, 255, 0)';
-          } else {
-            document.getElementById('wifi-error').style.display = 'inline';
-            document.getElementById('wifi').style.color = '#2196F3';
+    try {
+      document.getElementById('wifi').style.display = 'inline';
+      const response = await fetch("wifi?active");
+      if (response.ok) {
+        const data = await response.json();
+        if (data != false) {
+          const response = await fetch("wifi?internet");
+          document.getElementById('wifi-status').textContent = data;
+          document.getElementById('wifi-status').style.display = 'inline';
+          if (response.ok) {
+            const data = await response.json();
+            if (data == true) {
+              document.getElementById('wifi-error').style.display = 'none';
+              document.getElementById('wifi').style.color = 'rgb(0, 255, 0)';
+            } else {
+              document.getElementById('wifi-error').style.display = 'inline';
+              document.getElementById('wifi').style.color = '#2196F3';
+            }
           }
         }
       }
+    } finally {
+      // Start a timer to poll again
+      setTimeout(checkWifi, 10000);
     }
   }
-
-  var refreshWifi = setInterval(function () {
-    checkWifi();
-  }, 5000);
-
+  checkWifi();
 </script>
 {% endmacro %}
 

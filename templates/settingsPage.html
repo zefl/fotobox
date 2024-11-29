@@ -238,7 +238,6 @@ visibility: visible;
     for (i = 0; i < tablinks.length; i++) {
       tablinks[i].className = tablinks[i].className.replace(" active", "");
     }
-    console.log(tabName);
     document.getElementById(tabName).style.display = "block";
     if (!!evt) {
       evt.currentTarget.className += " active";
@@ -290,7 +289,6 @@ visibility: visible;
     if (response.ok && 200 == response.status) {
       const obj = await response.json();
       var element = document.getElementById("stream");
-      console.log(obj.value)
       if (obj.value == 0) {
         if (element.classList.contains("cropped_img")) {
           element.classList.remove("cropped_img");
@@ -341,11 +339,9 @@ visibility: visible;
   function activateCheckbox(checkbox, key) {
     if (checkbox.checked == true) {
       value = 1;
-      console.log("checked");
     }
     else {
       value = 0;
-      console.log("unchecked");
     }
 
     var xhttp = new XMLHttpRequest();
