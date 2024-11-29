@@ -53,11 +53,17 @@ class CameraBase(IFotocamera):
                     self.block_stream_send.put(self.block_stream)
                     with self.condition:
                         self.condition.wait()
-                        self._take_picture()
-                        self._frameAvalible = False
+                        self._frame = self._take_picture()
+                        if self._frame is not None:
+                            self._frameAvalible = True
+                            self.condition.notify()
+                            self.block_stream = False
+                        else:
+                            # We need to save picture before going on
+                            self._frameAvalible = False
                 except:
-                # self._frame = self._mp_FrameQueues[1].get()
-                # If it fails we could 
+                    # self._frame = self._mp_FrameQueues[1].get()
+                    # If it fails we could
                     self._frameAvalible = True
         else:
             """Check if camera is still connect"""
@@ -146,6 +152,8 @@ class CameraBase(IFotocamera):
     def frameSize(self):
         raise NotImplementedError
 
+    # Returns frame if available
+    # Returns none if not
     def _take_picture(self):
         raise NotImplementedError
 
@@ -168,20 +176,20 @@ class CameraBase(IFotocamera):
             nextFrameTime = time.time() + desiredCyleTime
             # call camera to take picutre
             if self._connected:
-                    try:
-                        blocked = self.block_stream_send.get(timeout=0.001)
-                        if blocked:
-                            with self.condition:
-                                self.condition.notify()
-                                self.condition.wait()
-                    except queue.Empty:
-                        pass
-                    try:
-                        self._frame = self._capture_stream()
-                    except:
-                        print("[picInABox] Error in camera reading")
-                        self.disconnect()
-                        self.connect(self._frameRate)
+                try:
+                    blocked = self.block_stream_send.get(timeout=0.001)
+                    if blocked:
+                        with self.condition:
+                            self.condition.notify()
+                            self.condition.wait()
+                except queue.Empty:
+                    pass
+                try:
+                    self._frame = self._capture_stream()
+                except:
+                    print("[picInABox] Error in camera reading")
+                    self.disconnect()
+                    self.connect(self._frameRate)
             if self._mp_StopEvent.value:
                 break
         self._mp_StopEvent.value = False

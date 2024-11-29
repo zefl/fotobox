@@ -134,6 +134,7 @@ class Camera(CameraBase):
         # self.set_config_value('actions', 'viewfinder', 0)
         self._lastCapture = self._camera.capture(gp.GP_CAPTURE_IMAGE)
         time.sleep(0.3)  # Necessary to let the time for the camera to save the image
+        None
 
     def _save_picture(self, pic_targert):
         if self._lastCapture:
