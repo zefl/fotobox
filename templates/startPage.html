@@ -10,70 +10,98 @@ Viel Spaß beim Feiern und Fotografieren
 
 {% block styles %}
 .choose {
-    margin:0 auto;
-    margin-top:34px; 
-    width:580px; 
-    height:68px; 
-    line-height: 68px; /* needs to be the same as hight*/
+margin:0 auto;
+margin-top:34px;
+width:580px;
+height:68px;
+line-height: 68px; /* needs to be the same as hight*/
 }
 .choose_botton{
-    width:513px;
-    height:68px;
-    float:left 
+width:513px;
+height:68px;
+float:left
 }
 
 .choose_img{
-    width:45px;
-    height:45px;
-    margin-left:6px;
-    margin-top:6px;
-    float:left;
-    text-align:center;
+width:45px;
+height:45px;
+margin-left:6px;
+margin-top:6px;
+float:left;
+text-align:center;
 }
 
 .not-selectable {
-    /* https://stackoverflow.com/questions/2310734/how-to-make-html-text-unselectable */
-    -webkit-touch-callout: none;
-    -webkit-user-select: none;
-    -khtml-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-  }
+/* https://stackoverflow.com/questions/2310734/how-to-make-html-text-unselectable */
+-webkit-touch-callout: none;
+-webkit-user-select: none;
+-khtml-user-select: none;
+-moz-user-select: none;
+-ms-user-select: none;
+user-select: none;
+}
 
 {{ notification_css() }}
 
 {% endblock %}
 
 {% block script %}
-<script type="text/javascript" src="{{url_for('static', filename='long-press-event-2.4.4/src/long-press-event.js')}}"></script>
+<script type="text/javascript"
+    src="{{url_for('static', filename='long-press-event-2.4.4/src/long-press-event.js')}}"></script>
 {{ check_wifi_js() }}
 {% endblock %}
 
 {% block content %}
-<div class="not-selectable" id="logo" data-long-press-delay="2000" style="width:276px;height:276px;overflow:hidden; margin:0 auto;">
-    <img role="presentation" src="../static/pictures/custom_style/logo.png" style="display:block;margin:0" oncontextmenu="return false;" height="276" width="276" data-width="276" data-height="276">
+<div class="not-selectable" id="logo" data-long-press-delay="2000"
+    style="width:276px;height:276px;overflow:hidden; margin:0 auto;">
+    <img role="presentation" src="../static/pictures/custom_style/logo.png" style="display:block;margin:0"
+        oncontextmenu="return false;" height="276" width="276" data-width="276" data-height="276">
 </div>
 
+{% if (settings['videoPicture']['value'] | int) + (settings['multiPicture']['value'] | int) +
+(settings['singlePicture']['value'] | int) == 1 %}
 <div class="choose">
-    <a href="options" style="text-decoration: none; "> 
-            <div class="button choose_botton" id="kamera">
-                <span >Fotospaß starten!</span>
+    {% if settings['videoPicture']['value'] %}
+    <form action="api/modus?option=3" method="POST">
+    {% elif settings['multiPicture']['value'] %}
+    <form action="api/modus?option=2" method="POST">
+    {% else %}
+    <form action="api/modus?option=1" method="POST">
+        {% endif %}
+        <input type="hidden" />
+        <a href="#" onclick="this.parentNode.submit()" style="text-decoration: none; ">
+            <div>
+                <div class="button choose_botton" id="kamera">
+                    <span>Fotospaß starten!</span>
+                </div>
+                <div class="choose_img">
+                    <img src="../static/pictures/kamera.png" style="height:100%;opacity:1" />
+                </div>
             </div>
-            <div class="choose_img">
-                <img src="../static/pictures/kamera.png" style="height:100%;opacity:1" />
-            </div>
+        </a>
+    </form>
+</div>
+{% else %}
+<div class="choose">
+    <a href="options" style="text-decoration: none; ">
+        <div class="button choose_botton" id="kamera">
+            <span>Fotospaß starten!</span>
+        </div>
+        <div class="choose_img">
+            <img src="../static/pictures/kamera.png" style="height:100%;opacity:1" />
+        </div>
     </a>
 </div>
+{% endif %}
 
 <div class="choose">
-    <a href="gallery" style="text-decoration: none; "> 
-            <div class="button choose_botton" id="gallery">
-                <span >Hier geht´s zur Galerie</span>
-            </div>
-            <div class="choose_img">
-                <img src="../static/pictures/gallery.png" style="height:100%;opacity:1" />
-            </div>
+    <a href="gallery" style="text-decoration: none; ">
+        <div class="button choose_botton" id="gallery">
+            <span>Hier geht´s zur Galerie</span>
+        </div>
+        <div class="choose_img">
+            <img src="../static/pictures/gallery.png" style="height:100%;opacity:1" />
+        </div>
     </a>
 </div>
 
@@ -81,17 +109,17 @@ Viel Spaß beim Feiern und Fotografieren
     // grab the element
     var el = document.getElementById('logo');
     // listen for the long-press event
-    el.addEventListener('long-press', function(e) {
-    
-      // stop the event from bubbling up
-      e.preventDefault()
-    
-      location.href = '/settings';
+    el.addEventListener('long-press', function (e) {
+
+        // stop the event from bubbling up
+        e.preventDefault()
+
+        location.href = '/settings';
 
     });
-    
+
 </script>
 
 {{ notification_js() }}
-   
+
 {% endblock %}
