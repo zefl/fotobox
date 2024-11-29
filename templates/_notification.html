@@ -84,18 +84,7 @@ top: 50%;
 {% endmacro %}
 
 {% macro notification_html() %}
-'<div class="alert_wrapper">
-	<div class="alert_inner">
-		<div class="alert_item">
-			<div class="icon data_icon"><i class="fas"></i></div>
-			<div class="data">
-				<p class="title"><span>type:</span>User action pending</p>
-				<p class="sub">Lorem ipsum dolor sit amet.</p>
-			</div>
-			<div class="icon close"><i class="fas fa-times"></i></div>
-		</div>
-	</div>
-</div>'
+'<div class="alert_wrapper"><div class="alert_inner"><div class="alert_item"><div class="icon data_icon"><i class="fas"></i></div><div class="data"><p class="title"><span>type:</span>User action pending</p><p class="sub">Lorem ipsum dolor sit amet.</p></div><div class="icon close" onclick="close(this)"><i class="fas fa-times"></i></div></div></div></div>'
 {% endmacro %}
 
 {% macro notification_js() %}
@@ -119,32 +108,32 @@ top: 50%;
 		if (!response.ok && 400 == response.status) {
 			const jsonObj = await response.json();
 			var div = createElementFromHTML({{ notification_html() }});
-		div.setAttribute('id', jsonObj.uuid);
-		var text = div.getElementsByClassName('sub')
-		text[0].innerText = jsonObj.description
-		document.body.appendChild(div);
-		var fas = div.getElementsByClassName("fas");
-		var alert_item = div.getElementsByClassName("alert_item");
-		var title = div.getElementsByClassName("title");
-		switch (jsonObj.status) {
-			case 'Info':
-				fas[0].classList.add("fa-info-circle")
-				alert_item[0].classList.add("alert_info")
-				title[0].innerHTML = "<span>Info</span>"
-				break
-			case 'Error':
-			default:
-				fas[0].classList.add("fa-bomb")
-				alert_item[0].classList.add("alert_error")
-				title[0].innerHTML = "<span>Fehler</span>"
-				break
+			div.setAttribute('id', jsonObj.uuid);
+			var text = div.getElementsByClassName('sub')
+			text[0].innerText = jsonObj.description
+			document.body.appendChild(div);
+			var fas = div.getElementsByClassName("fas");
+			var alert_item = div.getElementsByClassName("alert_item");
+			var title = div.getElementsByClassName("title");
+			switch (jsonObj.status) {
+				case 'Info':
+					fas[0].classList.add("fa-info-circle")
+					alert_item[0].classList.add("alert_info")
+					title[0].innerHTML = "<span>Info</span>"
+					break
+				case 'Error':
+				default:
+					fas[0].classList.add("fa-bomb")
+					alert_item[0].classList.add("alert_error")
+					title[0].innerHTML = "<span>Fehler</span>"
+					break
+			}
+			// from https://stackoverflow.com/a/23024673
+			alert_item[0].addEventListener('click', remove.bind(null, event, jsonObj.uuid));
+			alert_item[0].style.top = "50%";
 		}
-		// from https://stackoverflow.com/a/23024673
-		alert_item[0].addEventListener('click', remove.bind(null, event, jsonObj.uuid));
-		alert_item[0].style.top = "50%";
-	}
-	// Start a timer to poll the notification again after 1 second 
-	setTimeout(pollNotification, 1000);
+		// Start a timer to poll the notification again after 1 second 
+		setTimeout(pollNotification, 1000);
 	}
 	pollNotification();
 
