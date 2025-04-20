@@ -63,8 +63,10 @@ def exit():
 
 # create Flask object with __name__ --> acutal python object
 app = Flask(__name__)
-# Cache files for one day
-app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 60 * 60 * 24
+# Cache files for one day -> enable if QR code is not cached
+# app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 60 * 60 * 24
+# Do not cache anything because some pictures need to be reloaded like the rendered ones
+app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 0
 app.secret_key = "sdbngiusdngdsgbiursbng"
 app.config["UPLOAD_FOLDER"] = "static/pictures/custom_style"
 app.config["MAX_CONTENT_PATH"] = 16 * 1000 * 1000
@@ -212,7 +214,8 @@ def before_first_request_func():
                 os.makedirs(path)
 
     print("[picInABox] Browser will start now")
-    start_browser()
+    if get_operating_system() == "Windows":
+        start_browser()
 
 
 # from https://www.youtube.com/watch?v=8qDdbcWmzCg
@@ -514,7 +517,9 @@ def kill():
     import os
     import signal
 
-    kill_browser()
+    if get_operating_system() == "Windows":
+        kill_browser()
+
     pid = os.getpid()
     os.kill(pid, signal.SIGINT)
     return Response(status=200)
@@ -920,4 +925,5 @@ print("[picInABox] Starting ...")
 if __name__ == "__main__":
     print("[picInABox] Start PicInABox Web Server")
     before_first_request_func()
-    app.run(host="0.0.0.0", port=5000, debug=False, threaded=True, use_reloader=False)
+    # TODO port as gloabal config
+    app.run(host="0.0.0.0", port=5001, debug=False, threaded=True, use_reloader=False)

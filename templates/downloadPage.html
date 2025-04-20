@@ -90,79 +90,83 @@ video.addEventListener('loadeddata', function() {
    picload();
 }, false);
 
-function startUpFunction(){
+function forced_load() {
+  document.getElementById('picture').src = document.getElementById('picture').src + '?' + Date.now();  
+}
+
+async function startUpFunction(){
     var xhttp = new XMLHttpRequest();
     var jsonObj = null
-    xhttp.onreadystatechange = function() {
-        if (this.readyState == 4 && this.status == 200) {
-            jsonObj = JSON.parse(this.responseText);
-            modus = jsonObj.option
-            const div = document.createElement('div');
-            if(modus == 1 || modus == 2){
-                div.innerHTML = `
-                    <style>
-                      a, a:hover, a:focus, a:active {
-                        text-decoration: none;
-                        color: inherit;
-                      }
+    const response = await fetch("api/modus")
+    if (response.ok) {
+      const data = await response.json();
+      modus = data.option
+      const div = document.createElement('div');
+      if(modus == 1 || modus == 2){
+          div.innerHTML = `
+              <style>
+                a, a:hover, a:focus, a:active {
+                  text-decoration: none;
+                  color: inherit;
+                }
 
-                      .text {
-                        font-weight: bold;
-                        font-size: 3vh;
-                        font-family: "Lucida Console"
-                      }
+                .text {
+                  font-weight: bold;
+                  font-size: 3vh;
+                  font-family: "Lucida Console"
+                }
 
-                      .image{
-                        height: 15vh;
-                        width: 10vw;
-                      }
-                      /* https://www.w3schools.com/css/css3_shadows_box.asp
-                      https://www.w3schools.com/howto/howto_css_rounded_images.asp */
-                      .image_button{
-                        box-shadow:  0 4px 8px 0 grey, 0 6px 20px 0 grey;
-                        border-radius: 8%;
-                      }
-                    </style>
-                    <div id="loader" style="float:left;">
-                        <div class="loader"></div>
+                .image{
+                  height: 15vh;
+                  width: 10vw;
+                }
+                /* https://www.w3schools.com/css/css3_shadows_box.asp
+                https://www.w3schools.com/howto/howto_css_rounded_images.asp */
+                .image_button{
+                  box-shadow:  0 4px 8px 0 grey, 0 6px 20px 0 grey;
+                  border-radius: 8%;
+                }
+              </style>
+              <div id="loader" style="float:left;">
+                  <div class="loader"></div>
+              </div>
+              <div id="picture-frame" style="visibility: hidden;">
+                <div  style="width:80%; margin-left:5%; margin-top: 1%;">
+                    <img id="picture" onload="picload()" src="api/renderPicture" style="width:100%;height: 78vh; "/> 
+                </div>
+                <div class="text" style="width:15%; margin-left:85%; float:left; margin-top:-70vh;text-align: center;";>
+                    <div id="load-spinner" style="position:relative; {% if not(settings['qrCode']['value']) %} display: none; {% endif %}">
+                      <i class="fas fa-spinner fa-pulse fa-5x"></i>
+                      <div style="height: 5vh;"></div>
                     </div>
-                    <div id="picture-frame" style="visibility: hidden;">
-                      <div  style="width:80%; margin-left:5%; margin-top: 1%;">
-                          <img id="picture" onload="picload()" src="api/renderPicture" style="width:100%;height: 78vh; "/> 
-                      </div>
-                      <div class="text" style="width:15%; margin-left:85%; float:left; margin-top:-70vh;text-align: center;";>
-                          <div id="load-spinner" style="position:relative; {% if not(settings['qrCode']['value']) %} display: none; {% endif %}">
-                            <i class="fas fa-spinner fa-pulse fa-5x"></i>
-                            <div style="height: 5vh;"></div>
-                          </div>
-                          <img id="qr-code" class="image" style="display: none;" onload="disableSpinner()"> 
-                          <span id="qr-dwonload" style="display: none;">Download</span>
-                          <a href="/picture">
-                            <img class="image image_button"  data-scalestrategy="fit"  src="../static/pictures/kameraRetake.png"/> 
-                            <span style="white-space: nowrap ;">Noch einmal</span>
-                          </a>
-                          <a href="#">
-                            <img id="printing"  {% if not(settings['print_enable']['value']) %} style="display: none;" {% endif %}  class="image image_button" src="../static/pictures/print.png" onclick="printing()"/> 
-                            <span id="print_text" style="white-space: nowrap ; {% if not(settings['print_enable']['value']) %} display: none;" {% endif %}">Druck mich</span>
-                          </a>
-                      </div>
-                    </div>
-              `;
-            }
-            else if (modus == 3){
-              div.innerHTML = `
-                    <video id="video" controls autoplay>
-                      <source src="/api/renderVideo" type="video/mp4" style="width:80%; height: 78vh; margin-top: 1%;">
-                      Your browser does not support the video tag.
-                    </video>
-                    <img id="qr-code" style="width:10%; height: 18vh; "/> 
-              `;
-            }
-            document.getElementById('content').appendChild(div); 
-        }
+                    <img id="qr-code" class="image" style="display: none;" onload="disableSpinner()"> 
+                    <span id="qr-dwonload" style="display: none;">Download</span>
+                    <a href="/picture">
+                      <img class="image image_button"  data-scalestrategy="fit"  src="../static/pictures/kameraRetake.png"/> 
+                      <span style="white-space: nowrap ;">Noch einmal</span>
+                    </a>
+                    <a href="#">
+                      <img id="printing"  {% if not(settings['print_enable']['value']) %} style="display: none;" {% endif %}  class="image image_button" src="../static/pictures/print.png" onclick="printing()"/> 
+                      <span id="print_text" style="white-space: nowrap ; {% if not(settings['print_enable']['value']) %} display: none;" {% endif %}">Druck mich</span>
+                    </a>
+                </div>
+              </div>
+        `;
+      }
+      else if (modus == 3){
+        div.innerHTML = `
+              <video id="video" controls autoplay>
+                <source src="/api/renderVideo" type="video/mp4" style="width:80%; height: 78vh; margin-top: 1%;">
+                Your browser does not support the video tag.
+              </video>
+              <img id="qr-code" style="width:10%; height: 18vh; "/> 
+        `;
+      }
+      document.getElementById('content').appendChild(div); 
+      if (modus == 1 || modus == 2) {
+        forced_load();
+      }
     };
-    xhttp.open("GET", "api/modus");
-    xhttp.send();   
 }
 
 function disableSpinner() {

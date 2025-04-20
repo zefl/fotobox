@@ -289,26 +289,26 @@ visibility: visible;
   RefreshFolderStatus();
   var timeout = setInterval(RefreshFolderStatus, 10000);
 
-  async function scaleStreamImg() {
-    const response = await fetch("api/setting?key=previewCamera");
-    if (response.ok && 200 == response.status) {
-      const obj = await response.json();
-      var element = document.getElementById("stream");
-      console.log(obj.value)
-      if (obj.value == 0) {
-        if (element.classList.contains("cropped_img")) {
-          element.classList.remove("cropped_img");
-        }
-        element.classList.add("full_img");
-      } else {
-        if (element.classList.contains("full_img")) {
-          element.classList.remove("full_img");
-        }
-        element.classList.add("cropped_img");
-      }
-    }
-  }
-  scaleStreamImg();
+  //async function scaleStreamImg() {
+  //  const response = await fetch("api/setting?key=previewCamera");
+  //  if (response.ok && 200 == response.status) {
+  //    const obj = await response.json();
+  //    var element = document.getElementById("stream");
+  //    console.log(obj.value)
+  //    if (obj.value == 0) {
+  //      if (element.classList.contains("cropped_img")) {
+  //        element.classList.remove("cropped_img");
+  //      }
+  //      element.classList.add("full_img");
+  //    } else {
+  //      if (element.classList.contains("full_img")) {
+  //        element.classList.remove("full_img");
+  //      }
+  //      element.classList.add("cropped_img");
+  //    }
+  //  }
+  //}
+  //scaleStreamImg();
 
   async function RefreshStatus() {
     const response = await fetch("status?timelaps");
@@ -440,7 +440,8 @@ visibility: visible;
       </div>
       <div class="col-md-6">
         <div class="img-container">
-          <img id="stream" class="cropped_img" src="{{ url_for('pageVideoFeed') }}">
+          <!-- class="cropped_img" -->
+          <img id="stream" class="full_img" src="{{ url_for('pageVideoFeed') }}">
         </div>
       </div>
     </div>

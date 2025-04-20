@@ -219,7 +219,7 @@ def start_browser():
     import subprocess
 
     process = subprocess.Popen(
-        ["cmd", "/c", "start msedge 127.0.0.1:5000 --start-maximized --start-fullscreen"],
+        ["cmd", "/c", "start msedge 127.0.0.1:5001 --start-maximized --start-fullscreen"],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         text=True,
