@@ -138,11 +138,11 @@ function startUpFunction(){
                           <img id="qr-code" class="image" style="display: none;" onload="disableSpinner()"> 
                           <span id="qr-dwonload" style="display: none;">Download</span>
                           <a href="/picture">
-                            <img class="image image_button" data-loading="lazy" role="presentation" data-scalestrategy="fit"  src="../static/pictures/kameraRetake.png"/> 
+                            <img class="image image_button"  data-scalestrategy="fit"  src="../static/pictures/kameraRetake.png"/> 
                             <span style="white-space: nowrap ;">Noch einmal</span>
                           </a>
                           <a href="#">
-                            <img id="printing"  {% if not(settings['print_enable']['value']) %} style="display: none;" {% endif %} data-loading="lazy" role="presentation" class="image image_button" src="../static/pictures/print.png" onclick="printing()"/> 
+                            <img id="printing"  {% if not(settings['print_enable']['value']) %} style="display: none;" {% endif %}  class="image image_button" src="../static/pictures/print.png" onclick="printing()"/> 
                             <span id="print_text" style="white-space: nowrap ; {% if not(settings['print_enable']['value']) %} display: none;" {% endif %}">Druck mich</span>
                           </a>
                       </div>

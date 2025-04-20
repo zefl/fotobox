@@ -35,12 +35,15 @@ from io import BytesIO
 from PIL import Image
 from utils.utils import (
     get_ip_address,
+    get_operating_system,
+    kill_browser,
     openImage,
     findInserts,
     getWifiList,
     getActivWifi,
     checkInternetConnection,
     connectToWifi,
+    start_browser,
 )
 
 
@@ -60,7 +63,8 @@ def exit():
 
 # create Flask object with __name__ --> acutal python object
 app = Flask(__name__)
-app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 0
+# Cache files for one day
+app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 60 * 60 * 24
 app.secret_key = "sdbngiusdngdsgbiursbng"
 app.config["UPLOAD_FOLDER"] = "static/pictures/custom_style"
 app.config["MAX_CONTENT_PATH"] = 16 * 1000 * 1000
@@ -207,13 +211,16 @@ def before_first_request_func():
             if not (os.path.exists(path)):
                 os.makedirs(path)
 
+    print("[picInABox] Browser will start now")
+    start_browser()
+
 
 # from https://www.youtube.com/watch?v=8qDdbcWmzCg
 # adds settings json to each page
 @app.context_processor
 def context_processor():
     global g_settings
-    return dict(settings=g_settings.get_json())
+    return dict(settings=g_settings.get_json(), system=get_operating_system())
 
 
 # -------------------------------
@@ -500,6 +507,17 @@ def zipFile():
             }
             g_error.put(info)
         return redirect(url_for("pageSettings", active="Data"))
+
+
+@app.route("/api/kill")
+def kill():
+    import os
+    import signal
+
+    kill_browser()
+    pid = os.getpid()
+    os.kill(pid, signal.SIGINT)
+    return Response(status=200)
 
 
 @app.route("/api/update", methods=["GET"])
@@ -898,7 +916,8 @@ def Initialize():
         print("[picInABox] No Camera Found")
 
 
+print("[picInABox] Starting ...")
 if __name__ == "__main__":
-    print("[picInABox] Start PicInABox Application")
+    print("[picInABox] Start PicInABox Web Server")
     before_first_request_func()
     app.run(host="0.0.0.0", port=5000, debug=False, threaded=True, use_reloader=False)

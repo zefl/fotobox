@@ -1,5 +1,5 @@
 from upload.IUpload import IUpload
-from mega import Mega
+# from mega import Mega
 import json
 
 

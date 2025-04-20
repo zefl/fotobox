@@ -221,11 +221,15 @@ visibility: visible;
 {% endblock %}
 
 {% block script %}
+
+{% if system == "Linux" %}
 {{ check_wifi_js() }}
 
 {{ login_html() }}
 
 {{ login_js() }}
+
+{% endif %}
 <script>
   //This scritp is used for tab management
   function openTab(evt, tabName) {
@@ -536,6 +540,13 @@ visibility: visible;
       <a href="/api/update?reboot">
         <div class="button">
           <span>Reboot</span>
+        </div>
+      </a>
+    </div>
+    <div class="row" style="margin-top: 10px;">
+      <a href="/api/kill">
+        <div class="button">
+          <span>Close</span>
         </div>
       </a>
     </div>

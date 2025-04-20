@@ -31,7 +31,7 @@ class CameraBase(IFotocamera):
         self._mp_StopEvent = mp.Value("i", lock=False)
         self.block_stream = False
         self.block_stream_send = mp.Queue()
-        self.condition = threading.Condition()
+        self.condition_stream_stoped = threading.Condition()
         """Two queues one for preview and one if during preview picture is taken"""
         self._mp_FrameQueues = [mp.Queue(2), mp.Queue(2)]
         self._frame = []
@@ -51,13 +51,16 @@ class CameraBase(IFotocamera):
                 try:
                     self.block_stream = True
                     self.block_stream_send.put(self.block_stream)
-                    with self.condition:
-                        self.condition.wait()
+                    with self.condition_stream_stoped:
+                        self.condition_stream_stoped.wait()
+                        # If the camera can take a high resolution picture we take it here, this picture needs to be
+                        # saved special. To signal this set frameAvailble to false, so when saving the image the
+                        # camera need to do it
                         self._take_picture()
                         self._frameAvalible = False
                 except:
-                # self._frame = self._mp_FrameQueues[1].get()
-                # If it fails we could 
+                    # self._frame = self._mp_FrameQueues[1].get()
+                    # If it fails we could
                     self._frameAvalible = True
         else:
             """Check if camera is still connect"""
@@ -83,10 +86,10 @@ class CameraBase(IFotocamera):
             cv2.imwrite(picName, picFrame)
         else:
             self._save_picture(picName)
-            with self.condition:
-                if self.block_stream:
-                    self.condition.notify()
-                    self.block_stream = False
+        with self.condition_stream_stoped:
+            if self.block_stream:
+                self.condition_stream_stoped.notify()
+                self.block_stream = False
 
     def thread_start(self):
         if self._process:
@@ -168,20 +171,20 @@ class CameraBase(IFotocamera):
             nextFrameTime = time.time() + desiredCyleTime
             # call camera to take picutre
             if self._connected:
-                    try:
-                        blocked = self.block_stream_send.get(timeout=0.001)
-                        if blocked:
-                            with self.condition:
-                                self.condition.notify()
-                                self.condition.wait()
-                    except queue.Empty:
-                        pass
-                    try:
-                        self._frame = self._capture_stream()
-                    except:
-                        print("[picInABox] Error in camera reading")
-                        self.disconnect()
-                        self.connect(self._frameRate)
+                try:
+                    blocked = self.block_stream_send.get(timeout=0.001)
+                    if blocked:
+                        with self.condition_stream_stoped:
+                            self.condition_stream_stoped.notify()
+                            self.condition_stream_stoped.wait()
+                except queue.Empty:
+                    pass
+                try:
+                    self._frame = self._capture_stream()
+                except:
+                    print("[picInABox] Error in camera reading")
+                    self.disconnect()
+                    self.connect(self._frameRate)
             if self._mp_StopEvent.value:
                 break
         self._mp_StopEvent.value = False
