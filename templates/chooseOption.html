@@ -27,63 +27,51 @@ Ihr habt die Wahl ...
 
 <!-- from https://stackoverflow.com/questions/6180256/post-from-an-a-tag -->
 <!-- from http://www.corelangs.com/css/box/center-div.html -->
-<div class="container">
+<div class="container-fluid">
   <div class="row justify-content-md-center" {% if not(enable[0]) %} style="display: none;" {% endif %}>
-    <div class="col-6 mx-auto">
-        <form action="api/modus?option=1" method="POST">
-            <input type="hidden" />
-            <a href="#" onclick="this.parentNode.submit()" style="text-decoration: none; "> 
-                <div>
-                    <div class="button button-choose" id="kamera">
-                        Einzelfoto
-                    </div>
-                    <div class="icon-choose">
-                        <img src="../static/pictures/kamera.png" style="height:100%;opacity:1" />
-                    </div>
-                </div>
-            </a>
-        </form>
-    </div>
+    <form action="api/modus?option=1" method="POST">
+        <input type="hidden" />
+        <a href="#" onclick="this.parentNode.submit()" style="text-decoration: none; "> 
+            <div class="button button-choose" id="kamera">
+                Einzelfoto
+            </div>
+            <div class="icon-choose">
+                <img src="../static/pictures/kamera.png" style="height:100%;opacity:1" />
+            </div>
+        </a>
+    </form>
   </div>
 
   <div style="height: 5vh;"> </div>
 
   <div class="row justify-content-md-center" {% if not(enable[1]) %} style="display: none;" {% endif %}>
-    <div class="col-6 mx-auto">
-        <form action="api/modus?option=2" method="POST">
-            <input type="hidden" />
-            <a href="#" onclick="this.parentNode.submit()" style="text-decoration: none; "> 
-                <div>
-                    <div class="button button-choose" id="kamera4">
-                        {{numberOfPictures}}'er Fotosession
-                    </div>
-                    <div class="icon-choose">
-                        <img src="../static/pictures/kamera4.png" style="height:100%;opacity:1" />
-                    </div>
-                </div>
-            </a>
-        </form>
-    </div>
+    <form action="api/modus?option=2" method="POST">
+        <input type="hidden" />
+        <a href="#" onclick="this.parentNode.submit()" style="text-decoration: none; "> 
+            <div class="button button-choose" id="kamera4">
+                {{numberOfPictures}}'er Fotosession
+            </div>
+            <div class="icon-choose">
+                <img src="../static/pictures/kamera4.png" style="height:100%;opacity:1" />
+            </div>
+        </a>
+    </form>
   </div>
 
   <div style="height: 5vh;"> </div>
  
   <div class="row justify-content-md-center" {% if not(enable[2]) %} style="display: none;" {% endif %}>
-    <div class="col-6 mx-auto">
-        <form action="api/modus?option=3" method="POST">
-            <input type="hidden" />
-            <a href="#" onclick="this.parentNode.submit()" style="text-decoration: none; "> 
-                <div>
-                    <div class="button button-choose" id="video">
-                        Kurzvideo
-                    </div>
-                    <div class="icon-choose">
-                        <img src="../static/pictures/video.png" style="height:100%;opacity:1" />
-                    </div>
-                </div>
-            </a>
-        </form>
-    </div>
+    <form action="api/modus?option=3" method="POST">
+        <input type="hidden" />
+        <a href="#" onclick="this.parentNode.submit()" style="text-decoration: none; "> 
+            <div class="button button-choose" id="video">
+                Kurzvideo
+            </div>
+            <div class="icon-choose">
+                <img src="../static/pictures/video.png" style="height:100%;opacity:1" />
+            </div>
+        </a>
+    </form>
   </div>
 </div>
 
