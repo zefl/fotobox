@@ -85,10 +85,10 @@ function whenUserIdle(){
 document.addEventListener("DOMContentLoaded", startUpFunction);
 let modus = 0;
 
-video.addEventListener('loadeddata', function() {
-   // Video is loaded and can be played
-   picload();
-}, false);
+// video.addEventListener('loadeddata', function() {
+//    // Video is loaded and can be played
+//    picload();
+// }, false);
 
 function forced_load() {
   document.getElementById('picture').src = document.getElementById('picture').src + '?' + Date.now();  

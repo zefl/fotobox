@@ -58,107 +58,54 @@ div.container {
 
 let modus = 0;
 
-function startCapturing() {
+async function startCapturing() {
     //get Status of status of server https://www.w3schools.com/js/js_ajax_http_send.asp
-    var xhttp = new XMLHttpRequest();
-    var jsonObj = null
-    xhttp.onreadystatechange = function() {
-        if (this.readyState == 4 && this.status == 200) {
-          jsonObj = JSON.parse(this.responseText);
-          modus = jsonObj.option
-          statemachine('InitialStart');
-        }
+    const response = await fetch("api/modus")
+    if (response.ok) {
+      const data = await response.json();
+      modus = data.option;
+      await statemachine();
     };
-    xhttp.open("GET", "api/modus");
-    xhttp.send();  
 }
 
 let state = 'Init'
 let fotoCount = 0
 
-function statemachine(transition){
-    var done=false;
-    console.log('State: ' + state);
-    console.log('Transition: ' + transition);
-    switch(state){
-        case 'Init':
-            if(transition == 'InitialStart'){ 
-                startTimer({{settings['countDown']['value']}}, {{settings['triggerDelay']['value']}}, 'countdown');
-                state = 'waitForTimeout'
-            }
-            break;
-        case 'waitForTimeout':
-            if(transition == 'Trigger'){
-                //Capature Foto
-                var xhttp = new XMLHttpRequest();
-                var jsonObj = null
-                xhttp.onreadystatechange = function() {
-                    if (this.readyState == 4 && this.status == 200) {
-                      jsonObj = JSON.parse(this.responseText);
-                      ret = jsonObj.return
-                      state = 'waitForFoto';
-                      statemachine('FotoFinish');
-                    }
-                };
-                xhttp.open("POST", "api/controlCamera");
-                xhttp.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-                if(modus == 1 || modus == 2){
-                    xhttp.send(JSON.stringify({option:"takePciture"}));
-                }
-                else if(modus == 3){
-                    startTimer({{settings['timeVideo']['value']}},  0, 'video');
-                    xhttp.send(JSON.stringify({option:"startVideo"}));
-                }
-            }
-            break;
-       case 'waitForFoto':
-        if(transition == 'FotoFinish'){
-           if(modus == 1){ //one foto
-                //Wait for finish
-                done = true;
-                break;
-            }
-            else if (modus == 2){ //4 fotos
-                //Capature Foto
-                //Wait for finish
-                fotoCount++;
-                if(fotoCount == {{numberOfPictures}}){
-                    done = true;
-                    break;
-                }
-                startTimer({{settings['countDown']['value']}}, {{settings['triggerDelay']['value']}}, 'countdown');
-                state = 'waitForTimeout'
-                break;
-            } 
-        }
-        else if(transition == 'Trigger'){
-            if (modus == 3){                //viedo
-                var xhttp = new XMLHttpRequest();
-                var jsonObj = null
-                xhttp.onreadystatechange = function() {
-                    if (this.readyState == 4 && this.status == 200) {
-                      jsonObj = JSON.parse(this.responseText);
-                      ret = jsonObj.return
-                      state = 'waitForFoto';
-                      statemachine('finish');
-                    }
-                };
-                xhttp.open("POST", "api/controlCamera");
-                xhttp.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-                xhttp.send(JSON.stringify({option:"stopVideo"}));       
-            } 
-        }
-        else if(transition == 'finish'){
-            done = true;
-            break;
-        }
-    }
+async function take_picture() {
+  const config = {
+    method: 'POST',
+    headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json;charset=UTF-8',
+    },
+    body: JSON.stringify({option:"takePciture"})
+  }
+  const response = await fetch('api/controlCamera', config)
+}
 
-    if(done == true){
-        document.getElementById("countdown").style.display = 'none';
-        console.log("Fertig")
-        window.location.href = "./download";
-    }
+async function statemachine(){
+    var done=false;
+    const timeout = {{settings['countDown']['value']}}
+    if (modus == 1) {
+      // TODO {{settings['triggerDelay']['value']}}
+      TIME_LIMIT = timeout 
+      await countdown(timeout,0)
+      onTimesUp()
+      await take_picture()
+      await delay(1000);
+
+    } else if (modus == 2) {
+      while(fotoCount < {{numberOfPictures}}){
+        TIME_LIMIT = timeout 
+        await countdown(timeout,0)
+        onTimesUp()
+        await take_picture()
+        await delay(1000);
+        fotoCount++;
+      }
+    } 
+    // TODO modus  == 3
+    window.location.href = "./download";
 }
 
 //-------------------------------------------
@@ -183,7 +130,6 @@ const COLOR_CODES = {
 };
 
 let TIME_LIMIT = 5;
-let timePassed = 0;
 let timeLeft = TIME_LIMIT;
 let timerInterval = null;
 let remainingPathColor = COLOR_CODES.info.color;
@@ -194,47 +140,29 @@ function onTimesUp() {
   timerInterval = null;
 }
 
-function startTimer(time, trigger_before_end, type) {
-    //reset
-    console.log("Start Timer");
-    timePassed = 0;  
-    TIME_LIMIT = time;
-    timeLeft = time;
+const delay = ms => new Promise(res => setTimeout(res, ms));
+
+// Start_time 10, end_time 5
+async function countdown(start_time, end_time) {
     remainingPathColor = COLOR_CODES.info.color;
-    document.getElementById("base-timer-label").innerHTML = formatTime(timeLeft);
+    document.getElementById("base-timer-label").innerHTML = formatTime(start_time - end_time);
     document.getElementById("base-timer-path-remaining").setAttribute("stroke-dasharray", FULL_DASH_ARRAY);
     document.getElementById("base-timer-path-remaining").classList.remove(COLOR_CODES.alert.color);
     document.getElementById("base-timer-path-remaining").classList.add(COLOR_CODES.info.color);
-    if(type == 'video'){
-        document.getElementById("countdown").style.marginLeft="85%";
-        document.getElementById("countdown").style.marginTop="1%";
-        document.getElementById("base-timer").style.fontSize="4vw";
-        document.getElementById("base-timer").style.width="12vw";
-    }
-    //start Timer
-    if(timerInterval == null){
-      timerInterval = setInterval(() => {
-        timePassed = timePassed += 1;
-        timeLeft = TIME_LIMIT - timePassed;
-        document.getElementById("base-timer-label").innerHTML = formatTime(
-          timeLeft
-        );
-        setCircleDasharray();
-        setRemainingPathColor(timeLeft);
-
-        if (timeLeft === trigger_before_end) {
-          if(type == 'countdown'){
-            statemachine('Trigger')
-          }
-        }
-
-        if (timeLeft === 0) {
-          onTimesUp();
-          if(type == 'video'){
-            statemachine('Trigger')
-          }
-        }
-      }, 1000);
+    // if(type == 'video'){
+    //     document.getElementById("countdown").style.marginLeft="85%";
+    //     document.getElementById("countdown").style.marginTop="1%";
+    //     document.getElementById("base-timer").style.fontSize="4vw";
+    //     document.getElementById("base-timer").style.width="12vw";
+    //   }
+    time_passed = 0
+    while (start_time - time_passed > end_time) {
+      await delay(1000);
+      time_passed += 1;
+      timeLeft = start_time - time_passed - end_time;
+      setCircleDasharray();
+      document.getElementById("base-timer-label").innerHTML = formatTime(timeLeft);
+      setRemainingPathColor(timeLeft);
     }
 }
 
