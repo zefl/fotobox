@@ -108,6 +108,15 @@ def getWifiList():
     return wifi
 
 
+def get_operating_system():
+    if platform == "win32":
+        return "Windows"
+    elif platform.startswith("linux"):
+        return "Linux"
+    else:
+        return "Other"
+
+
 def getActivWifi():
     if platform != "win32":
         cmd = os.popen("iwgetid")
@@ -120,7 +129,7 @@ def getActivWifi():
     return False
 
 
-def checkInternetConnection(timeout= 5):
+def checkInternetConnection(timeout=5):
     url = "http://www.google.com"
     try:
         request = requests.get(url, timeout=timeout)
@@ -204,3 +213,27 @@ def get_ip_address(interface):
         return f"{ip_address}"
     except Exception as e:
         return f"No Ip address found"
+
+
+def start_browser():
+    import subprocess
+
+    process = subprocess.Popen(
+        ["cmd", "/c", "start msedge 127.0.0.1:5001 --start-maximized --start-fullscreen"],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+    stdout, stderr = process.communicate()
+
+
+def kill_browser():
+    import subprocess
+
+    process = subprocess.Popen(
+        ["cmd", "/c", "taskkill /im msedge.exe /f"],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+    stdout, stderr = process.communicate()

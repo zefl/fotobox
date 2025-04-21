@@ -307,7 +307,8 @@ function setCircleDasharray() {
     </div>
     <!--<div id="countdown" style="float:left; position:absolute; margin-left:85%;margin-top:1%;font-family: sans-serif;"></div>-->
     <div class="img-container">
-      <img {% if settings['previewCamera']['value'] == 0 %} class="full_img" {% else %} class="cropped_img" {% endif %}  src="{{ url_for('pageVideoFeed') }}" > 
+      <!-- {% if settings['previewCamera']['value'] == 0 %} class="full_img" {% else %} class="cropped_img" {% endif %} -->
+      <img class="full_img" src="{{ url_for('pageVideoFeed') }}" > 
     </div>
     <div class="container">
     </div>

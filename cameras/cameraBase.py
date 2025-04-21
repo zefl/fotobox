@@ -31,7 +31,7 @@ class CameraBase(IFotocamera):
         self._mp_StopEvent = mp.Value("i", lock=False)
         self.block_stream = False
         self.block_stream_send = mp.Queue()
-        self.condition = threading.Condition()
+        self.condition_stream_stoped = threading.Condition()
         """Two queues one for preview and one if during preview picture is taken"""
         self._mp_FrameQueues = [mp.Queue(2), mp.Queue(2)]
         self._frame = []
@@ -51,8 +51,11 @@ class CameraBase(IFotocamera):
                 try:
                     self.block_stream = True
                     self.block_stream_send.put(self.block_stream)
-                    with self.condition:
-                        self.condition.wait()
+                    with self.condition_stream_stoped:
+                        self.condition_stream_stoped.wait()
+                        # If the camera can take a high resolution picture we take it here, this picture needs to be
+                        # saved special. To signal this set frameAvailble to false, so when saving the image the
+                        # camera need to do it
                         self._frame = self._take_picture()
                         if self._frame is not None:
                             self._frameAvalible = True
@@ -89,10 +92,10 @@ class CameraBase(IFotocamera):
             cv2.imwrite(picName, picFrame)
         else:
             self._save_picture(picName)
-            with self.condition:
-                if self.block_stream:
-                    self.condition.notify()
-                    self.block_stream = False
+        with self.condition_stream_stoped:
+            if self.block_stream:
+                self.condition_stream_stoped.notify()
+                self.block_stream = False
 
     def thread_start(self):
         if self._process:
@@ -179,9 +182,9 @@ class CameraBase(IFotocamera):
                 try:
                     blocked = self.block_stream_send.get(timeout=0.001)
                     if blocked:
-                        with self.condition:
-                            self.condition.notify()
-                            self.condition.wait()
+                        with self.condition_stream_stoped:
+                            self.condition_stream_stoped.notify()
+                            self.condition_stream_stoped.wait()
                 except queue.Empty:
                     pass
                 try:

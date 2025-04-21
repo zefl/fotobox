@@ -65,6 +65,9 @@ class CameraTimelapss:
             self._process = None
         self._threadActive = False
 
+    def disconnect(self):
+        self._camera.disconnect
+
     def image_gray(self, file):
         frame = cv2.imread(file)
         # https://pyimagesearch.com/2015/05/25/basic-motion-detection-and-tracking-with-python-and-opencv/

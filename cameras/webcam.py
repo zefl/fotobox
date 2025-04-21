@@ -32,14 +32,17 @@ class Camera(CameraBase):
         super().__init__()
 
     def connect(self, fps: int = 0):
+        print("[picInABox] Connect to webcam")
         if self._camera == None:
             self._camera = cv2.VideoCapture(0)
             self._frameRate = fps
             self._frameSize = 0
             self._connected = True
+            print("[picInABox] Connect done")
 
     def disconnect(self):
         if self._camera:
+            print("[picInABox] Disconnect webcam")
             self._connected = False
             self._camera.release()
             self._camera = None
@@ -49,9 +52,9 @@ class Camera(CameraBase):
             return self._frameSize
         else:
             return 0
-
+        
     def _take_picture(self):
-        check, frame = self._camera.read()
+        _, frame = self._camera.read()
         return frame
 
     def _capture_stream(self):
