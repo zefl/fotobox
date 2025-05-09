@@ -1,8 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-#
-#  camera_pi.py
-
 import cv2
 import multiprocessing as mp
 
@@ -52,7 +47,7 @@ class Camera(CameraBase):
             return self._frameSize
         else:
             return 0
-        
+
     def _take_picture(self):
         _, frame = self._camera.read()
         return frame

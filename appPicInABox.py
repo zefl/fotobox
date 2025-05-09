@@ -1,8 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-#
-#  	picInABox.py
-#  	author:zefl
 import os
 import shutil
 
@@ -804,11 +799,17 @@ def Initialize():
     #########################
     global g_printer
     try:
-        from printers.printer import Printer
+        if get_operating_system() == "Windows":
+            from printers.win_printer import Printer
 
-        g_printer = Printer()
+            g_printer = Printer()
+
+        else:
+            from printers.cup_printer import Printer
+
+            g_printer = Printer()
     except:
-        from printers.virtualPrinter import VirtualPrinter
+        from printers.virtual_printer import VirtualPrinter
 
         g_printer = VirtualPrinter()
 

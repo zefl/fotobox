@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 import cups
 import tempfile
 import os.path as osp
@@ -59,7 +57,7 @@ class Printer(Logger):
     def reset_jobs(self):
         self._conn.cancelAllJobs(self.name)  # reset all jobs
         self._conn.enablePrinter(self.name)  # reset printer -> resets error
-    
+
     def check_status(self):
         status = self._conn.getPrinterAttributes(self.name)
         if status["printer-state-reasons"][0] != "none":
@@ -69,9 +67,9 @@ class Printer(Logger):
     def printing(self, picture):
         if self.name is None:
             raise EnvironmentError("Drucken nicht möglich. Fotobox neu starten")
-        
+
         printer_state = self._conn.getPrinters()[self.name]
-        match printer_state['printer-state-message']:
+        match printer_state["printer-state-message"]:
             case "Der Drucker existiert nicht oder ist zurzeit nicht verfügbar.":
                 raise EnvironmentError("Drucker nicht verfügbar bitte starten.")
 
@@ -82,18 +80,18 @@ class Printer(Logger):
         job_id = self._conn.printFile(self.name, picture, osp.basename(picture), {})
         # sleep short to give cups time to receive task
         time.sleep(2)
-        
+
         job_info = self._conn.getJobAttributes(job_id)
         start_print_time = time.time()
         start_waiting_time = None
-        while job_info['job-state-reasons'] == "job-printing":
+        while job_info["job-state-reasons"] == "job-printing":
             time.sleep(2)
-                                
+
             # Long timeout nothing is working
             if (time.time() - start_print_time) > 150:
                 raise RuntimeError("Zeitüberschreitung - Drucker bitte einschalten")
 
-            # ------ Log section ----------- 
+            # ------ Log section -----------
             # job_info = self._conn.getJobAttributes(job_id)
             # print(f"Overall job state {job_info['job-state-reasons']}")
             # number = len(job_info["job-printer-state-reasons"])
@@ -103,8 +101,8 @@ class Printer(Logger):
             # -------------------------
 
             job_info = self._conn.getJobAttributes(job_id)
-            # Check finish condition 
-            if job_info['job-state-reasons'] == "processing-to-stop-point":
+            # Check finish condition
+            if job_info["job-state-reasons"] == "processing-to-stop-point":
                 break
             if job_info["job-printer-state-reasons"] is None:
                 break
@@ -119,22 +117,22 @@ class Printer(Logger):
                         if start_waiting_time is None:
                             start_waiting_time = time.time()
                         else:
-                            # Printing duration ~60 sec 
+                            # Printing duration ~60 sec
                             if (time.time() - start_waiting_time) > 120:
                                 raise RuntimeError("Drucker zu langsam - bitte nachschauen ob alles ok ist")
-                    
+
                     case "marker-supply-empty-error":
                         raise RuntimeError("Keine Druckerpatrone im Drucker bitte hinten einsetzten oder tauschen")
-                
+
                     case "toner-empty":
                         raise RuntimeError("Druckerpatrone bitte hinten tauschen")
 
                     case "media-empty-error" | "media-needed":
                         raise RuntimeError("Kein Papier mehr im Drucker. Bitte seitlich nachfüllen")
-                    
+
                     case "input-tray-missing":
                         raise RuntimeError("Kein Papierfach. Bitte Papierfach seitlich einstetzen")
-                    
+
                     case _:
                         raise RuntimeError(f"Problem beim Drucker - {reason} - ")
 

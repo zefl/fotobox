@@ -1,11 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-#
-#  dslrCamera.py
-#
-#
-#
-
 try:
     import gphoto2 as gp
 except ImportError:

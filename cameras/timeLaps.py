@@ -1,11 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-#
-#  cameraRecorder.py
-#
-#
-#
-
 ##############
 # Notes:
 # - could be an timer to close thread if not needed after certain time

@@ -1,10 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-#
-#  camera_pi.py
-#
-#
-#
 try:
     import libcamera
     from picamera2 import Picamera2
@@ -51,7 +44,7 @@ class Camera(CameraBase):
 
             # camera setup
             self._camera.framerate = _fps
-            config = self._camera.create_preview_configuration({"format":"RGB888"})
+            config = self._camera.create_preview_configuration({"format": "RGB888"})
             config["transform"] = libcamera.Transform(hflip=0, vflip=1)
             config["controls"]["NoiseReductionMode"] = libcamera.controls.draft.NoiseReductionModeEnum.Fast
             self._camera.configure(config)

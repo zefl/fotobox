@@ -1,8 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-#
-#  camera_pi.py
-
 import copy
 import cv2
 from datetime import datetime

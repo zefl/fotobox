@@ -1,11 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-#
-#  cameraRecorder.py
-#
-#
-#
-
 ##############
 # Notes:
 # - could be an timer to close thread if not needed after certain time
@@ -44,9 +36,7 @@ class CameraRecorder(IVideocamera):
         #################
         # Save fps_recorded
         #################
-        self.fps = (
-            30  # in current setup we have two threads with leads to ~15 less framrate
-        )
+        self.fps = 30  # in current setup we have two threads with leads to ~15 less framrate
         self.fpsRecorded = 0
         #################
         # Optinal audio Recorder
@@ -77,9 +67,7 @@ class CameraRecorder(IVideocamera):
             timestamp = now.strftime("%Y_%m_%d_%H_%M_%S")
             video_file = os.path.join(_folder, "vid_" + timestamp + ".avi")
             frame = self.recordFrames[0]
-            videoWriter = cv2.VideoWriter(
-                video_file, fourcc, self.fpsRecorded, (frame.shape[1], frame.shape[0])
-            )
+            videoWriter = cv2.VideoWriter(video_file, fourcc, self.fpsRecorded, (frame.shape[1], frame.shape[0]))
             for frame in self.recordFrames:
                 videoWriter.write(frame)
             videoWriter.release()
@@ -99,11 +87,7 @@ class CameraRecorder(IVideocamera):
                 )
             else:
                 movie_file = "mov_" + timestamp + ".mp4"
-                (
-                    ffmpeg.input(video_file)
-                    .output(os.path.join(_folder, movie_file))
-                    .run()
-                )
+                (ffmpeg.input(video_file).output(os.path.join(_folder, movie_file)).run())
             os.remove(video_file)
             self.recordFrames = []
 
@@ -134,9 +118,7 @@ class CameraRecorder(IVideocamera):
                 if self.stopRecording and self.recordingActive:
                     self.finishTimeRec = _lastWakeUp
                     countFrames = len(self.recordFrames)
-                    self.fpsRecorded = countFrames / (
-                        self.finishTimeRec - self.startTimeRec
-                    )
+                    self.fpsRecorded = countFrames / (self.finishTimeRec - self.startTimeRec)
                     print(
                         "Recorded %d images in %d seconds at %.2ffps"
                         % (
@@ -147,9 +129,7 @@ class CameraRecorder(IVideocamera):
                     )
                     self.stopRecording = False
                     self.recordingActive = False
-                    self.startRecording = (
-                        False  # reset if someone wanted to start stream while running
-                    )
+                    self.startRecording = False  # reset if someone wanted to start stream while running
                     if self.audioRecorder:
                         self.audioRecorder.stop()
                     self.threadActive = False  # Stop thread
