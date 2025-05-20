@@ -1,5 +1,6 @@
 import os
 import shutil
+from enum import Enum
 
 from flask import (
     Flask,
@@ -42,9 +43,23 @@ from utils.utils import (
 )
 
 
+class enCamera(Enum):
+    DSLR = 0
+    PI = 1
+    WEBCAM = 2
+    IP = 3
+
+
+class cameraContainer:
+    def __init__(self):
+        self.previewCamera = None
+        self.fotoCamera = None
+        self.videoCamera = None
+        self.timelapsCamera = None
+
+
 def exit():
     global g_cameras
-    # syslog.syslog(syslog.LOG_INFO,'[PicInABox] Exit is done')
 
     for camera in g_cameras:
         if camera:
@@ -76,39 +91,13 @@ except:
         data = json.load(json_file)
 
 g_settings = Settings(**data)
-
 g_files = []
-
 g_modus = None
 g_anchorsMulti = []
 g_anchorSingle = []
-
 g_error = Error()
-
 g_url = ""
-
-
-class cameraContainer:
-    def __init__(self):
-        self.previewCamera = None
-        self.fotoCamera = None
-        self.videoCamera = None
-        self.timelapsCamera = None
-
-
-# holds active camera selection
 g_activeCamera = cameraContainer()
-
-from enum import Enum
-
-
-class enCamera(Enum):
-    DSLR = 0
-    PI = 1
-    WEBCAM = 2
-
-
-# Holds list of available g_cameras
 g_cameras = []
 g_frame = []
 g_init = False
@@ -134,7 +123,9 @@ def set_preview_camera(value):
         # load new camera
         g_activeCamera.previewCamera = camera.previewCamera
         g_activeCamera.timelapsCamera = camera.timelapsCamera
-        g_activeCamera.previewCamera.stream_start()
+        if int(value) != 3:
+            # dont start if ip camera
+            g_activeCamera.previewCamera.stream_start()
         return {"status": "Okay"}
     # no camera found
     return {"status": "Error", "description": "Kamera nicht verfügbar"}
@@ -155,7 +146,8 @@ def set_foto_camera(value):
 
 @g_settings.Callback("timelaps")
 def activate_timelaps(value):
-    if int(value):
+    if int(value) and int(value) != 3:
+        # dont start if ip camera
         g_activeCamera.timelapsCamera.recording_start()
     else:
         g_activeCamera.timelapsCamera.recording_stop()
@@ -164,7 +156,8 @@ def activate_timelaps(value):
 
 @g_settings.Callback("timelapsCreate")
 def create_timelaps(value):
-    if int(value):
+    if int(value) and int(value) != 3:
+        # dont start if ip camera
         g_activeCamera.timelapsCamera.recording_save()
     return {"status": "Okay"}  # return okay if no error before
 
@@ -180,7 +173,7 @@ def before_first_request_func():
     You may want to use this function to create any databases/tables required for your app.
     """
 
-    Initialize()
+    initialize()
 
     global g_anchorsMulti
     global g_anchorSingle
@@ -305,7 +298,6 @@ def settings():
             with open("static/user.json", "w") as f:
                 json.dump(g_settings.get_json(), f)
                 response = jsonify({"status": "okay"}, 200)
-                response.status_code = 200
                 return response
         else:
             if jsonReq["key"] in g_settings:
@@ -322,7 +314,7 @@ def settings():
 
 
 @app.route("/api/modus", methods=["POST", "GET"])
-def setg_modus():
+def set_modus():
     global g_modus
     if request.method == "POST":
         if "option" in request.args:
@@ -341,12 +333,18 @@ def action():
         if "takePciture" in jsonReq["option"]:
             g_activeCamera.fotoCamera.picture_take()
             number_of_files = len(glob.glob("data/orginal_pictures/*"))
-            g_activeCamera.fotoCamera.picture_save("data/orginal_pictures", f"foto_{(number_of_files + 1):08}")
+            fíle_name = g_activeCamera.fotoCamera.picture_save(
+                "data/orginal_pictures", f"foto_{(number_of_files + 1):08}"
+            )
+            data = {"filename": fíle_name}
         elif "startVideo" in jsonReq["option"]:
             g_activeCamera.videoCamera.recording_start()
+            data = {}
         elif "stopVideo" in jsonReq["option"]:
             g_activeCamera.videoCamera.recording_stop()
-    return jsonify({"return": "done"})
+            data = {}
+            # TODO save video here and return filename
+    return jsonify(data)
 
 
 @app.route("/api/getQRCode", methods=["GET"])
@@ -747,6 +745,7 @@ def upload():
 def gen():
     global g_activeCamera
     """Video streaming generator function."""
+    cnt = 0
     while True:
         time.sleep(1 / 20)
         frame = g_activeCamera.previewCamera.stream_show()
@@ -754,19 +753,24 @@ def gen():
             if len(frame) != 0:  # g_activeCamera.previewCamera.frameSize():
                 ret, frameJPG = cv2.imencode(".jpg", frame)
                 frameShow = frameJPG.tobytes()
+                cnt = 0
                 yield (b"--frame\r\n" b"Content-Type: image/jpeg\r\n\r\n" + frameShow + b"\r\n")
             else:
+                cnt += 1
                 print(
                     f"[picInABox] Corrupt Image in Video stream frame should be {g_activeCamera.previewCamera.frameSize()} but is {len(frame)}"
                 )
+                if cnt > 200:
+                    raise RuntimeError("[picInABox] Too many Corrupt Images")
         else:
             raise RuntimeError("[picInABox] No Frametype given")
 
 
-def Initialize():
+def initialize():
     from cameras.webcam import check_webcam
     from cameras.dslrCamera import check_dslrCamera
     from cameras.piCamera import check_piCamera
+    from cameras.ipCamera import check_ipcam
     from cameras.cameraRecorder import CameraRecorder
     from cameras.timeLaps import CameraTimelapss
 
@@ -822,6 +826,7 @@ def Initialize():
     dsl_connected = check_dslrCamera()
     pi_camera_connected = check_piCamera()
     webcam_connected = check_webcam()
+    ip_camera_conncetd = check_ipcam()
 
     if dsl_connected:
         try:
@@ -883,6 +888,27 @@ def Initialize():
             g_cameras.append(cvCameraContainer)
         except Exception as e:
             error = {"status": "Error", "description": "Kein Signal zur Webcam"}
+            g_error.put(error)
+            error = {"status": "Error", "description": repr(e)}
+            g_error.put(error)
+    else:
+        g_cameras.append(None)
+
+    if ip_camera_conncetd:
+        try:
+            print("[picInABox] Found ip camera")
+            from cameras.ipCamera import Camera
+
+            ipCameraContainer = cameraContainer()
+            ipCamera = Camera()
+            ipCamera.connect(30)
+            ipCameraContainer.fotoCamera = ipCamera
+            ipCameraContainer.previewCamera = ipCamera
+            ipCameraContainer.videoCamera = CameraRecorder(ipCamera)
+            ipCameraContainer.timelapsCamera = CameraTimelapss(ipCamera)
+            g_cameras.append(ipCameraContainer)
+        except Exception as e:
+            error = {"status": "Error", "description": "Kein Signal zur IP Camera"}
             g_error.put(error)
             error = {"status": "Error", "description": repr(e)}
             g_error.put(error)

@@ -235,7 +235,12 @@ function setCircleDasharray() {
     <!--<div id="countdown" style="float:left; position:absolute; margin-left:85%;margin-top:1%;font-family: sans-serif;"></div>-->
     <div class="img-container">
       <!-- {% if settings['previewCamera']['value'] == 0 %} class="full_img" {% else %} class="cropped_img" {% endif %} -->
+      {% if (settings['previewCamera']['value']|int) == 3 %} 
+      <img class="full_img" src="http://127.0.0.1:5002/{{ url_for('pageVideoFeed') }}" >  
+      {% else %} 
       <img class="full_img" src="{{ url_for('pageVideoFeed') }}" > 
+      {% endif %}
+      
     </div>
     <div class="container">
     </div>

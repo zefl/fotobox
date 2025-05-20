@@ -76,7 +76,7 @@ class CameraBase(IFotocamera):
         else:
             return []
 
-    def picture_save(self, folder="", file=""):
+    def picture_save(self, folder="", file="") -> str:
         now = datetime.now()
         picFrame = copy.copy(self._frame)
         if file == "":
@@ -91,6 +91,7 @@ class CameraBase(IFotocamera):
             if self.block_stream:
                 self.condition_stream_stoped.notify()
                 self.block_stream = False
+        return picName
 
     def thread_start(self):
         if self._process:

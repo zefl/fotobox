@@ -35,15 +35,10 @@ PHYSICALOFFSETY = 113
 class Printer(Logger):
     def __init__(self):
         super().__init__()
-        printers = win32print.EnumPrinters(win32print.PRINTER_ENUM_LOCAL)
-        for printer in printers:
-            print(f"Printer: {printer[2]}")
-        pass
 
+        print(f"[picInABox] Start connect to printer...")
         self.busy = False
         self.name = win32print.GetDefaultPrinter()
-        # self.name = printers[0][2]
-        # self.printer = win32print.OpenPrinter(self.name)
         self.printer_context = win32ui.CreateDC()
         self.printer_context.CreatePrinterDC(self.name)
         self.printable_area = self.printer_context.GetDeviceCaps(HORZRES), self.printer_context.GetDeviceCaps(VERTRES)
@@ -53,7 +48,16 @@ class Printer(Logger):
         self.printer_margins = self.printer_context.GetDeviceCaps(PHYSICALOFFSETX), self.printer_context.GetDeviceCaps(
             PHYSICALOFFSETY
         )
-        print(f"Choosen Printer: {self.name}")
+        print(f"[picInABox] Connected Printer: {self.name}")
+
+    def get_printer_names(self):
+        printers = win32print.EnumPrinters(win32print.PRINTER_ENUM_LOCAL)
+        printer_names = []
+        for printer in printers:
+            printer_names.append(printer[2])
+            print(f"Printer: {printer[2]}")
+        pass
+        return printer_names
 
     def reset_jobs(self):
         pass
@@ -64,6 +68,8 @@ class Printer(Logger):
     def printing(self, picture):
         bmp = Image.open(picture)
         bmp = bmp.resize((self.printable_area[0], self.printable_area[1]), Image.Resampling.LANCZOS)
+
+        # Do i need to rotate image???
         if bmp.size[0] > bmp.size[1]:
             bmp = bmp.rotate(90)
 

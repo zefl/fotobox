@@ -2,6 +2,7 @@ import cv2
 import os
 import requests
 import re
+import socket
 
 from PIL import Image
 from sys import platform
@@ -209,8 +210,15 @@ def connectToWifi(essid, password):
 def get_ip_address(interface):
     try:
         # Extract the IP address using the 'ip' command
-        ip_address = os.popen(f'ip -4 addr show {interface} | grep -oP "(?<=inet\\s)\d+(\\.\\d+){{3}}"').read().strip()
-        return f"{ip_address}"
+        if get_operating_system() == "Linux":
+            ip_address = (
+                os.popen(f'ip -4 addr show {interface} | grep -oP "(?<=inet\\s)\d+(\\.\\d+){{3}}"').read().strip()
+            )
+            return f"{ip_address}"
+        else:
+            hostname = socket.gethostname()
+            ip_address = socket.gethostbyname(hostname)
+            return f"{ip_address}"
     except Exception as e:
         return f"No Ip address found"
 

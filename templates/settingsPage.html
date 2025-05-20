@@ -12,18 +12,18 @@
   </div>
   <div class="col-md-4">
     {% if settings[setting]['type'] == "input" %}
-    <input style="font-size:20px;" size="4" id="{{ setting}}" placeholder="{{ settings[setting]['value'] }}"
+    <input style="font-size:20px;" size="4" id="{{ setting }}" placeholder="{{ settings[setting]['value'] }}"
       onchange="onChange('{{ setting }}')"></input>
     {% elif settings[setting]['type'] == "bool" %}
     <label class="switch">
-      <input type="checkbox" {% if settings[setting]['value']==1%} checked {% endif %}
+      <input type="checkbox" {% if settings[setting]['value']==1 %} checked {% endif %}
         onchange="activateCheckbox(this, '{{ setting}}')">
       <span class="slider round"></span>
     </label>
     {% elif settings[setting]['type'] == "array" %}
-    <select name="plan" id="{{ setting }}" onchange="onChange('{{ setting }}')" ready="initElement('{{ setting }}', 2)">
+    <select id="{{ setting }}" onchange="onChange('{{ setting }}')">
       {% for value in settings[setting]['values'] %}
-      <option value="{{ loop.index0 }}" {% if settings[setting]['value']==loop.index0%} selected {% endif %}>{{ value }}
+      <option value="{{ loop.index0 }}" {% if (settings[setting]['value']|int)==loop.index0 %} selected {% endif %}>{{ value }}
       </option>
       {% endfor %}
     </select>
@@ -438,7 +438,11 @@ visibility: visible;
       <div class="col-md-6">
         <div class="img-container">
           <!-- class="cropped_img" -->
-          <img id="stream" class="full_img" src="{{ url_for('pageVideoFeed') }}">
+            {% if (settings['previewCamera']['value']|int) == 3 %} 
+            <img class="full_img" src="http://127.0.0.1:5002/{{ url_for('pageVideoFeed') }}" >  
+            {% else %} 
+            <img class="full_img" src="{{ url_for('pageVideoFeed') }}" > 
+            {% endif %}
         </div>
       </div>
     </div>

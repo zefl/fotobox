@@ -31,20 +31,20 @@
         "group" : "camera",
         "type" : "array",
         "value" : 0,
-        "values" : ["Spiegel Reflex", "Front Kamera", "Webcam"],
+        "values" : ["Spiegel Reflex", "Front Kamera", "Webcam", "IpCam"],
         "nameDE" : "Auswahl Vorschau",
         "min" : 0,
-        "max" : 2
+        "max" : 3
     },
     "fotoCamera":
     {
         "group" : "camera",
         "type" : "array",
         "value" : 0,
-        "values" : ["Spiegel Reflex", "Front Kamera", "Webcam"],
+        "values" : ["Spiegel Reflex", "Front Kamera", "Webcam", "IpCam"],
         "nameDE" : "Auswahl Fotocamera",
         "min" : 0,
-        "max" : 2
+        "max" : 3
     },
     "timelaps":
     {

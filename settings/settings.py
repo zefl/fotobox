@@ -27,10 +27,7 @@ class Settings(dict):
         if key.startswith("_"):
             super().__setitem__(key, value)
         else:
-            if (
-                self._metadata[key]["min"] <= int(value)
-                and int(value) <= self._metadata[key]["max"]
-            ):
+            if self._metadata[key]["min"] <= int(value) and int(value) <= self._metadata[key]["max"]:
                 self._value = value
                 if key in self._callbacks:
                     self._ret = self._callbacks[key](value)
@@ -54,10 +51,7 @@ class Settings(dict):
         if key.startswith("_"):
             self.__setitem__(key, value)
         else:
-            if (
-                self._metadata[key]["min"] <= int(value)
-                and int(value) <= self._metadata[key]["max"]
-            ):
+            if self._metadata[key]["min"] <= int(value) and int(value) <= self._metadata[key]["max"]:
                 self.__setitem__(key, value)
 
     def Callback(self, key):
