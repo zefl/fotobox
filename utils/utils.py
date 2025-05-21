@@ -223,11 +223,11 @@ def get_ip_address(interface):
         return f"No Ip address found"
 
 
-def start_browser():
+def start_browser(port):
     import subprocess
 
     process = subprocess.Popen(
-        ["cmd", "/c", "start msedge 127.0.0.1:5001 --start-maximized --start-fullscreen"],
+        ["cmd", "/c", f"start msedge 127.0.0.1:{port} --start-maximized --start-fullscreen"],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         text=True,

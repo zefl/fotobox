@@ -5,6 +5,11 @@ import requests
 import multiprocessing as mp
 import numpy as np
 import json
+import re
+from PIL import Image
+import numpy as np
+import io
+import os
 
 
 def check_ipcam():
@@ -21,7 +26,9 @@ class Camera(CameraBase):
             self._ip = "http://127.0.0.1:5002"
             self._frameRate = fps
             self._frameSize = 0
+            self._image = None
             self._connected = True
+            self._name = ""
             print("[picInABox] Connect done")
 
     def disconnect(self):
@@ -38,10 +45,22 @@ class Camera(CameraBase):
             return 0
 
     def _take_picture(self):
-        response = requests.get(f"{self._ip}/api/controlCamera")
+        payload = {"option": "takePicture"}
+        response = requests.post(f"{self._ip}/api/controlCamera", json=payload)
         if response.status_code == 200:
-            return response.content
+            data = json.loads(response.content)
+            self._name = re.split(r"[/\\]", data["filename"])[-1]
+            response = requests.get(f"{self._ip}/upload_orign/{self._name}")
+            if response.status_code == 200:
+                self._image = Image.open(io.BytesIO(response.content))
+                return None
         return None
+
+    def _save_picture(self, pic_targert):
+        if self._image:
+            if not os.path.exists(pic_targert):
+                self._image.save(pic_targert)
+                self._image = None
 
     def _capture_stream(self):
         import time

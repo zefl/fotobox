@@ -1,5 +1,6 @@
 import os
 import shutil
+import argparse
 from enum import Enum
 
 from flask import (
@@ -167,7 +168,7 @@ def create_timelaps(value):
 # from https://flask-session.readthedocs.io/en/latest/
 # from https://pythonise.com/series/learning-flask/python-before-after-request
 # -------------------------------
-def before_first_request_func():
+def before_first_request_func(port):
     """
     This function will run once before the first request to this instance of the application.
     You may want to use this function to create any databases/tables required for your app.
@@ -203,7 +204,7 @@ def before_first_request_func():
 
     print("[picInABox] Browser will start now")
     if get_operating_system() == "Windows":
-        start_browser()
+        start_browser(port)
 
 
 # from https://www.youtube.com/watch?v=8qDdbcWmzCg
@@ -283,6 +284,11 @@ def pageImage(filename):
     return send_from_directory("data/pictures", filename)
 
 
+@app.route("/upload_orign/<filename>")
+def pageImageOrgin(filename):
+    return send_from_directory("data/orginal_pictures", filename)
+
+
 # -------------------------------
 # Rest API functions
 # -------------------------------
@@ -330,7 +336,7 @@ def action():
     global g_activeCamera
     jsonReq = json.loads(request.data)
     if request.method == "POST":
-        if "takePciture" in jsonReq["option"]:
+        if "takePicture" in jsonReq["option"]:
             g_activeCamera.fotoCamera.picture_take()
             number_of_files = len(glob.glob("data/orginal_pictures/*"))
             fíle_name = g_activeCamera.fotoCamera.picture_save(
@@ -950,7 +956,11 @@ def initialize():
 
 print("[picInABox] Starting ...")
 if __name__ == "__main__":
-    print("[picInABox] Start PicInABox Web Server")
-    before_first_request_func()
-    # TODO port as gloabal config
-    app.run(host="0.0.0.0", port=5001, debug=False, threaded=True, use_reloader=False)
+    parser = argparse.ArgumentParser(description="Process a port number.")
+    parser.add_argument("port", type=int, help="Port number to process")
+
+    args = parser.parse_args()
+    print(f"[picInABox] Start PicInABox Web Server on port {args.port}")
+    # Other idea app.config["SERVER_PORT"] = 5000 with app.config.get('SERVER_PORT', 'Unknown')
+    before_first_request_func(args.port)
+    app.run(host="0.0.0.0", port=args.port, debug=False, threaded=True, use_reloader=False)

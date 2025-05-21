@@ -77,7 +77,7 @@ async function take_picture() {
         'Accept': 'application/json',
         'Content-Type': 'application/json;charset=UTF-8',
     },
-    body: JSON.stringify({option:"takePciture"})
+    body: JSON.stringify({option:"takePicture"})
   }
   const response = await fetch('api/controlCamera', config)
 }
