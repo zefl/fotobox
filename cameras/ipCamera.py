@@ -11,6 +11,8 @@ import numpy as np
 import io
 import os
 
+from appPicInABox import g_settings
+
 
 def check_ipcam():
     return True
@@ -21,9 +23,15 @@ class Camera(CameraBase):
         super().__init__()
 
     def connect(self, fps: int = 0):
+        global g_settings
+        try:
+            port = g_settings["portIpCamera"]
+        except:
+            port = 9999
         print("[picInABox] Connect to ip webcam")
         if self._camera == None:
-            self._ip = "http://127.0.0.1:5002"
+            # us eg_setting instead of port
+            self._ip = f"http://127.0.0.1:{port}"
             self._frameRate = fps
             self._frameSize = 0
             self._image = None
@@ -35,7 +43,6 @@ class Camera(CameraBase):
         if self._camera:
             print("[picInABox] Disconnect webcam")
             self._connected = False
-            self._camera.release()
             self._camera = None
 
     def frameSize(self):

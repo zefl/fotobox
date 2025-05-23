@@ -124,8 +124,11 @@ def set_preview_camera(value):
         # load new camera
         g_activeCamera.previewCamera = camera.previewCamera
         g_activeCamera.timelapsCamera = camera.timelapsCamera
-        if int(value) != 3:
-            # dont start if ip camera
+        if int(value) == 3:
+            g_activeCamera.previewCamera.disconnect()
+            g_activeCamera.previewCamera.connect(30)
+        else:
+            # only start ip no ip camera is used
             g_activeCamera.previewCamera.stream_start()
         return {"status": "Okay"}
     # no camera found
@@ -140,6 +143,11 @@ def set_foto_camera(value):
         # load new camera
         g_activeCamera.fotoCamera = camera.fotoCamera
         g_activeCamera.videoCamera = camera.videoCamera
+        if int(value) == 3:
+            g_activeCamera.fotoCamera.disconnect()
+            g_activeCamera.fotoCamera.connect(30)
+            # g_activeCamera.videoCamera.disconnect()
+            # g_activeCamera.videoCamera.connect(30)
         return {"status": "Okay"}
     # no camera found
     return {"status": "Error", "description": "Kamera nicht verfügbar"}

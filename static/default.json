@@ -46,6 +46,15 @@
         "min" : 0,
         "max" : 3
     },
+     "portIpCamera":
+    {
+        "group" : "camera",
+        "type" : "input",
+        "value" : 5002,
+        "nameDE" : "Port Ip Kamera",
+        "min" : 1000,
+        "max" : 9999
+    },
     "timelaps":
     {
         "group" : "timelaps",

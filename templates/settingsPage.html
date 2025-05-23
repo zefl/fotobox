@@ -405,7 +405,7 @@ visibility: visible;
   }
 </script>
 {{ notification_js() }}
-{% endblock%}
+{% endblock %}
 
 {% block content %}
 <!-- from https://www.w3schools.com/howto/tryit.asp?filename=tryhow_js_tabs-->
@@ -439,7 +439,7 @@ visibility: visible;
         <div class="img-container">
           <!-- class="cropped_img" -->
             {% if (settings['previewCamera']['value']|int) == 3 %} 
-            <img class="full_img" src="http://127.0.0.1:5002/{{ url_for('pageVideoFeed') }}" >  
+            <img class="full_img" src="http://127.0.0.1:{{settings['portIpCamera']['value']}}/{{url_for('pageVideoFeed')}}" >  
             {% else %} 
             <img class="full_img" src="{{ url_for('pageVideoFeed') }}" > 
             {% endif %}
