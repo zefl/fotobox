@@ -10,3 +10,5 @@ flask
 GitPython
 qrcode
 # picamera2 install via apt python3-picamera2
+win32printing
+pygetwindow
