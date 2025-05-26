@@ -38,6 +38,7 @@ class Camera(CameraBase):
             self._image = None
             self._connected = True
             self._name = ""
+            self._camera = "IpCamera"
 
             print("[picInABox] Connect done")
 
