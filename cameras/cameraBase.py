@@ -54,7 +54,7 @@ class CameraBase(IFotocamera):
                         self._frame = self._take_picture()
                         if self._frame is not None:
                             self._frameAvalible = True
-                            self.condition.notify()
+                            self.condition_stream_stoped.notify()
                             self.block_stream = False
                         else:
                             # We need to save picture before going on
