@@ -249,8 +249,8 @@ def maximzie():
             if "Edge" in title:
                 window = gw.getWindowsWithTitle(title)[0]
 
-    window.maximize()
     window.activate()
+    window.maximize()
     print("[picInABox] Maximizing done")
 
 

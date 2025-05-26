@@ -67,6 +67,7 @@ class Printer(Logger):
 
     def printing(self, picture):
         bmp = Image.open(picture)
+        bmp = bmp.rotate(90, expand=True)
         bmp = bmp.resize(self.printable_area, Image.Resampling.LANCZOS)
 
         self.printer_context.StartDoc(picture)
