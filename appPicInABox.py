@@ -298,7 +298,8 @@ def pageVideoFeed():
     global g_activeCamera, g_settings, g_cameras
     # Stop ip camera to reduce load if it is only used as foto camera
     if int(g_settings.previewCamera) != 3:
-        g_cameras[3].previewCamera.stop_stream(10)
+        # TODO fixme need to be done on front end because it stalls also ip camera
+        g_cameras[3].previewCamera.stop_stream(1)
     g_activeCamera.previewCamera.stream_start()  # start preview stream
     # Video streaming route. Put this in the src attribute of an img tag
     # This gets called when the image inside the html is loaded
