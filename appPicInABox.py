@@ -127,6 +127,7 @@ def set_preview_camera(value):
         if int(value) == 3:
             g_activeCamera.previewCamera.disconnect()
             g_activeCamera.previewCamera.connect(30)
+            g_activeCamera.previewCamera.start_stream(10)
         else:
             # only start ip no ip camera is used
             g_activeCamera.previewCamera.stream_start()
@@ -245,16 +246,30 @@ def pageSettings():
 
 @app.route("/options")
 def pageOptions():
+    global g_settings, g_modus
     # [Single Foto, 4'er Session Foto, Video]
-    return render_template(
-        "chooseOption.html",
-        numberOfPictures=len(g_anchorsMulti),
-        enable=[
-            g_settings.singlePicture,
-            g_settings.multiPicture,
-            g_settings.videoPicture,
-        ],
-    )
+    if g_settings.singlePicture and not g_settings.multiPicture and not g_settings.videoPicture:
+        g_modus = 1
+        # redirect the webpage to the picture Page
+        return redirect(url_for("pagePicture"))
+    elif not g_settings.singlePicture and g_settings.multiPicture and not g_settings.videoPicture:
+        g_modus = 2
+        # redirect the webpage to the picture Page
+        return redirect(url_for("pagePicture"))
+    elif not g_settings.singlePicture and not g_settings.multiPicture and g_settings.videoPicture:
+        g_modus = 3
+        # redirect the webpage to the picture Page
+        return redirect(url_for("pagePicture"))
+    else:
+        return render_template(
+            "chooseOption.html",
+            numberOfPictures=len(g_anchorsMulti),
+            enable=[
+                g_settings.singlePicture,
+                g_settings.multiPicture,
+                g_settings.videoPicture,
+            ],
+        )
 
 
 @app.route("/picture")
@@ -280,7 +295,10 @@ def pageGallery():
 
 @app.route("/videoFeed")
 def pageVideoFeed():
-    global g_activeCamera
+    global g_activeCamera, g_settings, g_cameras
+    # Stop ip camera to reduce load if it is only used as foto camera
+    if int(g_settings.previewCamera) != 3:
+        g_cameras[3].previewCamera.stop_stream(10)
     g_activeCamera.previewCamera.stream_start()  # start preview stream
     # Video streaming route. Put this in the src attribute of an img tag
     # This gets called when the image inside the html is loaded
@@ -341,7 +359,7 @@ def set_modus():
 
 @app.route("/api/controlCamera", methods=["POST", "GET"])
 def action():
-    global g_activeCamera
+    global g_activeCamera, g_settings
     jsonReq = json.loads(request.data)
     if request.method == "POST":
         if "takePicture" in jsonReq["option"]:
@@ -358,6 +376,15 @@ def action():
             g_activeCamera.videoCamera.recording_stop()
             data = {}
             # TODO save video here and return filename
+        elif "stopStream" in jsonReq["option"]:
+            g_activeCamera.previewCamera.stream_stop()
+            g_activeCamera.timelapsCamera.recording_stop()
+            data = {}
+        elif "startStream" in jsonReq["option"]:
+            g_activeCamera.previewCamera.stream_start()
+            if g_settings["timelaps"] == 1:
+                g_activeCamera.timelapsCamera.recording_start()
+            data = {}
     return jsonify(data)
 
 
@@ -929,14 +956,17 @@ def initialize():
     else:
         g_cameras.append(None)
 
-    if pi_camera_connected and dsl_connected:
-        g_settings["fotoCamera"] = enCamera.DSLR.value
-        g_activeCamera.videoCamera = g_cameras[enCamera.DSLR.value].videoCamera
-        g_activeCamera.fotoCamera = g_cameras[enCamera.DSLR.value].fotoCamera
-        g_settings["previewCamera"] = enCamera.PI.value
-        g_activeCamera.previewCamera = g_cameras[enCamera.PI.value].previewCamera
-        g_activeCamera.timelapsCamera = g_cameras[enCamera.PI.value].timelapsCamera
-    else:
+    g_activeCamera.videoCamera = g_cameras[int(g_settings.fotoCamera)].videoCamera
+    g_activeCamera.fotoCamera = g_cameras[int(g_settings.fotoCamera)].fotoCamera
+    g_activeCamera.previewCamera = g_cameras[int(g_settings.previewCamera)].previewCamera
+    g_activeCamera.timelapsCamera = g_cameras[int(g_settings.previewCamera)].timelapsCamera
+
+    if (
+        g_activeCamera.videoCamera is None
+        or g_activeCamera.fotoCamera is None
+        or g_activeCamera.previewCamera is None
+        or g_activeCamera.timelapsCamera is None
+    ):
         for camera in g_cameras:
             if camera != None:
                 g_settings["fotoCamera"] = g_cameras.index(camera)

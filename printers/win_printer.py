@@ -67,11 +67,7 @@ class Printer(Logger):
 
     def printing(self, picture):
         bmp = Image.open(picture)
-        bmp = bmp.resize((self.printable_area[0], self.printable_area[1]), Image.Resampling.LANCZOS)
-
-        # Do i need to rotate image???
-        if bmp.size[0] > bmp.size[1]:
-            bmp = bmp.rotate(90)
+        bmp = bmp.resize(self.printable_area, Image.Resampling.LANCZOS)
 
         self.printer_context.StartDoc(picture)
         self.printer_context.StartPage()

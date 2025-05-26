@@ -10,8 +10,9 @@ from PIL import Image
 import numpy as np
 import io
 import os
+import time
 
-from appPicInABox import g_settings
+from appPicInABox import g_settings, g_error
 
 
 def check_ipcam():
@@ -37,6 +38,7 @@ class Camera(CameraBase):
             self._image = None
             self._connected = True
             self._name = ""
+
             print("[picInABox] Connect done")
 
     def disconnect(self):
@@ -50,6 +52,44 @@ class Camera(CameraBase):
             return self._frameSize
         else:
             return 0
+
+    def stop_stream(self, timeout_sec):
+        global g_error
+        start = time.time()
+
+        while time.time() < start + timeout_sec:
+            time.sleep(1.0)
+            try:
+                payload = {"option": "stopStream"}
+                response = requests.post(f"{self._ip}/api/controlCamera", json=payload)
+
+                if response.status_code == 200:
+                    print("[picInABox] IpCam stream stopped")
+                    return
+            except:
+                continue
+
+        info = {"status": "Error", "description": "Stream Ip Camera nicht gestopt"}
+        g_error.put(info)
+
+    def start_stream(self, timeout_sec):
+        global g_error
+        start = time.time()
+
+        while time.time() < start + timeout_sec:
+            time.sleep(1.0)
+            try:
+                payload = {"option": "startStream"}
+                response = requests.post(f"{self._ip}/api/controlCamera", json=payload)
+
+                if response.status_code == 200:
+                    print("[picInABox] IpCam stream started")
+                    return
+            except:
+                continue
+
+        info = {"status": "Error", "description": "Stream Ip Camera nicht gestartet"}
+        g_error.put(info)
 
     def _take_picture(self):
         payload = {"option": "takePicture"}

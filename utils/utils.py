@@ -225,14 +225,33 @@ def get_ip_address(interface):
 
 def start_browser(port):
     import subprocess
+    from multiprocessing import Process
 
-    process = subprocess.Popen(
+    subprocess.Popen(
         ["cmd", "/c", f"start msedge 127.0.0.1:{port} --start-maximized --start-fullscreen"],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         text=True,
     )
-    stdout, stderr = process.communicate()
+
+    p = Process(target=maximzie)
+    p.start()
+
+
+def maximzie():
+    import pygetwindow as gw
+
+    print("[picInABox] Start Maximizing Browser")
+    window = None
+    while window is None:
+        titles = gw.getAllTitles()
+        for title in titles:
+            if "Edge" in title:
+                window = gw.getWindowsWithTitle(title)[0]
+
+    window.maximize()
+    window.activate()
+    print("[picInABox] Maximizing done")
 
 
 def kill_browser():

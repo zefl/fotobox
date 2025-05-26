@@ -67,7 +67,9 @@ class CameraBase(IFotocamera):
             """Check if camera is still connect"""
             if self._camera == None:
                 self.connect(self._frameRate)
-            self._take_picture()
+            self._frame = self._take_picture()
+            if self._frame is not None:
+                self._frameAvalible = True
 
     def picture_show(self):
         if self._frameAvalible:
