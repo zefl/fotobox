@@ -791,7 +791,7 @@ def gen():
     while True:
         time.sleep(1 / 20)
         frame = g_activeCamera.previewCamera.stream_show()
-        if type(frame) != "NoneType":
+        if frame is not None:
             if len(frame) != 0:  # g_activeCamera.previewCamera.frameSize():
                 ret, frameJPG = cv2.imencode(".jpg", frame)
                 frameShow = frameJPG.tobytes()
@@ -799,13 +799,13 @@ def gen():
                 yield (b"--frame\r\n" b"Content-Type: image/jpeg\r\n\r\n" + frameShow + b"\r\n")
             else:
                 cnt += 1
-                print(
-                    f"[picInABox] Corrupt Image in Video stream frame should be {g_activeCamera.previewCamera.frameSize()} but is {len(frame)}"
-                )
-                if cnt > 200:
-                    raise RuntimeError("[picInABox] Too many Corrupt Images")
+                print(f"[picInABox] Corrupt Image in Video stream frame")
         else:
-            raise RuntimeError("[picInABox] No Frametype given")
+            cnt += 1
+            print(f"[picInABox] No Image in Video stream frame")
+
+        if cnt > 200:
+            raise RuntimeError("[picInABox] Too many Corrupt Images")
 
 
 def initialize():
@@ -889,7 +889,7 @@ def initialize():
             error = {"status": "Error", "description": repr(e)}
             g_error.put(error)
     else:
-        g_cameras.append(None)
+        g_cameras.append(cameraContainer())
 
     if pi_camera_connected:
         try:
@@ -913,7 +913,7 @@ def initialize():
             error = {"status": "Error", "description": repr(e)}
             g_error.put(error)
     else:
-        g_cameras.append(None)
+        g_cameras.append(cameraContainer())
 
     if webcam_connected:
         try:
@@ -934,7 +934,7 @@ def initialize():
             error = {"status": "Error", "description": repr(e)}
             g_error.put(error)
     else:
-        g_cameras.append(None)
+        g_cameras.append(cameraContainer())
 
     if ip_camera_conncetd:
         try:
@@ -955,7 +955,7 @@ def initialize():
             error = {"status": "Error", "description": repr(e)}
             g_error.put(error)
     else:
-        g_cameras.append(None)
+        g_cameras.append(cameraContainer())
 
     g_activeCamera.videoCamera = g_cameras[int(g_settings.fotoCamera)].videoCamera
     g_activeCamera.fotoCamera = g_cameras[int(g_settings.fotoCamera)].fotoCamera
