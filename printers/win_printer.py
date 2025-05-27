@@ -1,6 +1,6 @@
 from PIL import Image, ImageWin
 
-import os, sys
+import time
 import win32print
 import win32ui
 
@@ -82,6 +82,28 @@ class Printer(Logger):
 
         self.printer_context.EndPage()
         self.printer_context.EndDoc()
+
+        start = time.time()
+        printer = win32print.OpenPrinter(self.name, None)
+        active = True
+        while active:
+            active = False
+            jobs = win32print.EnumJobs(printer, 0, -1, 2)
+            for job in jobs:
+                if picture in job["pDocument"]:
+                    active = True
+                    status = job["Status"]
+                    if status == win32print.JOB_STATUS_ERROR:
+                        raise RuntimeError("Problem beim Drucker")
+                    elif status == win32print.JOB_STATUS_PAPEROUT:
+                        raise RuntimeError("Kein Papier mehr im Drucker")
+                    elif status == win32print.JOB_STATUS_OFFLINE:
+                        raise RuntimeError("Drucker ist offline")
+                    elif status == win32print.JOB_STATUS_COMPLETE:
+                        break
+
+            if start + 30 < time.time():
+                raise RuntimeError("Zeitüberschreitung - Drucker prüfen")
 
     def print_picture(self, picture):
         if self.busy:
