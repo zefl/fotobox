@@ -62,10 +62,22 @@ class Printer(Logger):
     def reset_jobs(self):
         pass
 
-    def check_status(self):
-        pass
+    def check_status(self, printer):
+        printer_status = win32print.GetPrinter(printer, 2)["Status"]
+        if printer_status == win32print.PRINTER_STATUS_OFFLINE:
+            win32print.ClosePrinter(printer)
+            raise RuntimeError("Drucker offline - bitte Drucker einschalten")
+        elif printer_status == win32print.PRINTER_STATUS_NO_TONER:
+            win32print.ClosePrinter(printer)
+            raise RuntimeError("Toner leer - bitte Toner aufüllen")
+        elif printer_status == win32print.PRINTER_STATUS_PAPER_JAM:
+            win32print.ClosePrinter(printer)
+            raise RuntimeError("Papierstau - bitte entfernen")
 
     def printing(self, picture):
+        printer = win32print.OpenPrinter(self.name, None)
+        self.check_status(printer)
+
         bmp = Image.open(picture)
         bmp = bmp.rotate(90, expand=True)
         bmp = bmp.resize(self.printable_area, Image.Resampling.LANCZOS)
@@ -84,26 +96,31 @@ class Printer(Logger):
         self.printer_context.EndDoc()
 
         start = time.time()
-        printer = win32print.OpenPrinter(self.name, None)
         active = True
+        printer = win32print.OpenPrinter(self.name, None)
         while active:
             active = False
+
             jobs = win32print.EnumJobs(printer, 0, -1, 2)
             for job in jobs:
                 if picture in job["pDocument"]:
                     active = True
                     status = job["Status"]
                     if status == win32print.JOB_STATUS_ERROR:
+                        win32print.ClosePrinter(printer)
                         raise RuntimeError("Problem beim Drucker")
-                    elif status == win32print.JOB_STATUS_PAPEROUT:
-                        raise RuntimeError("Kein Papier mehr im Drucker")
-                    elif status == win32print.JOB_STATUS_OFFLINE:
-                        raise RuntimeError("Drucker ist offline")
+                    elif status == win32print.JOB_STATUS_DELETED:
+                        win32print.ClosePrinter(printer)
+                        raise RuntimeError("Druckauftrag wurde gelöscht")
                     elif status == win32print.JOB_STATUS_COMPLETE:
                         break
 
             if start + 30 < time.time():
+                win32print.ClosePrinter(printer)
                 raise RuntimeError("Zeitüberschreitung - Drucker prüfen")
+
+        self.check_status(printer)
+        win32print.ClosePrinter(printer)
 
     def print_picture(self, picture):
         if self.busy:
