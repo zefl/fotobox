@@ -463,7 +463,7 @@ def get_picture():
                 (ancor["x"], ancor["y"]),
             )  # from https://www.geeksforgeeks.org/python-pil-image-resize-method/
 
-        layoutImg = openImage(layoutSrc)
+        layoutImg = openImage(layoutSrc).convert("RGBA")
         # from https://pythontic.com/image-processing/pillow/alpha-composite
         finalImg = Image.alpha_composite(compositeImg, layoutImg)
         # imgSrc = "data/pictures/"+ datetime.now().strftime('%Y_%m_%d_%H_%M_%S') +"_4Pics.jpg"
