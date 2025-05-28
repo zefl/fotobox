@@ -240,6 +240,7 @@ def start_browser(port):
 
 def maximzie():
     import pygetwindow as gw
+    import ctypes
 
     print("[picInABox] Start Maximizing Browser")
     window = None
@@ -249,8 +250,9 @@ def maximzie():
             if "Edge" in title:
                 window = gw.getWindowsWithTitle(title)[0]
 
-    window.activate()
     window.maximize()
+    # Bring the window to the foreground
+    ctypes.windll.user32.SetForegroundWindow(window._hWnd)
     print("[picInABox] Maximizing done")
 
 
