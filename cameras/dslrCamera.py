@@ -88,6 +88,26 @@ class Camera(CameraBase):
                         "(kill it manually before starting pibooth)".format(proc.name())
                     )
 
+    def print_config(self):
+        # Retrieve all configuration settings
+        config = self._camera.get_config()
+        sections = []
+        for child in config.get_children():
+            if child.get_type() == gp.GP_WIDGET_SECTION:
+                sections.append(child.get_name())
+
+        for section in sections:
+            for child in config.get_child_by_name(section).get_children():
+                print(f"{section}: {child.get_name()}/{child.get_value()}")
+
+    # config = gp.gp_camera_get_single_config(self._camera, "viewfinder")[1]
+    # gp.gp_widget_set_value(config, 0)
+    # gp.gp_camera_set_single_config(self._camera, "viewfinder", config)
+
+    # config = self._camera.get_single_config("viewfinder")
+    # config.get_value()
+    # config.set_value(0)
+    # self._camera.set_single_config("viewfinder", config)
     def set_config_value(self, section, option, value):
         """Set camera configuration. This method don't send the updated
         configuration to the camera (avoid connection flooding if several
