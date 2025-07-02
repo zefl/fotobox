@@ -2,6 +2,7 @@ import os
 import shutil
 import argparse
 from enum import Enum
+from typing import List
 
 from flask import (
     Flask,
@@ -15,9 +16,11 @@ from flask import (
     send_file,
     make_response,
 )
+from cameras import IVideocamera
+from cameras.IFotocamera import IFotocamera
 from settings.settings import Settings
 from error.error import Error
-from upload.mega_io import MegaNz
+from upload.dropbox import Dropbox
 
 import time
 import cv2
@@ -53,8 +56,9 @@ class enCamera(Enum):
 
 class cameraContainer:
     def __init__(self):
-        self.previewCamera = None
-        self.fotoCamera = None
+        # TODO define types : IVideocamera
+        self.previewCamera: IFotocamera = None
+        self.fotoCamera: IFotocamera = None
         self.videoCamera = None
         self.timelapsCamera = None
 
@@ -99,13 +103,13 @@ g_anchorSingle = []
 g_error = Error()
 g_url = ""
 g_activeCamera = cameraContainer()
-g_cameras = []
+g_cameras: List[cameraContainer] = []
 g_frame = []
 g_init = False
 g_remove_click_time = 0
 g_remove_click_cnt = 0
 g_printer = None
-g_file_server = MegaNz()
+g_file_server = Dropbox()
 
 
 # -------------------------------
@@ -122,15 +126,11 @@ def set_preview_camera(value):
         if g_activeCamera.previewCamera:
             g_activeCamera.previewCamera.stream_stop()
         # load new camera
+        g_activeCamera.previewCamera.disconnect()
         g_activeCamera.previewCamera = camera.previewCamera
         g_activeCamera.timelapsCamera = camera.timelapsCamera
-        if int(value) == 3:
-            g_activeCamera.previewCamera.disconnect()
-            g_activeCamera.previewCamera.connect(30)
-            g_activeCamera.previewCamera.start_stream(10)
-        else:
-            # only start ip no ip camera is used
-            g_activeCamera.previewCamera.stream_start()
+        g_activeCamera.previewCamera.connect(30)
+        g_activeCamera.previewCamera.stream_start()
         return {"status": "Okay"}
     # no camera found
     return {"status": "Error", "description": "Kamera nicht verfügbar"}
@@ -190,6 +190,10 @@ def before_first_request_func(port):
     global g_modus
     global g_settings
     global g_init
+
+    global g_file_server
+
+    g_file_server.Connect()
 
     if g_init == False:
         g_init = True
@@ -295,12 +299,6 @@ def pageGallery():
 
 @app.route("/videoFeed")
 def pageVideoFeed():
-    global g_activeCamera, g_settings, g_cameras
-    # Stop ip camera to reduce load if it is only used as foto camera
-    if int(g_settings.previewCamera) != 3:
-        # TODO fixme need to be done on front end because it stalls also ip camera
-        g_cameras[3].previewCamera.stop_stream(1)
-    g_activeCamera.previewCamera.stream_start()  # start preview stream
     # Video streaming route. Put this in the src attribute of an img tag
     # This gets called when the image inside the html is loaded
     return Response(gen(), mimetype="multipart/x-mixed-replace; boundary=frame")
@@ -370,6 +368,10 @@ def action():
                 "data/orginal_pictures", f"foto_{(number_of_files + 1):08}"
             )
             data = {"filename": fíle_name}
+        if "reconnect" in jsonReq["option"]:
+            # TODO it's still a problem if there is a active stream
+            g_activeCamera.previewCamera.reconnect(30)
+            data = {}
         elif "startVideo" in jsonReq["option"]:
             g_activeCamera.videoCamera.recording_start()
             data = {}
@@ -785,27 +787,33 @@ def upload():
 # Helper functions
 # -------------------------------
 def gen():
-    global g_activeCamera
     """Video streaming generator function."""
+    global g_activeCamera, g_settings, g_cameras
+    g_activeCamera.previewCamera.stream_start()
     cnt = 0
-    while True:
-        time.sleep(1 / 20)
-        frame = g_activeCamera.previewCamera.stream_show()
-        if frame is not None:
-            if len(frame) != 0:  # g_activeCamera.previewCamera.frameSize():
-                ret, frameJPG = cv2.imencode(".jpg", frame)
-                frameShow = frameJPG.tobytes()
-                cnt = 0
-                yield (b"--frame\r\n" b"Content-Type: image/jpeg\r\n\r\n" + frameShow + b"\r\n")
+    try:
+        while True:
+            time.sleep(1 / 20)
+            frame = g_activeCamera.previewCamera.stream_show()
+            if frame is not None:
+                if len(frame) != 0:  # g_activeCamera.previewCamera.frameSize():
+                    ret, frameJPG = cv2.imencode(".jpg", frame)
+                    frameShow = frameJPG.tobytes()
+                    cnt = 0
+                    yield (b"--frame\r\n" b"Content-Type: image/jpeg\r\n\r\n" + frameShow + b"\r\n")
+                else:
+                    cnt += 1
+                    print(f"[picInABox] Corrupt Image in Video stream frame")
             else:
                 cnt += 1
-                print(f"[picInABox] Corrupt Image in Video stream frame")
-        else:
-            cnt += 1
-            print(f"[picInABox] No Image in Video stream frame")
+                print(f"[picInABox] No Image in Video stream frame")
 
-        if cnt > 200:
-            raise RuntimeError("[picInABox] Too many Corrupt Images")
+            if cnt > 200:
+                raise RuntimeError("[picInABox] Too many Corrupt Images")
+    finally:
+        pass
+        # Stop ip camera to reduce load
+        # g_activeCamera.previewCamera.stream_stop()
 
 
 def initialize():
@@ -969,7 +977,7 @@ def initialize():
         or g_activeCamera.timelapsCamera is None
     ):
         for camera in g_cameras:
-            if camera != None:
+            if camera is not None:
                 g_settings["fotoCamera"] = g_cameras.index(camera)
                 g_activeCamera.videoCamera = camera.videoCamera
                 g_activeCamera.fotoCamera = camera.fotoCamera
@@ -978,19 +986,24 @@ def initialize():
                 g_activeCamera.timelapsCamera = camera.timelapsCamera
                 break
 
-    if g_activeCamera.previewCamera != None:
-        # start preview camera right away
-        g_activeCamera.previewCamera.stream_start()
-        frameRaw = g_activeCamera.previewCamera.stream_show()
-        while type(frameRaw) != "NoneType" and len(frameRaw) > 0:
-            print("[picInABox] Wait for first capture")
-            time.sleep(1)
+    try:
+        if g_activeCamera.previewCamera is not None:
+            # start preview camera right away
+            g_activeCamera.previewCamera.stream_start()
             frameRaw = g_activeCamera.previewCamera.stream_show()
-        print("[picInABox] Cameras init done")
-        if g_settings["timelaps"] == 1:
-            g_activeCamera.timelapsCamera.recording_start()
-    else:
-        print("[picInABox] No Camera Found")
+            while type(frameRaw) != "NoneType" and len(frameRaw) > 0:
+                print("[picInABox] Wait for first capture")
+                time.sleep(1)
+                frameRaw = g_activeCamera.previewCamera.stream_show()
+                g_activeCamera.previewCamera.stream_stop()
+            print("[picInABox] Cameras init done")
+            if g_settings["timelaps"] == 1:
+                g_activeCamera.timelapsCamera.recording_start()
+    except Exception as e:
+        error = {"status": "Error", "description": "No connection to camera found"}
+        g_error.put(error)
+        error = {"status": "Error", "description": repr(e)}
+        g_error.put(error)
 
 
 print("[picInABox] Starting ...")

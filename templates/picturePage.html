@@ -23,7 +23,7 @@ div.container {
 
 .img-container {
     width: 100%;
-    height: 78vh;
+    height: 80vh;
     overflow: hidden;
     display: flex;
     justify-content: center;
@@ -208,7 +208,7 @@ function setCircleDasharray() {
 {% endblock%}
 
 {% block content %}
-<div onclick="startCapturing(this)" class="polaroid"> 
+<div onclick="startCapturing(this)" class="polaroid, selectDisable"> 
 	<div id="countdown" style="float:left; position:absolute; margin-left:33%; margin-top:5%;font-family: sans-serif;z-index:1;">
         <div id="base-timer" class="base-timer">
           <svg class="base-timer__svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
