@@ -44,7 +44,7 @@ class Camera(CameraBase):
 
     def disconnect(self):
         if self._camera:
-            print("[picInABox] Disconnect webcam")
+            print("[picInABox] Disconnect ipcam")
             self._connected = False
             self._camera = None
 
@@ -54,11 +54,18 @@ class Camera(CameraBase):
         else:
             return 0
 
-    def stop_stream(self, timeout_sec):
+    def reconnect(self, fps: int = 0):
+        payload = {"option": "reconnect"}
+        response = requests.post(f"{self._ip}/api/controlCamera", json=payload, timeout=10.0)
+        if response.status_code == 200:
+            print("[picInABox] IpCam stream reconnected")
+        super().reconnect(fps)
+
+    def stream_stop(self):
         global g_error
         start = time.time()
 
-        while time.time() < start + timeout_sec:
+        while time.time() < start + 1:
             time.sleep(1.0)
             try:
                 payload = {"option": "stopStream"}
@@ -73,11 +80,11 @@ class Camera(CameraBase):
         info = {"status": "Error", "description": "Stream Ip Camera nicht gestopt"}
         g_error.put(info)
 
-    def start_stream(self, timeout_sec):
+    def stream_start(self):
         global g_error
         start = time.time()
 
-        while time.time() < start + timeout_sec:
+        while time.time() < start + 10:
             time.sleep(1.0)
             try:
                 payload = {"option": "startStream"}

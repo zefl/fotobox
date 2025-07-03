@@ -1,6 +1,5 @@
 {% extends "base.html" %}
 
-
 {% block header %}
 Klappe und Action
 {% endblock %}
@@ -24,7 +23,7 @@ div.container {
 
 .img-container {
     width: 100%;
-    height: 78vh;
+    height: 80vh;
     overflow: hidden;
     display: flex;
     justify-content: center;
@@ -45,8 +44,6 @@ div.container {
   transform: translate(0%, 0%);
   margin-top: 1%;
 }
-
-
 {% endblock %}
 
 {% block script %}
@@ -55,20 +52,17 @@ div.container {
 
 <script>
 
-let modus = 0;
-
-async function startCapturing() {
+async function startCapturing(triggeringElement) {
+    console.log("Start capturing");
+    triggeringElement.onclick = null;
     //get Status of status of server https://www.w3schools.com/js/js_ajax_http_send.asp
     const response = await fetch("api/modus")
     if (response.ok) {
       const data = await response.json();
-      modus = data.option;
-      await statemachine();
+      let modus = data.option;
+      await statemachine(modus);
     };
 }
-
-let state = 'Init'
-let fotoCount = 0
 
 async function take_picture() {
   const config = {
@@ -82,7 +76,8 @@ async function take_picture() {
   const response = await fetch('api/controlCamera', config)
 }
 
-async function statemachine(){
+async function statemachine(modus){
+    let fotoCount = 0;
     var done=false;
     const timeout = {{settings['countDown']['value']}}
     if (modus == 1) {
@@ -213,7 +208,7 @@ function setCircleDasharray() {
 {% endblock%}
 
 {% block content %}
-<div onclick="startCapturing()" class="polaroid"> 
+<div onclick="startCapturing(this)" class="polaroid, selectDisable"> 
 	<div id="countdown" style="float:left; position:absolute; margin-left:33%; margin-top:5%;font-family: sans-serif;z-index:1;">
         <div id="base-timer" class="base-timer">
           <svg class="base-timer__svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">

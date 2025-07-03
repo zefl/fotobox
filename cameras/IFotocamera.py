@@ -11,6 +11,10 @@ class IFotocamera(ABC):
         raise NotImplementedError
 
     @abstractmethod
+    def reconnect(self, _fps: int = 0):
+        raise NotImplementedError
+
+    @abstractmethod
     def picture_show(self):
         raise NotImplementedError
 
