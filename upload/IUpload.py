@@ -13,3 +13,11 @@ class IUpload(ABC):
     @abstractmethod
     def GetLastUploadLink(self):
         raise NotImplementedError
+
+    @abstractmethod
+    def GetCurrentPW(self):
+        return ""
+
+    @abstractmethod
+    def UpdatePW(self):
+        return True

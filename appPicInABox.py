@@ -87,13 +87,29 @@ app.config["UPLOAD_FOLDER"] = "static/pictures/custom_style"
 app.config["MAX_CONTENT_PATH"] = 16 * 1000 * 1000
 ALLOWED_EXTENSIONS = set(["png", "ico"])
 
-# TODO if update in default json we need to merge user json
-try:
+
+def merge_default_into_user(default, user):
+    for key, value in default.items():
+        if key not in user:
+            user[key] = value
+        elif isinstance(value, dict) and isinstance(user[key], dict):
+            merge_default_into_user(value, user[key])
+
+
+with open("static/default.json") as json_file:
+    default_config = json.load(json_file)
+
+if os.path.exists("static/user.json"):
     with open("static/user.json") as json_file:
         data = json.load(json_file)
-except:
-    with open("static/default.json") as json_file:
-        data = json.load(json_file)
+else:
+    data = {}
+
+merge_default_into_user(default_config, data)
+
+with open("static/user.json", "w") as f:
+    json.dump(data, f, indent=2)
+
 
 g_settings = Settings(**data)
 g_files = []
@@ -126,11 +142,13 @@ def set_preview_camera(value):
         if g_activeCamera.previewCamera:
             g_activeCamera.previewCamera.stream_stop()
         # load new camera
-        g_activeCamera.previewCamera.disconnect()
+        if g_activeCamera.previewCamera:
+            g_activeCamera.previewCamera.disconnect()
         g_activeCamera.previewCamera = camera.previewCamera
         g_activeCamera.timelapsCamera = camera.timelapsCamera
-        g_activeCamera.previewCamera.connect(30)
-        g_activeCamera.previewCamera.stream_start()
+        if g_activeCamera.previewCamera:
+            g_activeCamera.previewCamera.connect(30)
+            g_activeCamera.previewCamera.stream_start()
         return {"status": "Okay"}
     # no camera found
     return {"status": "Error", "description": "Kamera nicht verfügbar"}
@@ -327,7 +345,7 @@ def settings():
         jsonReq = json.loads(request.data)
         if "save" in jsonReq:
             with open("static/user.json", "w") as f:
-                json.dump(g_settings.get_json(), f)
+                json.dump(g_settings.get_json(), f, indent=2)
                 response = jsonify({"status": "okay"}, 200)
                 return response
         else:
@@ -431,6 +449,20 @@ def get_qrCode():
         img.save(img_buf, "PNG")
         img_buf.seek(0)
         return send_file(img_buf, mimetype="image/png")
+
+
+@app.route("/api/server", methods=["GET", "PUT"])
+def server():
+    global g_file_server
+
+    if request.method == "GET":
+        return jsonify({"pw": g_file_server.GetCurrentPW()})
+    elif request.method == "PUT":
+        jsonReq = json.loads(request.data)
+        print(jsonReq["pw"])
+        return Response(status=200)
+    else:
+        return None
 
 
 @app.route("/api/renderPicture", methods=["GET"])
@@ -608,7 +640,16 @@ def status():
                 response.status_code = 200
                 return response
         elif "timelaps" in request.args:
-            response = jsonify(g_activeCamera.timelapsCamera.status_save())
+            if g_activeCamera.timelapsCamera is not None:
+                response = jsonify(g_activeCamera.timelapsCamera.status_save())
+            else:
+                response = jsonify(
+                    {
+                        "step": 0,
+                        "percent": 0,
+                        "run_time": 0,
+                    }
+                )
             response.status_code = 200
             return response
         elif "git" in request.args:
@@ -651,7 +692,8 @@ def printing():
                     "description": "Bild wird gedruckt",
                 }
                 g_error.put(info)
-                g_printer.print_picture(file)
+                for _ in range(0, int(g_settings.print_number)):
+                    g_printer.print_picture(file)
                 info = {
                     "status": "Info",
                     "description": "Bild fertig. Seitlich entnehmen.",
@@ -789,6 +831,8 @@ def upload():
 def gen():
     """Video streaming generator function."""
     global g_activeCamera, g_settings, g_cameras
+    if g_activeCamera.previewCamera is None:
+        return
     g_activeCamera.previewCamera.stream_start()
     cnt = 0
     try:

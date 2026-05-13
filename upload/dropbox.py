@@ -13,14 +13,18 @@ class Dropbox(IUpload):
         self._last_upload_file_link = ""
         self._connected = False
 
+    def _get_pw(self):
+        with open("upload/login.json") as f:
+            logins = json.load(f)
+            if "Dropbox" in logins:
+                login = logins["Dropbox"]
+                return login["token"]
+
     def Connect(self):
         if not (self._connected):
-            with open("upload/login.json") as f:
-                logins = json.load(f)
-                if "Dropbox" in logins:
-                    login = logins["Dropbox"]
-                    self._file_server = dropbox.Dropbox(login["token"])
-                    self._connected = True
+            pw = self._get_pw()
+            self._file_server = dropbox.Dropbox(pw)
+            self._connected = True
         return self._connected
 
     def UploadPicture(self, picture):
@@ -36,3 +40,9 @@ class Dropbox(IUpload):
 
     def GetLastUploadLink(self):
         return self._last_upload_file_link.url
+
+    def UpdatePW(self):
+        return super().UpdatePW()
+
+    def GetCurrentPW(self):
+        return self._get_pw()
