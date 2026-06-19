@@ -135,5 +135,14 @@
         "nameDE" : "Aktivieren Video funktion",
         "min" : 0,
         "max" : 1
+    },
+    "rotate":
+    {
+        "group" : "camera",
+        "type" : "input",
+        "value" : 0,
+        "nameDE" : "Drehen des Bildes",
+        "min" : 0,
+        "max" : 360
     }
 }
