@@ -62,6 +62,17 @@ class cameraContainer:
         self.videoCamera = None
         self.timelapsCamera = None
 
+    def online(self) -> bool:
+        if (
+            self.videoCamera is not None
+            and self.fotoCamera is not None
+            and self.previewCamera is not None
+            and self.timelapsCamera is not None
+        ):
+            True
+        else:
+            False
+
 
 def exit():
     global g_cameras
@@ -119,7 +130,7 @@ g_file_server = Dropbox()
 def set_preview_camera(value):
     global g_activeCamera
     camera = g_cameras[int(value)]
-    if camera:
+    if camera.online():
         # stop old stream
         if g_activeCamera.timelapsCamera:
             g_activeCamera.timelapsCamera.recording_stop()
