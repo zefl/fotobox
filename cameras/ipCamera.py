@@ -124,10 +124,6 @@ class Camera(CameraBase):
         if response.status_code == 200:
             data = json.loads(response.content)
             frame = np.array(data, dtype=np.uint8)
-            global g_settings
-            rotate = int(g_settings.get("rotate", 0))
-            if rotate != 0:
-                frame = np.rot90(frame, k=1)
             self._frameSize == len(frame)
         else:
             frame = []

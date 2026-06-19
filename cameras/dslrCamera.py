@@ -14,7 +14,6 @@ import time
 
 from cameras.cameraBase import CameraBase
 from cameras.cameraBase import stream_run
-from appPicInABox import g_settings
 
 
 # from https://github.com/pibooth/pibooth/blob/master/pibooth/camera/gphoto.py
@@ -163,10 +162,6 @@ class Camera(CameraBase):
             file_data = camFile.get_data_and_size()
             image = Image.open(io.BytesIO(file_data))
             img = image.transpose(Image.FLIP_LEFT_RIGHT)
-            global g_settings
-            rotate = int(g_settings.get("rotate", 0))
-            if rotate != 0:
-                img = img.rotate(rotate)
             frame = np.array(img)[:, :, ::-1]
             return frame
         except:

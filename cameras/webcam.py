@@ -4,8 +4,6 @@ import multiprocessing as mp
 from cameras.cameraBase import CameraBase
 from cameras.cameraBase import stream_run
 
-from appPicInABox import g_settings
-
 
 # from https://github.com/pibooth/pibooth/blob/master/pibooth/camera/opencv.py
 def check_webcam():
@@ -62,10 +60,6 @@ class Camera(CameraBase):
         check, frame = self._camera.read()
         if check:
             frame = cv2.flip(frame, 1)
-            global g_settings
-            rotate = int(g_settings.get("rotate", 0))
-            if rotate != 0:
-                frame = cv2.rotate(frame, cv2.ROTATE_90_CLOCKWISE)
             if self._frameSize == 0:
                 self._frameSize == len(frame)
         else:
