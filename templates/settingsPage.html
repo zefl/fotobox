@@ -209,6 +209,7 @@ height: 150%;
 transform: translate(-4%, -10%);
 margin-top: 1%;
 }
+
 .full_img {
 position: absolute;
 width: 100%;
@@ -387,6 +388,24 @@ margin-top: 1%;
     button.disabled = false;
   }
 
+  async function getServerToken() {
+    const response = await fetch("/api/server");
+    let data = await response.json();
+    const tokenField = document.getElementById("tokenField");
+    tokenField.value = data.pw
+  }
+
+  async function updateServerToken() {
+    const tokenField = document.getElementById("tokenField");
+    const response = await fetch('/api/server', {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ pw: tokenField.value })
+    });
+  }
+
   async function create_zip(button) {
     start_spinner(button)
     let download = document.getElementById('download');
@@ -528,6 +547,14 @@ margin-top: 1%;
     <div class="row">
       <div class="col-4">
         {{ create_settings('other') }}
+        <div class="row">
+          <label for="tokenField" style="font-size:20px;" class="form-label">Enter your token</label>
+          <textarea class="form-control" id="tokenField" rows="4"></textarea>
+          <div class="d-flex gap-2">
+            <button class="btn btn-primary" onclick="getServerToken()">Get Current Token</button>
+            <button class="btn btn-success" onclick="updateServerToken()">Update Token</button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
