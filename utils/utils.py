@@ -18,6 +18,30 @@ def openImage(layoutSrc):
     return img
 
 
+def rotateImageArray(img: Image, index: str):
+    index = int(index)
+    if index == 1:
+        return img.rotate(90, expand=1)
+    elif index == 2:
+        return img.rotate(270, expand=1)
+    elif index == 3:
+        return img.rotate(180, expand=1)
+    else:
+        return img
+
+
+def rotateImage(img, index: str):
+    index = int(index)
+    if index == 1:
+        return cv2.rotate(img, cv2.ROTATE_90_CLOCKWISE)
+    elif index == 2:
+        return cv2.rotate(img, cv2.ROTATE_90_COUNTERCLOCKWISE)
+    elif index == 3:
+        return cv2.rotate(img, cv2.ROTATE_180)
+    else:
+        return img
+
+
 def findInserts(layoutSrc):
     img = openImage(layoutSrc)
     width, height = img.size

@@ -43,6 +43,8 @@ from utils.utils import (
     getActivWifi,
     checkInternetConnection,
     connectToWifi,
+    rotateImage,
+    rotateImageArray,
     start_browser,
 )
 
@@ -481,6 +483,7 @@ def get_picture():
     global g_modus
     global g_anchorsMulti
     global g_anchorSingle
+    global g_settings
     time.sleep(2)
     if request.method == "GET":
         list_of_files = glob.glob("data/orginal_pictures/*")
@@ -488,15 +491,18 @@ def get_picture():
         pics = []
         if g_modus == 1:
             # append last taken image
-            pics.append(openImage(list_of_files[-1]))
+            img = openImage(list_of_files[-1])
+            img = rotateImageArray(img, g_settings.rotateImage)
+            pics.append(img)
             layoutSrc = os.path.join(app.config["UPLOAD_FOLDER"], "LayoutSingle.png")
             anchors = g_anchorSingle
 
         elif g_modus == 2:
             pics = []
             for index in range(1, len(g_anchorsMulti) + 1):
-                id = index * -1
-                pics.append(openImage(list_of_files[id]))
+                img = openImage(list_of_files[index * -1])
+                img = rotateImageArray(img, g_settings.rotateImage)
+                pics.append(img)
             layoutSrc = os.path.join(app.config["UPLOAD_FOLDER"], "LayoutMulti.png")
             anchors = g_anchorsMulti
 
@@ -845,6 +851,7 @@ def gen():
     if g_activeCamera.previewCamera is None:
         return
     g_activeCamera.previewCamera.stream_start()
+    encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 80]
     cnt = 0
     try:
         while True:
@@ -852,7 +859,8 @@ def gen():
             frame = g_activeCamera.previewCamera.stream_show()
             if frame is not None:
                 if len(frame) != 0:  # g_activeCamera.previewCamera.frameSize():
-                    ret, frameJPG = cv2.imencode(".jpg", frame)
+                    frame = rotateImage(frame, g_settings.rotateStream)
+                    ret, frameJPG = cv2.imencode(".jpg", frame, encode_param)
                     frameShow = frameJPG.tobytes()
                     cnt = 0
                     yield (b"--frame\r\n" b"Content-Type: image/jpeg\r\n\r\n" + frameShow + b"\r\n")
